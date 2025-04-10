@@ -14,6 +14,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <mainClass>org.example.SysAdminToolbox</mainClass>
         <imageName>sysadmintoolbox</imageName>
+        <buildArgs>--no-fallback</buildArgs>
     </properties>
 
     <dependencies>
@@ -83,11 +84,25 @@
                     <imageName>${imageName}</imageName>
                     <mainClass>${mainClass}</mainClass>
                     <buildArgs>
-                        <buildArg>--no-fallback</buildArg>
-                        <buildArg>-Ob</buildArg>
+                        <buildArg>${buildArgs}</buildArg>
                     </buildArgs>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <buildArgs>--no-fallback -Ob</buildArgs>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>prod</id>
+            <properties>
+                <buildArgs>--no-fallback</buildArgs>
+            </properties>
+        </profile>
+    </profiles>
 </project>
