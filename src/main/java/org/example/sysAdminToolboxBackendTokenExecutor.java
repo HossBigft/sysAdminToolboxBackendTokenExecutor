@@ -18,19 +18,18 @@ import java.util.regex.Pattern;
         mixinStandardHelpOptions = true
 )
 public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
-    private static final String TEST_MAIL_LOGIN="testsupportmail";
-    private static final String MAIL_DESCRIPTION="throwaway mail for troubleshooting purposes. You may delete it at will.";
-    private static final int MAIL_PASSWORD_LENGTH=15;
+    private static final String TEST_MAIL_LOGIN = "testsupportmail";
+    private static final String MAIL_DESCRIPTION = "throwaway mail for troubleshooting purposes. You may delete it at will.";
+    private static final int MAIL_PASSWORD_LENGTH = 15;
     private static final Pattern DOMAIN_PATTERN =
             Pattern.compile("^(?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.(?!-)[A-Za-z0-9.-]{2,}$");
 
-    Predicate<String> isDomain= DOMAIN_PATTERN.asMatchPredicate();
+    Predicate<String> isDomain = DOMAIN_PATTERN.asMatchPredicate();
 
-    private Optional<String> getEmailPassword(String login, String domain) {
+    private Optional<String> getEmailPassword(String login, String domain) throws IOException {
         String emailPassword = "";
-
-        ProcessBuilder builder = new ProcessBuilder("/usr/local/psa/admin/bin/mail_auth_view");
-        try {
+        if (isDomain.test(domain)) {
+            ProcessBuilder builder = new ProcessBuilder("/usr/local/psa/admin/bin/mail_auth_view");
             Process process = builder.start();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 List<String> result = reader.lines()
@@ -46,10 +45,8 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
                     emailPassword = result.get(0);
                 }
             }
-        } catch (IOException e) {
-            System.out.println("/usr/local/psa/admin/bin/mail_auth_view is not found");
-        }
 
+        }
         return emailPassword.isEmpty() ? Optional.empty() : Optional.of(emailPassword);
     }
 
@@ -60,27 +57,28 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     private String domain;
 
     @Override
-    public Integer call() throws Exception {
-        if (!isValidDomain(domain)) {
+    public Integer call() {
+        if (!isDomain.test(domain)) {
             System.err.println("Error: Invalid domain format.");
             return 1;
         }
+        Optional<String> maybePassword;
 
-        Optional<String> maybePassword = getEmailPassword(testMailLogin, domain);
-
-        if (maybePassword.isPresent()) {
-            System.out.println(maybePassword.get());
-        } else {
-            System.err.println("No password found for " + testMailLogin + "@" + domain);
-            return 0;
+        try {
+            maybePassword = getEmailPassword(testMailLogin, domain);
+        } catch (IOException e) {
+            System.out.println("/usr/local/psa/admin/bin/mail_auth_view is not found");
+            return 1;
         }
+        maybePassword.ifPresentOrElse(
+                System.out::println,
+                () -> System.err.println("No password found for " + testMailLogin + "@" + domain)
+        );
+
 
         return 0;
     }
 
-    private boolean isValidDomain(String domain) {
-        return DOMAIN_PATTERN.matcher(domain).matches();
-    }
 
     public static void main(String[] args) {
         int exitCode = new CommandLine(new sysAdminToolboxBackendTokenExecutor()).execute(args);
