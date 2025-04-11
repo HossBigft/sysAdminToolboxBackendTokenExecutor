@@ -23,19 +23,15 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 
-@Command(name = "sysadmintoolbox",
-        description = "Executes sudo commands on server",
-        mixinStandardHelpOptions = true
-)
+@Command(name = "sysadmintoolbox", description = "Executes sudo commands on server", mixinStandardHelpOptions = true)
 public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     private static final String TEST_MAIL_LOGIN = "testsupportmail";
-    private static final String TEST_MAIL_DESCRIPTION =
-            "throwaway mail for troubleshooting purposes. You may delete it at will.";
+    private static final String TEST_MAIL_DESCRIPTION = "throwaway mail for troubleshooting purposes. You may delete it at will.";
     private static final int TEST_MAIL_PASSWORD_LENGTH = 15;
     private static final String PLESK_CLI_EXECUTABLE = "/usr/sbin/plesk";
     private static final String PLESK_CLI_GET_MAIL_USERS_CREDENTIALS = "/usr/local/psa/admin/bin/mail_auth_view";
-    private static final Pattern DOMAIN_PATTERN =
-            Pattern.compile("^(?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.(?!-)[A-Za-z0-9.-]{2,}$");
+    private static final Pattern DOMAIN_PATTERN = Pattern.compile(
+            "^(?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.(?!-)[A-Za-z0-9.-]{2,}$");
 
     Predicate<String> isDomain = DOMAIN_PATTERN.asMatchPredicate();
     @Parameters(index = "0", description = "The domain to check.")
@@ -60,12 +56,7 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         };
         CharacterRule specialRule = new CharacterRule(safeSpecials, 1);
 
-        List<CharacterRule> rules = Arrays.asList(
-                lowerCaseRule,
-                upperCaseRule,
-                digitRule,
-                specialRule
-        );
+        List<CharacterRule> rules = Arrays.asList(lowerCaseRule, upperCaseRule, digitRule, specialRule);
 
         return generator.generatePassword(length, rules);
     }
@@ -75,22 +66,18 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         System.exit(exitCode);
     }
 
-    private Optional<String> getEmailPassword(String login,
-                                              String mailDomain) throws IOException {
+    private Optional<String> getEmailPassword(String login, String mailDomain) throws IOException {
         String emailPassword = "";
         if (isDomain.test(mailDomain)) {
             ProcessBuilder builder = new ProcessBuilder("/usr/local/psa/admin/bin/mail_auth_view");
             Process process = builder.start();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                List<String> result = reader.lines()
-                        .filter(line -> line.contains(login + "@" + mailDomain))
-                        .map(line -> line.replaceAll("\\s",
-                                "")) // remove all whitespace
+                List<String> result = reader.lines().filter(line -> line.contains(login + "@" + mailDomain))
+                        .map(line -> line.replaceAll("\\s", "")) // remove all whitespace
                         .map(line -> {
                             int index = line.indexOf('|');
                             return index >= 0 ? line.split("\\|")[3] : "";
-                        })
-                        .toList();
+                        }).toList();
 
                 if (!result.isEmpty()) {
                     emailPassword = result.get(0);
@@ -101,24 +88,11 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         return emailPassword.isEmpty() ? Optional.empty() : Optional.of(emailPassword);
     }
 
-    private void createMail(String login,
-                            String mailDomain,
-                            String password,
-                            String description) throws CommandFailedException {
+    private void createMail(String login, String mailDomain, String password, String description) throws
+            CommandFailedException {
         if (isDomain.test(mailDomain)) {
-            ProcessBuilder builder = new ProcessBuilder(PLESK_CLI_EXECUTABLE,
-                    "bin",
-                    "mail",
-                    "--create",
-                    login,
-                    "@",
-                    mailDomain,
-                    "-passwd",
-                    password,
-                    "-mailbox",
-                    "true",
-                    "-description",
-                    description);
+            ProcessBuilder builder = new ProcessBuilder(PLESK_CLI_EXECUTABLE, "bin", "mail", "--create", login, "@",
+                    mailDomain, "-passwd", password, "-mailbox", "true", "-description", description);
             try {
                 Process process = builder.start();
                 int exitCode = -1;
@@ -143,8 +117,8 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         JSONObject mailCredentials = new JSONObject();
         if (isDomain.test(testMailDomain)) {
             String password;
-            URI login_link = URI.create("https://webmail." + domain + "/roundcube/index.php?_user=" +
-                    URLEncoder.encode(TEST_MAIL_LOGIN + "@" + domain, StandardCharsets.UTF_8));
+            URI login_link = URI.create("https://webmail." + domain + "/roundcube/index.php?_user=" + URLEncoder.encode(
+                    TEST_MAIL_LOGIN + "@" + domain, StandardCharsets.UTF_8));
             Optional<String> existing_password = Optional.empty();
             try {
                 existing_password = getEmailPassword(TEST_MAIL_LOGIN, testMailDomain);
@@ -156,8 +130,7 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             } else {
                 password = generatePassword(TEST_MAIL_PASSWORD_LENGTH);
                 try {
-                    createMail(TEST_MAIL_LOGIN, domain, password,
-                            TEST_MAIL_DESCRIPTION);
+                    createMail(TEST_MAIL_LOGIN, domain, password, TEST_MAIL_DESCRIPTION);
                 } catch (CommandFailedException e) {
                     System.err.println("Email creation for " + domain + " failed with " + e);
                     throw new CommandFailedException("Email creation for " + domain + " failed with " + e);
@@ -172,8 +145,69 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         return mailCredentials.isEmpty() ? Optional.empty() : Optional.of(mailCredentials);
     }
 
+    private boolean isCommandAvailable(String command) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder("which", command);
+            Process process = pb.start();
+            return process.waitFor() == 0;
+        } catch (IOException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+
+    private String getSqlCliName() throws CommandFailedException {
+        if (isCommandAvailable("mariadb")) {
+            return "mariadb";
+        } else if (isCommandAvailable("mysql")) {
+            return "mysql";
+        } else {
+            throw new CommandFailedException("Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
+        }
+    }
+
+    private Optional<List<String>> executeSqlCommand(String dbUser, String dbPassword, String cmd)
+            throws CommandFailedException {
+
+        String dbHost = "localhost";
+        String dbName = "psa";
+        String mysqlCliName = getSqlCliName(); // now just a String
+
+        ProcessBuilder pb = new ProcessBuilder(
+                mysqlCliName,
+                "--host", dbHost,
+                "--user=" + dbUser,
+                "--password=" + dbPassword,
+                "--database", dbName,
+                "--batch",
+                "--skip-column-names",
+                "--raw",
+                "-e", cmd
+        );
+
+        try {
+            Process process = pb.start();
+            int exitStatus = process.waitFor();
+
+            if (exitStatus != 0) {
+                throw new CommandFailedException("SQL command execution failed with status " + exitStatus);
+            }
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                List<String> lines = reader.lines().toList();
+                return lines.isEmpty() ? Optional.empty() : Optional.of(lines);
+            }
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new CommandFailedException("SQL command interrupted", e);
+        } catch (IOException e) {
+            throw new CommandFailedException("SQL cli executable " + mysqlCliName + " is not found.");
+        }
+    }
+
     @Override
-    public Integer call() throws CommandFailedException {
+    public Integer call() {
         if (!isDomain.test(domain)) {
             System.err.println("Error: Invalid domain format.");
             return 1;
@@ -182,10 +216,11 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         try {
             mailCredentials = plesk_get_testmail_credentials(domain);
         } catch (CommandFailedException e) {
-            throw new CommandFailedException("Test mail creation failed with " + e);
+            System.out.println("Test mail creation failed with " + e);
+            return 1;
         }
-        mailCredentials.ifPresentOrElse(System.out::println, () -> System.out.println
-                ("Email for " + domain + " was not found"));
+        mailCredentials.ifPresentOrElse(System.out::println,
+                () -> System.out.println("Email for " + domain + " was not found"));
 
         return 0;
     }
@@ -199,4 +234,6 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             super(message, cause);
         }
     }
+
+
 }
