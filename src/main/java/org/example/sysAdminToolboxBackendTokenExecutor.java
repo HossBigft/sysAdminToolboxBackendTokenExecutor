@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+
 @Command(name = "sysadmintoolbox",
         description = "Executes sudo commands on server",
         mixinStandardHelpOptions = true
@@ -21,20 +22,33 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     private static final String TEST_MAIL_LOGIN = "testsupportmail";
     private static final String MAIL_DESCRIPTION = "throwaway mail for troubleshooting purposes. You may delete it at will.";
     private static final int MAIL_PASSWORD_LENGTH = 15;
+    private static final String PLESK_CLI_EXECUTABLE = "/usr/sbin/plesk";
     private static final Pattern DOMAIN_PATTERN =
             Pattern.compile("^(?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.(?!-)[A-Za-z0-9.-]{2,}$");
 
     Predicate<String> isDomain = DOMAIN_PATTERN.asMatchPredicate();
 
-    private Optional<String> getEmailPassword(String login, String domain) throws IOException {
+    private class CommandFailedException extends Exception {
+        public CommandFailedException(String message) {
+            super(message);
+        }
+
+        public CommandFailedException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
+    private Optional<String> getEmailPassword(String login,
+                                              String mailDomain) throws IOException {
         String emailPassword = "";
-        if (isDomain.test(domain)) {
+        if (isDomain.test(mailDomain)) {
             ProcessBuilder builder = new ProcessBuilder("/usr/local/psa/admin/bin/mail_auth_view");
             Process process = builder.start();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 List<String> result = reader.lines()
-                        .filter(line -> line.contains(login + "@" + domain))
-                        .map(line -> line.replaceAll("\\s", "")) // remove all whitespace
+                        .filter(line -> line.contains(login + "@" + mailDomain))
+                        .map(line -> line.replaceAll("\\s",
+                                "")) // remove all whitespace
                         .map(line -> {
                             int index = line.indexOf('|');
                             return index >= 0 ? line.split("\\|")[3] : "";
@@ -48,6 +62,39 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
         }
         return emailPassword.isEmpty() ? Optional.empty() : Optional.of(emailPassword);
+    }
+
+    private void createMail(String login,
+                            String mailDomain,
+                            String password,
+                            String description) throws IOException, CommandFailedException {
+        if (isDomain.test(mailDomain)) {
+            ProcessBuilder builder = new ProcessBuilder(PLESK_CLI_EXECUTABLE,
+                    "bin",
+                    "mail",
+                    "--create",
+                    login,
+                    "@",
+                    mailDomain,
+                    "-passwd",
+                    password,
+                    "-mailbox",
+                    "true",
+                    "-description",
+                    description);
+            Process process = builder.start();
+            int exitCode = -1; 
+            try {
+                exitCode = process.waitFor();
+                if (exitCode != 0) {
+                    throw new CommandFailedException("Mail creation failed with exit code " + exitCode);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new CommandFailedException("Mail creation interrupted with exit code " + exitCode, e);
+            }
+        }
+
     }
 
     @Parameters(index = "0", description = "The email login (before the @).")
@@ -65,7 +112,8 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         Optional<String> maybePassword;
 
         try {
-            maybePassword = getEmailPassword(testMailLogin, domain);
+            maybePassword = getEmailPassword(testMailLogin,
+                    domain);
         } catch (IOException e) {
             System.out.println("/usr/local/psa/admin/bin/mail_auth_view is not found");
             return 1;
