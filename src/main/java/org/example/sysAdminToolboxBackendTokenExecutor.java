@@ -12,6 +12,9 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.Arrays;
+
+import org.passay.*;
 
 
 @Command(name = "sysadmintoolbox",
@@ -20,7 +23,8 @@ import java.util.regex.Pattern;
 )
 public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     private static final String TEST_MAIL_LOGIN = "testsupportmail";
-    private static final String MAIL_DESCRIPTION = "throwaway mail for troubleshooting purposes. You may delete it at will.";
+    private static final String MAIL_DESCRIPTION =
+            "throwaway mail for troubleshooting purposes. You may delete it at will.";
     private static final int MAIL_PASSWORD_LENGTH = 15;
     private static final String PLESK_CLI_EXECUTABLE = "/usr/sbin/plesk";
     private static final Pattern DOMAIN_PATTERN =
@@ -83,7 +87,7 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
                     "-description",
                     description);
             Process process = builder.start();
-            int exitCode = -1; 
+            int exitCode = -1;
             try {
                 exitCode = process.waitFor();
                 if (exitCode != 0) {
@@ -95,6 +99,35 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             }
         }
 
+    }
+
+    private static String generatePassword(int length) {
+
+        PasswordGenerator generator = new PasswordGenerator();
+
+        CharacterRule lowerCaseRule = new CharacterRule(EnglishCharacterData.LowerCase, 1);
+        CharacterRule upperCaseRule = new CharacterRule(EnglishCharacterData.UpperCase, 1);
+        CharacterRule digitRule = new CharacterRule(EnglishCharacterData.Digit, 1);
+
+        CharacterData safeSpecials = new CharacterData() {
+            public String getErrorCode() {
+                return "SHELL_QUOTE_CHARS_PROHIBITED";
+            }
+
+            public String getCharacters() {
+                return "!#$%&()*+,-./:;<=>?@[\\]^_{|}~";
+            }
+        };
+        CharacterRule specialRule = new CharacterRule(safeSpecials, 1);
+
+        List<CharacterRule> rules = Arrays.asList(
+                lowerCaseRule,
+                upperCaseRule,
+                digitRule,
+                specialRule
+        );
+
+        return generator.generatePassword(length, rules);
     }
 
     @Parameters(index = "0", description = "The email login (before the @).")
@@ -118,9 +151,20 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             System.out.println("/usr/local/psa/admin/bin/mail_auth_view is not found");
             return 1;
         }
+
         maybePassword.ifPresentOrElse(
                 System.out::println,
-                () -> System.err.println("No password found for " + testMailLogin + "@" + domain)
+                () -> {
+
+                    System.err.println("No password found for " + testMailLogin + "@" + domain);
+                    try {
+                        createMail(testMailLogin, domain, generatePassword(8), "description");
+                    } catch (IOException e) {
+                        System.err.println(PLESK_CLI_EXECUTABLE + " is not found");
+                    } catch (CommandFailedException e) {
+                        System.err.println("Email creation for " + domain + " failed with " + e);
+                    }
+                }
         );
 
 
