@@ -7,19 +7,17 @@ import picocli.CommandLine.Parameters;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Command(name = "sysadmintoolbox",
         description = "Executes sudo commands on server",
         mixinStandardHelpOptions = true
 )
-public class SysAdminToolbox implements Callable<Integer> {
+public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     private static final String TEST_MAIL_LOGIN="testsupportmail";
     private static final String MAIL_DESCRIPTION="throwaway mail for troubleshooting purposes. You may delete it at will.";
     private static final int MAIL_PASSWORD_LENGTH=15;
@@ -85,7 +83,7 @@ public class SysAdminToolbox implements Callable<Integer> {
     }
 
     public static void main(String[] args) {
-        int exitCode = new CommandLine(new SysAdminToolbox()).execute(args);
+        int exitCode = new CommandLine(new sysAdminToolboxBackendTokenExecutor()).execute(args);
         System.exit(exitCode);
     }
 }
