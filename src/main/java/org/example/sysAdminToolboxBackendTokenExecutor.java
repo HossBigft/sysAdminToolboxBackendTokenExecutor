@@ -1,5 +1,6 @@
 package org.example;
 
+import org.json.JSONObject;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
@@ -7,6 +8,9 @@ import picocli.CommandLine.Parameters;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -23,7 +27,7 @@ import org.passay.*;
 )
 public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     private static final String TEST_MAIL_LOGIN = "testsupportmail";
-    private static final String MAIL_DESCRIPTION =
+    private static final String TEST_MAIL_DESCRIPTION =
             "throwaway mail for troubleshooting purposes. You may delete it at will.";
     private static final int MAIL_PASSWORD_LENGTH = 15;
     private static final String PLESK_CLI_EXECUTABLE = "/usr/sbin/plesk";
@@ -128,6 +132,33 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         );
 
         return generator.generatePassword(length, rules);
+    }
+
+    private JSONObject plesk_get_testmail_credentials(String testMailDomain) {
+        if (isDomain.test(testMailDomain)) {
+
+        }
+        String password;
+        URI login_link = URI.create("https://webmail." + domain + "/roundcube/index.php?_user=" +
+                URLEncoder.encode(TEST_MAIL_LOGIN + "@" + domain, StandardCharsets.UTF_8));
+        Optional<String> existing_password;
+        try {
+            existing_password = getEmailPassword(TEST_MAIL_LOGIN, testMailDomain);
+        } catch (IOException e) {
+            System.out.println("/usr/local/psa/admin/bin/mail_auth_view is not found");
+        }
+        existing_password.ifPresentOrElse(
+                password=existing_password.get(),
+                () -> {
+                    try {
+                        createMail(TEST_MAIL_LOGIN, domain, generatePassword(8), TEST_MAIL_DESCRIPTION);
+                    } catch (IOException e) {
+                        System.err.println(PLESK_CLI_EXECUTABLE + " is not found");
+                    } catch (CommandFailedException e) {
+                        System.err.println("Email creation for " + domain + " failed with " + e);
+                    }
+                }
+        );
     }
 
     @Parameters(index = "0", description = "The email login (before the @).")
