@@ -1,6 +1,9 @@
 package org.example;
 
-import org.json.JSONObject;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.passay.CharacterData;
 import org.passay.CharacterRule;
 import org.passay.EnglishCharacterData;
@@ -10,16 +13,16 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 
@@ -36,6 +39,11 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     Predicate<String> isDomain = DOMAIN_PATTERN.asMatchPredicate();
     @Parameters(index = "0", description = "The domain to check.")
     private String domain;
+
+    public static void main(String[] args) {
+        int exitCode = new CommandLine(new sysAdminToolboxBackendTokenExecutor()).execute(args);
+        System.exit(exitCode);
+    }
 
     private static String generatePassword(int length) {
 
@@ -61,12 +69,27 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         return generator.generatePassword(length, rules);
     }
 
-    public static void main(String[] args) {
-        int exitCode = new CommandLine(new sysAdminToolboxBackendTokenExecutor()).execute(args);
-        System.exit(exitCode);
+    @Override
+    public Integer call() {
+        if (!isDomain.test(domain)) {
+            System.err.println("Error: Invalid domain format.");
+            return 1;
+        }
+        Optional<List<String>> mailCredentials;
+        try {
+            mailCredentials = plesk_fetch_subscription_info_by_domain(domain);
+        } catch (CommandFailedException e) {
+            System.out.println("Test mail creation failed with " + e);
+            return 1;
+        }
+        mailCredentials.ifPresentOrElse(System.out::println,
+                () -> System.out.println("Email for " + domain + " was not found"));
+
+        return 0;
     }
 
-    private Optional<String> getEmailPassword(String login, String mailDomain) throws IOException {
+    private Optional<String> getEmailPassword(String login,
+                                              String mailDomain) throws IOException {
         String emailPassword = "";
         if (isDomain.test(mailDomain)) {
             ProcessBuilder builder = new ProcessBuilder("/usr/local/psa/admin/bin/mail_auth_view");
@@ -88,7 +111,10 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         return emailPassword.isEmpty() ? Optional.empty() : Optional.of(emailPassword);
     }
 
-    private void createMail(String login, String mailDomain, String password, String description) throws
+    private void createMail(String login,
+                            String mailDomain,
+                            String password,
+                            String description) throws
             CommandFailedException {
         if (isDomain.test(mailDomain)) {
             ProcessBuilder builder = new ProcessBuilder(PLESK_CLI_EXECUTABLE, "bin", "mail", "--create", login, "@",
@@ -113,8 +139,9 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
     }
 
-    private Optional<JSONObject> plesk_get_testmail_credentials(String testMailDomain) throws CommandFailedException {
-        JSONObject mailCredentials = new JSONObject();
+    private Optional<ObjectNode> plesk_get_testmail_credentials(String testMailDomain) throws CommandFailedException {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode mailCredentials = om.createObjectNode();
         if (isDomain.test(testMailDomain)) {
             String password;
             URI login_link = URI.create("https://webmail." + domain + "/roundcube/index.php?_user=" + URLEncoder.encode(
@@ -166,12 +193,43 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         }
     }
 
-    private Optional<List<String>> executeSqlCommand(String dbUser, String dbPassword, String cmd)
+    private String buildSqlQuery(String domain) {
+        return """
+                SELECT\s
+                    base.subscription_id AS result,
+                    (SELECT name FROM domains WHERE id = base.subscription_id) AS name,
+                    (SELECT pname FROM clients WHERE id = base.cl_id) AS username,
+                    (SELECT login FROM clients WHERE id = base.cl_id) AS userlogin,
+                    (SELECT GROUP_CONCAT(CONCAT(d2.name, ':', d2.status) SEPARATOR ',')
+                        FROM domains d2\s
+                        WHERE base.subscription_id IN (d2.id, d2.webspace_id)) AS domains,
+                    (SELECT overuse FROM domains WHERE id = base.subscription_id) as is_space_overused,
+                    (SELECT ROUND(real_size/1024/1024) FROM domains WHERE id = base.subscription_id) as subscription_size_mb,
+                    (SELECT status FROM domains WHERE id = base.subscription_id) as subscription_status
+                FROM (
+                    SELECT\s
+                        CASE\s
+                            WHEN webspace_id = 0 THEN id\s
+                            ELSE webspace_id\s
+                        END AS subscription_id,
+                        cl_id,
+                        name
+                    FROM domains\s
+                    WHERE name LIKE '%s'
+                ) AS base;
+                """.formatted(domain);
+    }
+
+
+    private Optional<List<String>> executeSqlCommand(String cmd)
             throws CommandFailedException {
 
         String dbHost = "localhost";
         String dbName = "psa";
-        String mysqlCliName = getSqlCliName(); // now just a String
+        String dbUser = Config.getDatabaseUser();
+        String dbPassword = Config.getDatabasePassword();
+        String mysqlCliName = getSqlCliName();
+
 
         ProcessBuilder pb = new ProcessBuilder(
                 mysqlCliName,
@@ -206,23 +264,14 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         }
     }
 
-    @Override
-    public Integer call() {
-        if (!isDomain.test(domain)) {
-            System.err.println("Error: Invalid domain format.");
-            return 1;
+    private Optional<List<String>> plesk_fetch_subscription_info_by_domain(String domain) throws
+            CommandFailedException {
+        Optional<List<String>> result = Optional.empty();
+        if (isDomain.test(domain)) {
+            String sqlCMd = buildSqlQuery(domain);
+            result = executeSqlCommand(sqlCMd);
         }
-        Optional<JSONObject> mailCredentials;
-        try {
-            mailCredentials = plesk_get_testmail_credentials(domain);
-        } catch (CommandFailedException e) {
-            System.out.println("Test mail creation failed with " + e);
-            return 1;
-        }
-        mailCredentials.ifPresentOrElse(System.out::println,
-                () -> System.out.println("Email for " + domain + " was not found"));
-
-        return 0;
+        return result.isEmpty() ? Optional.empty() : result;
     }
 
     private static class CommandFailedException extends Exception {
@@ -230,8 +279,61 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             super(message);
         }
 
-        public CommandFailedException(String message, Throwable cause) {
+        public CommandFailedException(String message,
+                                      Throwable cause) {
             super(message, cause);
+        }
+    }
+
+    private static class Config {
+        private static final String ENV_PATH = ".env.json";
+        private static Map<String, String> values = new HashMap<>();
+
+        static {
+            try {
+                loadConfig();
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to load config", e);
+            }
+        }
+
+        private static boolean computeIfAbsentOrBlank(Map<String, String> map,
+                                                      String key,
+                                                      Supplier<String> supplier) {
+            String val = map.get(key);
+            if (val == null || val.isBlank()) {
+                map.put(key, supplier.get());
+                return true;
+            }
+            return false;
+        }
+
+        private static void loadConfig() throws IOException {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.enable(SerializationFeature.INDENT_OUTPUT);
+            File envFile = new File(ENV_PATH);
+
+            try {
+                values = mapper.readValue(envFile, new TypeReference<Map<String, String>>() {
+                });
+            } catch (IOException e) {
+                values = new HashMap<>();
+            }
+
+            boolean updated = false;
+            updated |= computeIfAbsentOrBlank(values, "DATABASE_USER", () -> System.getenv("USER"));
+            updated |= computeIfAbsentOrBlank(values, "DATABASE_PASSWORD", () -> generatePassword(10));
+            if (updated) {
+                mapper.writeValue(envFile, values);
+            }
+        }
+
+        static String getDatabaseUser() {
+            return values.get("DATABASE_USER");
+        }
+
+        static String getDatabasePassword() {
+            return values.get("DATABASE_PASSWORD");
         }
     }
 
