@@ -19,6 +19,11 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.attribute.*;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
@@ -39,6 +44,7 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     Predicate<String> isDomain = DOMAIN_PATTERN.asMatchPredicate();
     @Parameters(index = "0", description = "The domain to check.")
     private String domain;
+
 
     public static void main(String[] args) {
         int exitCode = new CommandLine(new sysAdminToolboxBackendTokenExecutor()).execute(args);
@@ -271,7 +277,7 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             String sqlCMd = buildSqlQuery(domain);
             result = executeSqlCommand(sqlCMd);
         }
-        return result.isEmpty() ? Optional.empty() : result;
+        return result;
     }
 
     private static class CommandFailedException extends Exception {
@@ -287,6 +293,9 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
     private static class Config {
         private static final String ENV_PATH = ".env.json";
+        private static final String DOTENV_PERMISSIONS = "rw-------";
+        private static final String DOTENV_OWNER = "root";
+        private static final String DOTENV_GROUP = "root";
         private static Map<String, String> values = new HashMap<>();
 
         static {
@@ -321,10 +330,23 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             }
 
             boolean updated = false;
-            updated |= computeIfAbsentOrBlank(values, "DATABASE_USER", () -> System.getenv("USER"));
+            updated |= computeIfAbsentOrBlank(values, "DATABASE_USER",
+                    () -> {
+                        String sudoUser = System.getenv("SUDO_USER");
+                        if (sudoUser == null || sudoUser.isBlank()) {
+                            return System.getenv("USER");
+                        } else if ("root".equals(sudoUser)) {
+                            return System.getenv("USER");
+                        } else {
+                            return sudoUser;
+                        }
+                    });
             updated |= computeIfAbsentOrBlank(values, "DATABASE_PASSWORD", () -> generatePassword(10));
             if (updated) {
                 mapper.writeValue(envFile, values);
+            }
+            if (!isEnvPermissionsSecure(envFile)) {
+                setEnvPermissionsOwner(envFile);
             }
         }
 
@@ -334,6 +356,34 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
         static String getDatabasePassword() {
             return values.get("DATABASE_PASSWORD");
+        }
+
+        private static boolean isEnvPermissionsSecure(File envFile) throws IOException {
+            Path envPath = envFile.toPath();
+            Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(envPath);
+
+            String permString = PosixFilePermissions.toString(permissions);
+            boolean permsOk = DOTENV_PERMISSIONS.equals(permString);
+
+            UserPrincipal owner = Files.getOwner(envPath);
+            boolean ownerOk = DOTENV_OWNER.equals(owner.getName());
+
+            PosixFileAttributes attrs = Files.readAttributes(envPath, PosixFileAttributes.class);
+            boolean groupOk = DOTENV_GROUP.equals(attrs.group().getName());
+
+            return permsOk && ownerOk && groupOk;
+
+        }
+
+        private static void setEnvPermissionsOwner(File envFile) throws IOException {
+            Path filePath = envFile.toPath();
+            Files.setPosixFilePermissions(filePath, PosixFilePermissions.fromString(DOTENV_PERMISSIONS));
+            UserPrincipalLookupService lookupService = FileSystems.getDefault().getUserPrincipalLookupService();
+            UserPrincipal userPrincipal = lookupService.lookupPrincipalByName(DOTENV_OWNER);
+            GroupPrincipal groupPrincipal = lookupService.lookupPrincipalByGroupName(DOTENV_GROUP);
+
+            Files.setAttribute(filePath, "posix:owner", userPrincipal, LinkOption.NOFOLLOW_LINKS);
+            Files.setAttribute(filePath, "posix:group", groupPrincipal, LinkOption.NOFOLLOW_LINKS);
         }
     }
 
