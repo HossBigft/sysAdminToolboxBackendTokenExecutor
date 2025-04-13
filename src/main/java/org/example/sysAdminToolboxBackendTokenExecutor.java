@@ -12,23 +12,21 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.nio.file.attribute.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 
 @Command(name = "sysadmintoolbox", description = "Executes sudo commands on server", mixinStandardHelpOptions = true)
@@ -41,6 +39,7 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     private static final Pattern DOMAIN_PATTERN = Pattern.compile(
             "^(?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.(?!-)[A-Za-z0-9.-]{2,}$");
 
+
     Predicate<String> isDomain = DOMAIN_PATTERN.asMatchPredicate();
     @Parameters(index = "0", description = "The domain to check.")
     private String domain;
@@ -49,30 +48,6 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     public static void main(String[] args) {
         int exitCode = new CommandLine(new sysAdminToolboxBackendTokenExecutor()).execute(args);
         System.exit(exitCode);
-    }
-
-    private static String generatePassword(int length) {
-
-        PasswordGenerator generator = new PasswordGenerator();
-
-        CharacterRule lowerCaseRule = new CharacterRule(EnglishCharacterData.LowerCase, 1);
-        CharacterRule upperCaseRule = new CharacterRule(EnglishCharacterData.UpperCase, 1);
-        CharacterRule digitRule = new CharacterRule(EnglishCharacterData.Digit, 1);
-
-        CharacterData safeSpecials = new CharacterData() {
-            public String getErrorCode() {
-                return "SHELL_QUOTE_CHARS_PROHIBITED";
-            }
-
-            public String getCharacters() {
-                return "!#$%&()*+,-./:;<=>?@[\\]^_{|}~";
-            }
-        };
-        CharacterRule specialRule = new CharacterRule(safeSpecials, 1);
-
-        List<CharacterRule> rules = Arrays.asList(lowerCaseRule, upperCaseRule, digitRule, specialRule);
-
-        return generator.generatePassword(length, rules);
     }
 
     @Override
@@ -94,55 +69,95 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         return 0;
     }
 
-    private Optional<String> getEmailPassword(String login,
-                                              String mailDomain) throws IOException {
-        String emailPassword = "";
-        if (isDomain.test(mailDomain)) {
-            ProcessBuilder builder = new ProcessBuilder("/usr/local/psa/admin/bin/mail_auth_view");
-            Process process = builder.start();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                List<String> result = reader.lines().filter(line -> line.contains(login + "@" + mailDomain))
-                        .map(line -> line.replaceAll("\\s", "")) // remove all whitespace
-                        .map(line -> {
-                            int index = line.indexOf('|');
-                            return index >= 0 ? line.split("\\|")[3] : "";
-                        }).toList();
-
-                if (!result.isEmpty()) {
-                    emailPassword = result.get(0);
-                }
-            }
-
+    private Optional<List<String>> plesk_fetch_subscription_info_by_domain(String domain) throws
+            CommandFailedException {
+        Optional<List<String>> result = Optional.empty();
+        if (isDomain.test(domain)) {
+            String sqlCMd = buildSqlQuery(domain);
+            result = executeSqlCommand(sqlCMd);
         }
-        return emailPassword.isEmpty() ? Optional.empty() : Optional.of(emailPassword);
+        return result;
     }
 
-    private void createMail(String login,
-                            String mailDomain,
-                            String password,
-                            String description) throws
-            CommandFailedException {
-        if (isDomain.test(mailDomain)) {
-            ProcessBuilder builder = new ProcessBuilder(PLESK_CLI_EXECUTABLE, "bin", "mail", "--create", login, "@",
-                    mailDomain, "-passwd", password, "-mailbox", "true", "-description", description);
-            try {
-                Process process = builder.start();
-                int exitCode = -1;
-                try {
-                    exitCode = process.waitFor();
-                    if (exitCode != 0) {
-                        throw new CommandFailedException("Mail creation failed with exit code " + exitCode);
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new CommandFailedException("Mail creation interrupted with exit code " + exitCode, e);
-                }
-            } catch (IOException e) {
-                throw new CommandFailedException(PLESK_CLI_EXECUTABLE + " is not found");
+    private String buildSqlQuery(String domain) {
+        return """
+                SELECT\s
+                    base.subscription_id AS result,
+                    (SELECT name FROM domains WHERE id = base.subscription_id) AS name,
+                    (SELECT pname FROM clients WHERE id = base.cl_id) AS username,
+                    (SELECT login FROM clients WHERE id = base.cl_id) AS userlogin,
+                    (SELECT GROUP_CONCAT(CONCAT(d2.name, ':', d2.status) SEPARATOR ',')
+                        FROM domains d2\s
+                        WHERE base.subscription_id IN (d2.id, d2.webspace_id)) AS domains,
+                    (SELECT overuse FROM domains WHERE id = base.subscription_id) as is_space_overused,
+                    (SELECT ROUND(real_size/1024/1024) FROM domains WHERE id = base.subscription_id) as subscription_size_mb,
+                    (SELECT status FROM domains WHERE id = base.subscription_id) as subscription_status
+                FROM (
+                    SELECT\s
+                        CASE\s
+                            WHEN webspace_id = 0 THEN id\s
+                            ELSE webspace_id\s
+                        END AS subscription_id,
+                        cl_id,
+                        name
+                    FROM domains\s
+                    WHERE name LIKE '%s'
+                ) AS base;
+                """.formatted(domain);
+    }
+
+    private Optional<List<String>> executeSqlCommand(String cmd) throws CommandFailedException {
+
+        String dbHost = "localhost";
+        String dbName = "psa";
+        String dbUser = Config.getDatabaseUser();
+        String dbPassword = Config.getDatabasePassword();
+        String mysqlCliName = getSqlCliName();
+
+
+        ProcessBuilder pb = new ProcessBuilder(mysqlCliName, "--host", dbHost, "--user=" + dbUser,
+                "--password=" + dbPassword, "--database", dbName, "--batch", "--skip-column-names", "--raw", "-e", cmd);
+
+        try {
+            Process process = pb.start();
+            int exitStatus = process.waitFor();
+
+            if (exitStatus != 0) {
+                throw new CommandFailedException("SQL command execution failed with status " + exitStatus);
             }
 
-        }
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                List<String> lines = reader.lines().toList();
+                return lines.isEmpty() ? Optional.empty() : Optional.of(lines);
+            }
 
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new CommandFailedException("SQL command interrupted", e);
+        } catch (IOException e) {
+            throw new CommandFailedException("SQL cli executable " + mysqlCliName + " is not found.");
+        }
+    }
+
+    private String getSqlCliName() throws CommandFailedException {
+        if (isCommandAvailable("mariadb")) {
+            return "mariadb";
+        } else if (isCommandAvailable("mysql")) {
+            return "mysql";
+        } else {
+            throw new CommandFailedException("Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
+        }
+    }
+
+    private boolean isCommandAvailable(String command) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder("which", command);
+            Process process = pb.start();
+            return process.waitFor() == 0;
+        } catch (IOException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 
     private Optional<ObjectNode> plesk_get_testmail_credentials(String testMailDomain) throws CommandFailedException {
@@ -178,106 +193,78 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         return mailCredentials.isEmpty() ? Optional.empty() : Optional.of(mailCredentials);
     }
 
-    private boolean isCommandAvailable(String command) {
-        try {
-            ProcessBuilder pb = new ProcessBuilder("which", command);
-            Process process = pb.start();
-            return process.waitFor() == 0;
-        } catch (IOException | InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
-        }
-    }
-
-    private String getSqlCliName() throws CommandFailedException {
-        if (isCommandAvailable("mariadb")) {
-            return "mariadb";
-        } else if (isCommandAvailable("mysql")) {
-            return "mysql";
-        } else {
-            throw new CommandFailedException("Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
-        }
-    }
-
-    private String buildSqlQuery(String domain) {
-        return """
-                SELECT\s
-                    base.subscription_id AS result,
-                    (SELECT name FROM domains WHERE id = base.subscription_id) AS name,
-                    (SELECT pname FROM clients WHERE id = base.cl_id) AS username,
-                    (SELECT login FROM clients WHERE id = base.cl_id) AS userlogin,
-                    (SELECT GROUP_CONCAT(CONCAT(d2.name, ':', d2.status) SEPARATOR ',')
-                        FROM domains d2\s
-                        WHERE base.subscription_id IN (d2.id, d2.webspace_id)) AS domains,
-                    (SELECT overuse FROM domains WHERE id = base.subscription_id) as is_space_overused,
-                    (SELECT ROUND(real_size/1024/1024) FROM domains WHERE id = base.subscription_id) as subscription_size_mb,
-                    (SELECT status FROM domains WHERE id = base.subscription_id) as subscription_status
-                FROM (
-                    SELECT\s
-                        CASE\s
-                            WHEN webspace_id = 0 THEN id\s
-                            ELSE webspace_id\s
-                        END AS subscription_id,
-                        cl_id,
-                        name
-                    FROM domains\s
-                    WHERE name LIKE '%s'
-                ) AS base;
-                """.formatted(domain);
-    }
-
-
-    private Optional<List<String>> executeSqlCommand(String cmd)
-            throws CommandFailedException {
-
-        String dbHost = "localhost";
-        String dbName = "psa";
-        String dbUser = Config.getDatabaseUser();
-        String dbPassword = Config.getDatabasePassword();
-        String mysqlCliName = getSqlCliName();
-
-
-        ProcessBuilder pb = new ProcessBuilder(
-                mysqlCliName,
-                "--host", dbHost,
-                "--user=" + dbUser,
-                "--password=" + dbPassword,
-                "--database", dbName,
-                "--batch",
-                "--skip-column-names",
-                "--raw",
-                "-e", cmd
-        );
-
-        try {
-            Process process = pb.start();
-            int exitStatus = process.waitFor();
-
-            if (exitStatus != 0) {
-                throw new CommandFailedException("SQL command execution failed with status " + exitStatus);
-            }
-
+    private Optional<String> getEmailPassword(String login,
+                                              String mailDomain) throws IOException {
+        String emailPassword = "";
+        if (isDomain.test(mailDomain)) {
+            ProcessBuilder builder = new ProcessBuilder("/usr/local/psa/admin/bin/mail_auth_view");
+            Process process = builder.start();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                List<String> lines = reader.lines().toList();
-                return lines.isEmpty() ? Optional.empty() : Optional.of(lines);
+                List<String> result = reader.lines().filter(line -> line.contains(login + "@" + mailDomain))
+                        .map(line -> line.replaceAll("\\s", "")) // remove all whitespace
+                        .map(line -> {
+                            int index = line.indexOf('|');
+                            return index >= 0 ? line.split("\\|")[3] : "";
+                        }).toList();
+
+                if (!result.isEmpty()) {
+                    emailPassword = result.get(0);
+                }
             }
 
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new CommandFailedException("SQL command interrupted", e);
-        } catch (IOException e) {
-            throw new CommandFailedException("SQL cli executable " + mysqlCliName + " is not found.");
         }
+        return emailPassword.isEmpty() ? Optional.empty() : Optional.of(emailPassword);
     }
 
-    private Optional<List<String>> plesk_fetch_subscription_info_by_domain(String domain) throws
-            CommandFailedException {
-        Optional<List<String>> result = Optional.empty();
-        if (isDomain.test(domain)) {
-            String sqlCMd = buildSqlQuery(domain);
-            result = executeSqlCommand(sqlCMd);
+    private static String generatePassword(int length) {
+
+        PasswordGenerator generator = new PasswordGenerator();
+
+        CharacterRule lowerCaseRule = new CharacterRule(EnglishCharacterData.LowerCase, 1);
+        CharacterRule upperCaseRule = new CharacterRule(EnglishCharacterData.UpperCase, 1);
+        CharacterRule digitRule = new CharacterRule(EnglishCharacterData.Digit, 1);
+
+        CharacterData safeSpecials = new CharacterData() {
+            public String getErrorCode() {
+                return "SHELL_QUOTE_CHARS_PROHIBITED";
+            }
+
+            public String getCharacters() {
+                return "!#$%&()*+,-./:;<=>?@[\\]^_{|}~";
+            }
+        };
+        CharacterRule specialRule = new CharacterRule(safeSpecials, 1);
+
+        List<CharacterRule> rules = Arrays.asList(lowerCaseRule, upperCaseRule, digitRule, specialRule);
+
+        return generator.generatePassword(length, rules);
+    }
+
+    private void createMail(String login,
+                            String mailDomain,
+                            String password,
+                            String description) throws CommandFailedException {
+        if (isDomain.test(mailDomain)) {
+            ProcessBuilder builder = new ProcessBuilder(PLESK_CLI_EXECUTABLE, "bin", "mail", "--create", login, "@",
+                    mailDomain, "-passwd", password, "-mailbox", "true", "-description", description);
+            try {
+                Process process = builder.start();
+                int exitCode = -1;
+                try {
+                    exitCode = process.waitFor();
+                    if (exitCode != 0) {
+                        throw new CommandFailedException("Mail creation failed with exit code " + exitCode);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new CommandFailedException("Mail creation interrupted with exit code " + exitCode, e);
+                }
+            } catch (IOException e) {
+                throw new CommandFailedException(PLESK_CLI_EXECUTABLE + " is not found");
+            }
+
         }
-        return result;
+
     }
 
     private static class CommandFailedException extends Exception {
@@ -296,6 +283,7 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         private static final String DOTENV_PERMISSIONS = "rw-------";
         private static final String DOTENV_OWNER = "root";
         private static final String DOTENV_GROUP = "root";
+        private static final int DB_USER_PASSWORD_LENGTH = 15;
         private static Map<String, String> values = new HashMap<>();
 
         static {
@@ -304,6 +292,31 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             } catch (IOException e) {
                 throw new RuntimeException("Failed to load config", e);
             }
+        }
+
+        private static void loadConfig() throws IOException {
+            File envFile = new File(ENV_PATH);
+            ObjectMapper mapper = new ObjectMapper();
+
+            try {
+                values = mapper.readValue(envFile, new TypeReference<Map<String, String>>() {
+                });
+            } catch (IOException e) {
+                values = new HashMap<>();
+            }
+
+            boolean updated = false;
+            updated |= computeIfAbsentOrBlank(values, "DATABASE_USER", Config::resolveUser);
+            updated |= computeIfAbsentOrBlank(values, "DATABASE_PASSWORD",
+                    () -> generatePassword(DB_USER_PASSWORD_LENGTH));
+            if (updated) {
+                updateDotEnv();
+            }
+            if (!isEnvPermissionsSecure(envFile)) {
+                setEnvPermissionsOwner(envFile);
+            }
+            DatabaseSetup.ensureDatabaseSetup();
+
         }
 
         private static boolean computeIfAbsentOrBlank(Map<String, String> map,
@@ -317,45 +330,17 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             return false;
         }
 
-        private static void loadConfig() throws IOException {
+        public static String resolveUser() {
+            return Stream.of(getSudoUser(), getSystemUser(), getUserFromPath()).flatMap(Optional::stream)
+                    .filter(Config::isValidUser).findFirst().orElseThrow(
+                            () -> new IllegalStateException("Could not determine valid user for running executable."));
+        }
+
+        private static void updateDotEnv() throws IOException {
             ObjectMapper mapper = new ObjectMapper();
             mapper.enable(SerializationFeature.INDENT_OUTPUT);
             File envFile = new File(ENV_PATH);
-
-            try {
-                values = mapper.readValue(envFile, new TypeReference<Map<String, String>>() {
-                });
-            } catch (IOException e) {
-                values = new HashMap<>();
-            }
-
-            boolean updated = false;
-            updated |= computeIfAbsentOrBlank(values, "DATABASE_USER",
-                    () -> {
-                        String sudoUser = System.getenv("SUDO_USER");
-                        if (sudoUser == null || sudoUser.isBlank()) {
-                            return System.getenv("USER");
-                        } else if ("root".equals(sudoUser)) {
-                            return System.getenv("USER");
-                        } else {
-                            return sudoUser;
-                        }
-                    });
-            updated |= computeIfAbsentOrBlank(values, "DATABASE_PASSWORD", () -> generatePassword(10));
-            if (updated) {
-                mapper.writeValue(envFile, values);
-            }
-            if (!isEnvPermissionsSecure(envFile)) {
-                setEnvPermissionsOwner(envFile);
-            }
-        }
-
-        static String getDatabaseUser() {
-            return values.get("DATABASE_USER");
-        }
-
-        static String getDatabasePassword() {
-            return values.get("DATABASE_PASSWORD");
+            mapper.writeValue(envFile, values);
         }
 
         private static boolean isEnvPermissionsSecure(File envFile) throws IOException {
@@ -385,7 +370,268 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             Files.setAttribute(filePath, "posix:owner", userPrincipal, LinkOption.NOFOLLOW_LINKS);
             Files.setAttribute(filePath, "posix:group", groupPrincipal, LinkOption.NOFOLLOW_LINKS);
         }
+
+        private static Optional<String> getSudoUser() {
+            return Optional.ofNullable(System.getenv("SUDO_USER"));
+        }
+
+        private static Optional<String> getSystemUser() {
+            String systemUser = System.getProperty("user.name");
+            return Optional.ofNullable(systemUser);
+        }
+
+        private static Optional<String> getUserFromPath() {
+            String cwd = System.getProperty("user.dir");
+            if (cwd == null) return Optional.empty();
+
+            Path path = Paths.get(cwd).toAbsolutePath();
+            for (int i = 0; i < path.getNameCount() - 1; i++) {
+                if ("home".equals(path.getName(i).toString())) {
+                    String username = path.getName(i + 1).toString();
+                    return Optional.of(username);
+                }
+            }
+            return Optional.empty();
+        }
+
+        private static boolean isValidUser(String user) {
+            return !"root".equals(user);
+        }
+
+        static String getDatabaseUser() {
+            return values.get("DATABASE_USER");
+        }
+
+        static String getDatabasePassword() {
+            return values.get("DATABASE_PASSWORD");
+        }
+
+        private static class DatabaseSetup {
+            static final String DB_URL = "jdbc:mysql://localhost:3306";
+            static final String ADMIN_USER = "root";
+
+            private static void ensureDatabaseSetup() {
+                try {
+                    ensureDatabaseUser();
+                    ensureUserIsReadOnly();
+                } catch (Exception e) {
+                    System.err.println("Database setup failed: " + e.getMessage());
+                }
+            }
+
+            private static void ensureUserIsReadOnly() {
+                if (!isDbUserReadOnly()) {
+                    setReadOnly();
+                } else {
+                    System.out.printf("User %s is already read-only.%n", getDatabaseUser());
+                }
+            }
+
+            private static boolean isDbUserReadOnly() {
+                try {
+                    ProcessBuilder pb = new ProcessBuilder(getSqlCliName(), "-u", ADMIN_USER, "--skip-column-names",
+                            "-e", String.format("SHOW GRANTS FOR '%s'@'localhost'", getDatabaseUser()));
+
+                    Process process = pb.start();
+                    String output = readProcessOutput(process.getInputStream());
+                    String error = readProcessOutput(process.getErrorStream());
+
+                    int exitCode = process.waitFor();
+                    if (exitCode != 0) {
+                        System.err.println("Failed to check user permissions: " + error);
+                        return false;
+                    }
+
+                    boolean hasOnlySelectPrivileges = true;
+                    for (String line : output.split("\n")) {
+                        line = line.toUpperCase();
+                        if (!line.contains("SHOW GRANTS") && !line.contains("GRANTS FOR")) {
+                            if (!line.contains("SELECT")) {
+                                hasOnlySelectPrivileges = false;
+                                break;
+                            }
+
+                            if (line.matches(
+                                    ".*\\b(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|INDEX|EXECUTE|ALL PRIVILEGES)\\b.*")) {
+                                hasOnlySelectPrivileges = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    return hasOnlySelectPrivileges;
+                } catch (Exception e) {
+                    System.err.println("Error checking user permissions: " + e.getMessage());
+                    return false;
+                }
+            }
+
+            private static void ensureDatabaseUser() throws IOException {
+                if (!isDbUserExists()) {
+                    createUser();
+                    System.out.printf("Created database user %s.%n", getDatabaseUser());
+                } else {
+                    System.out.printf("Database user %s already exists.%n", getDatabaseUser());
+                    if (!isDbUserAbleToConnect()) {
+                        regenerateDbUserPassword();
+                        setDbUserPassword();
+                        updateDotEnv();
+                        System.out.printf("Updated password for user %s.%n", getDatabaseUser());
+                    }
+                }
+            }
+
+            private static void regenerateDbUserPassword() {
+                values.put("DATABASE_PASSWORD", generatePassword(DB_USER_PASSWORD_LENGTH));
+            }
+
+            private static void setDbUserPassword() {
+                if (getDatabaseUser().equalsIgnoreCase(ADMIN_USER)) {
+                    System.err.println(
+                            "WARNING: Refusing to modify the root user. Please configure a different database user.");
+                    return;
+                }
+                try {
+                    ProcessBuilder pb = new ProcessBuilder(getSqlCliName(), "-u", ADMIN_USER, "-e",
+                            String.format("ALTER USER '%s'@'localhost' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;",
+                                    getDatabaseUser(), getDatabasePassword()));
+
+                    Process process = pb.start();
+                    String error = readProcessOutput(process.getErrorStream());
+                    int exitCode = process.waitFor();
+
+                    if (exitCode != 0) {
+                        System.err.println("Failed to update user password: " + error);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error updating user password: " + e.getMessage());
+                }
+            }
+
+            private static boolean isDbUserAbleToConnect() {
+                try (Connection conn = DriverManager.getConnection(DB_URL, getDatabaseUser(), getDatabasePassword())) {
+                    return true;
+                } catch (SQLException e) {
+                    System.err.println("User unable to connect: " + e.getMessage());
+                    return false;
+                }
+            }
+
+            private static boolean isDbUserExists() {
+                try {
+                    ProcessBuilder pb = new ProcessBuilder(getSqlCliName(), "-u", ADMIN_USER, "--skip-column-names",
+                            "-e",
+                            String.format("SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '%s') AS user_exists;",
+                                    getDatabaseUser()));
+
+                    Process process = pb.start();
+                    String output = readProcessOutput(process.getInputStream());
+                    String error = readProcessOutput(process.getErrorStream());
+
+                    int exitCode = process.waitFor();
+                    if (exitCode != 0) {
+                        System.err.println("Failed to check if user exists: " + error);
+                        return false;
+                    }
+
+                    for (String line : output.split("\n")) {
+                        if (line.trim().equals("1")) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                } catch (Exception e) {
+                    System.err.println("Error checking if user exists: " + e.getMessage());
+                    return false;
+                }
+            }
+
+            private static void createUser() {
+                if (getDatabaseUser().equalsIgnoreCase(ADMIN_USER)) {
+                    System.err.println(
+                            "WARNING: Refusing to modify the root user. Please configure a different database user.");
+                    return;
+                }
+                try {
+                    ProcessBuilder pb = new ProcessBuilder(getSqlCliName(), "-u", ADMIN_USER, "-e",
+                            String.format("CREATE USER '%s'@'localhost' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;",
+                                    getDatabaseUser(), getDatabasePassword()));
+
+                    Process process = pb.start();
+                    String error = readProcessOutput(process.getErrorStream());
+                    int exitCode = process.waitFor();
+
+                    if (exitCode != 0) {
+                        System.err.println("Failed to create user: " + error);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error creating user: " + e.getMessage());
+                }
+            }
+
+            private static void setReadOnly() {
+                if (getDatabaseUser().equalsIgnoreCase(ADMIN_USER)) {
+                    System.err.println(
+                            "WARNING: Refusing to modify the root user. Please configure a different database user.");
+                    return;
+                }
+                try {
+                    String commands = String.format(
+                            "REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s'@'localhost'; " + "GRANT SELECT ON *.* TO '%s'@'localhost'; " + "FLUSH PRIVILEGES;",
+                            getDatabaseUser(), getDatabaseUser());
+
+                    ProcessBuilder pb = new ProcessBuilder(getSqlCliName(), "-u", ADMIN_USER, "-e", commands);
+
+                    Process process = pb.start();
+                    String error = readProcessOutput(process.getErrorStream());
+                    int exitCode = process.waitFor();
+
+                    if (exitCode != 0) {
+                        System.err.println("Failed to set user as read-only: " + error);
+                    } else {
+                        System.out.printf("Set user %s to read-only.%n", getDatabaseUser());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error setting user as read-only: " + e.getMessage());
+                }
+            }
+
+            private static String readProcessOutput(InputStream inputStream) throws IOException {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                    StringBuilder output = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line).append("\n");
+                    }
+                    return output.toString();
+                }
+            }
+
+
+            private static String getSqlCliName() throws CommandFailedException {
+                if (isCommandAvailable("mariadb")) {
+                    return "mariadb";
+                } else if (isCommandAvailable("mysql")) {
+                    return "mysql";
+                } else {
+                    System.err.println("Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
+                    throw new CommandFailedException(
+                            "Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
+                }
+            }
+
+
+            private static boolean isCommandAvailable(String command) {
+                try {
+                    ProcessBuilder pb = new ProcessBuilder("which", command);
+                    Process process = pb.start();
+                    return process.waitFor() == 0;
+                } catch (IOException | InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
+        }
     }
-
-
 }
