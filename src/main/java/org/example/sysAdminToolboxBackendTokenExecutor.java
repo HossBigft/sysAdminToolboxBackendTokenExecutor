@@ -18,9 +18,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
@@ -63,7 +61,7 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             System.out.println("Test mail creation failed with " + e);
             return 1;
         }
-        mailCredentials.ifPresentOrElse(System.out::println,
+        mailCredentials.ifPresentOrElse(creds -> System.out.println(String.join("", creds)),
                 () -> System.out.println("Email for " + domain + " was not found"));
 
         return 0;
@@ -73,13 +71,82 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             CommandFailedException {
         Optional<List<String>> result = Optional.empty();
         if (isDomain.test(domain)) {
-            String sqlCMd = buildSqlQuery(domain);
-            result = executeSqlCommand(sqlCMd);
+            try {
+                result = executeSqlQueryJDBC(prepareSubscriptionInfoStatement(domain));
+            } catch (SQLException e) {
+                System.out.println("Subscription info fetch failed with " + e);
+            }
         }
         return result;
     }
 
-    private String buildSqlQuery(String domain) {
+    private Optional<List<String>> executeSqlQueryJDBC(PreparedStatement stmt) throws CommandFailedException {
+
+        try (ResultSet rs = stmt.executeQuery()) {
+            ResultSetMetaData meta = rs.getMetaData();
+            int columnCount = meta.getColumnCount();
+            List<String> results = new ArrayList<>();
+
+            while (rs.next()) {
+                StringBuilder row = new StringBuilder();
+                for (int i = 1; i <= columnCount; i++) {
+                    if (i > 1) row.append("\t");
+                    row.append(rs.getString(i));
+                }
+                results.add(row.toString());
+            }
+
+            return results.isEmpty() ? Optional.empty() : Optional.of(results);
+        } catch (SQLException e) {
+            throw new CommandFailedException("SQL command execution failed: " + e.getMessage(), e);
+        }
+    }
+
+    private PreparedStatement prepareSubscriptionInfoStatement(String domain) throws SQLException {
+        Connection connection = getConnection();
+        PreparedStatement stmt = connection.prepareStatement(buildSqlQuery());
+        stmt.setString(1, domain);
+        return stmt;
+    }
+
+    private Connection getConnection() throws SQLException {
+        String dbHost = "localhost";
+        String dbName = "psa";
+        String dbUser = Config.getDatabaseUser();
+        String dbPassword = Config.getDatabasePassword();
+
+        String dbUrl = String.format("jdbc:mysql://%s/%s", dbHost, dbName);
+        return DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+    }
+
+    private String buildSqlQuery() {
+        return """
+                SELECT
+                    base.subscription_id AS result,
+                    (SELECT name FROM domains WHERE id = base.subscription_id) AS name,
+                    (SELECT pname FROM clients WHERE id = base.cl_id) AS username,
+                    (SELECT login FROM clients WHERE id = base.cl_id) AS userlogin,
+                    (SELECT GROUP_CONCAT(CONCAT(d2.name, ':', d2.status) SEPARATOR ',')
+                        FROM domains d2
+                        WHERE base.subscription_id IN (d2.id, d2.webspace_id)) AS domains,
+                    (SELECT overuse FROM domains WHERE id = base.subscription_id) as is_space_overused,
+                    (SELECT ROUND(real_size/1024/1024) FROM domains WHERE id = base.subscription_id) as subscription_size_mb,
+                    (SELECT status FROM domains WHERE id = base.subscription_id) as subscription_status
+                FROM (
+                    SELECT
+                        CASE
+                            WHEN webspace_id = 0 THEN id
+                            ELSE webspace_id
+                        END AS subscription_id,
+                        cl_id,
+                        name
+                    FROM domains
+                    WHERE name LIKE ?
+                ) AS base;
+                """;
+    }
+
+    private String buildSqlQueryCLI(String domain) {
         return """
                 SELECT\s
                     base.subscription_id AS result,
@@ -106,7 +173,7 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
                 """.formatted(domain);
     }
 
-    private Optional<List<String>> executeSqlCommand(String cmd) throws CommandFailedException {
+    private Optional<List<String>> executeSqlCommandCLI(String cmd) throws CommandFailedException {
 
         String dbHost = "localhost";
         String dbName = "psa";
@@ -159,6 +226,7 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             return false;
         }
     }
+
 
     private Optional<ObjectNode> plesk_get_testmail_credentials(String testMailDomain) throws CommandFailedException {
         ObjectMapper om = new ObjectMapper();
