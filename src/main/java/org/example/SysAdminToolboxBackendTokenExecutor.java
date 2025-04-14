@@ -61,7 +61,8 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         return 0;
     }
 
-    private Optional<List<String>> plesk_fetch_subscription_info_by_domain(String domain) throws CommandFailedException {
+    private Optional<List<String>> plesk_fetch_subscription_info_by_domain(String domain) throws
+            CommandFailedException {
         Optional<List<String>> result = Optional.empty();
         if (isDomain.test(domain)) {
             try {
@@ -167,15 +168,13 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     }
 
     private Optional<List<String>> executeSqlCommandCLI(String cmd) throws CommandFailedException {
-
         String dbHost = "localhost";
         String dbName = "psa";
         String dbUser = Config.getDatabaseUser();
         String dbPassword = Config.getDatabasePassword();
         String mysqlCliName = getSqlCliName();
 
-
-        ProcessBuilder pb = new ProcessBuilder(mysqlCliName,
+        List<String> lines = runCommand(mysqlCliName,
                 "--host",
                 dbHost,
                 "--user=" + dbUser,
@@ -187,26 +186,8 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
                 "--raw",
                 "-e",
                 cmd);
+        return lines.isEmpty() ? Optional.empty() : Optional.of(lines);
 
-        try {
-            Process process = pb.start();
-            int exitStatus = process.waitFor();
-
-            if (exitStatus != 0) {
-                throw new CommandFailedException("SQL command execution failed with status " + exitStatus);
-            }
-
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                List<String> lines = reader.lines().toList();
-                return lines.isEmpty() ? Optional.empty() : Optional.of(lines);
-            }
-
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new CommandFailedException("SQL command interrupted", e);
-        } catch (IOException e) {
-            throw new CommandFailedException("SQL cli executable " + mysqlCliName + " is not found.");
-        }
     }
 
     private String getSqlCliName() throws CommandFailedException {
@@ -219,17 +200,31 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         }
     }
 
-    private boolean isCommandAvailable(String command) {
+    private List<String> runCommand(String... args) throws CommandFailedException {
         try {
-            ProcessBuilder pb = new ProcessBuilder("which", command);
-            Process process = pb.start();
-            return process.waitFor() == 0;
+            Process process = new ProcessBuilder(args).start();
+            int exitCode = process.waitFor();
+
+            if (exitCode != 0) {
+                throw new CommandFailedException("Command failed: " + String.join(" ", args));
+            }
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                return reader.lines().toList();
+            }
         } catch (IOException | InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
+            throw new CommandFailedException("Command execution failed", e);
         }
     }
 
+    private boolean isCommandAvailable(String command) {
+        try {
+            runCommand("which", command);
+        } catch (CommandFailedException e) {
+            return false;
+        }
+        return true;
+    }
 
     private Optional<ObjectNode> plesk_get_testmail_credentials(String testMailDomain) throws CommandFailedException {
         ObjectMapper om = new ObjectMapper();
@@ -261,23 +256,24 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         return mailCredentials.isEmpty() ? Optional.empty() : Optional.of(mailCredentials);
     }
 
-    private Optional<String> getEmailPassword(String login, String mailDomain) throws CommandFailedException {
+    private Optional<String> getEmailPassword(String login,
+                                              String mailDomain) throws CommandFailedException {
         String emailPassword = "";
         if (isDomain.test(mailDomain)) {
-            List<String> result= runCommand("/usr/local/psa/admin/bin/mail_auth_view");
+            List<String> result = runCommand(PLESK_CLI_GET_MAIL_USERS_CREDENTIALS);
 
-                 result= result.stream()
-                        .filter(line -> line.contains(login + "@" + mailDomain))
-                        .map(line -> line.replaceAll("\\s", "")) // remove all whitespace
-                        .map(line -> {
-                            int index = line.indexOf('|');
-                            return index >= 0 ? line.split("\\|")[3] : "";
-                        })
-                        .toList();
+            result = result.stream()
+                    .filter(line -> line.contains(login + "@" + mailDomain))
+                    .map(line -> line.replaceAll("\\s", "")) // remove all whitespace
+                    .map(line -> {
+                        int index = line.indexOf('|');
+                        return index >= 0 ? line.split("\\|")[3] : "";
+                    })
+                    .toList();
 
-                if (!result.isEmpty()) {
-                    emailPassword = result.get(0);
-                }
+            if (!result.isEmpty()) {
+                emailPassword = result.get(0);
+            }
 
         }
         return emailPassword.isEmpty() ? Optional.empty() : Optional.of(emailPassword);
@@ -305,29 +301,13 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
     }
 
-    private List<String> runCommand(String... args) throws CommandFailedException {
-        try {
-            Process process = new ProcessBuilder(args).start();
-            int exitCode = process.waitFor();
-
-            if (exitCode != 0) {
-                throw new CommandFailedException("Command failed: " + String.join(" ", args));
-            }
-
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                return reader.lines().toList();
-            }
-        } catch (IOException | InterruptedException e) {
-            throw new CommandFailedException("Command execution failed", e);
-        }
-    }
-
     static class CommandFailedException extends Exception {
         public CommandFailedException(String message) {
             super(message);
         }
 
-        public CommandFailedException(String message, Throwable cause) {
+        public CommandFailedException(String message,
+                                      Throwable cause) {
             super(message, cause);
         }
     }
