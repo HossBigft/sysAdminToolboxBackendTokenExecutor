@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 
 
 @Command(name = "sysadmintoolbox", description = "Executes sudo commands on server", mixinStandardHelpOptions = true)
-public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
+public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     private static final String TEST_MAIL_LOGIN = "testsupportmail";
     private static final String TEST_MAIL_DESCRIPTION = "throwaway mail for troubleshooting purposes. You may delete it at will.";
     private static final int TEST_MAIL_PASSWORD_LENGTH = 15;
@@ -38,7 +38,7 @@ public class sysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
 
     public static void main(String[] args) {
-        int exitCode = new CommandLine(new sysAdminToolboxBackendTokenExecutor()).execute(args);
+        int exitCode = new CommandLine(new SysAdminToolboxBackendTokenExecutor()).execute(args);
         System.exit(exitCode);
     }
 

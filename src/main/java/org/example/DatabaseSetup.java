@@ -212,14 +212,14 @@ public class DatabaseSetup {
         }
     }
 
-    static String getSqlCliName() throws sysAdminToolboxBackendTokenExecutor.CommandFailedException {
+    static String getSqlCliName() throws SysAdminToolboxBackendTokenExecutor.CommandFailedException {
         if (isCommandAvailable("mariadb")) {
             return "mariadb";
         } else if (isCommandAvailable("mysql")) {
             return "mysql";
         } else {
             System.err.println("Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
-            throw new sysAdminToolboxBackendTokenExecutor.CommandFailedException(
+            throw new SysAdminToolboxBackendTokenExecutor.CommandFailedException(
                     "Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
         }
     }
