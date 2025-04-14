@@ -240,11 +240,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
                     TEST_MAIL_LOGIN + "@" + domain,
                     StandardCharsets.UTF_8));
             Optional<String> existing_password = Optional.empty();
-            try {
-                existing_password = getEmailPassword(TEST_MAIL_LOGIN, testMailDomain);
-            } catch (IOException e) {
-                System.out.println(PLESK_CLI_GET_MAIL_USERS_CREDENTIALS + " is not found");
-            }
+            existing_password = getEmailPassword(TEST_MAIL_LOGIN, testMailDomain);
             if (existing_password.isPresent()) {
                 password = existing_password.get();
             } else {
@@ -265,13 +261,12 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         return mailCredentials.isEmpty() ? Optional.empty() : Optional.of(mailCredentials);
     }
 
-    private Optional<String> getEmailPassword(String login, String mailDomain) throws IOException {
+    private Optional<String> getEmailPassword(String login, String mailDomain) throws CommandFailedException {
         String emailPassword = "";
         if (isDomain.test(mailDomain)) {
-            ProcessBuilder builder = new ProcessBuilder("/usr/local/psa/admin/bin/mail_auth_view");
-            Process process = builder.start();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                List<String> result = reader.lines()
+            List<String> result= runCommand("/usr/local/psa/admin/bin/mail_auth_view");
+
+                 result= result.stream()
                         .filter(line -> line.contains(login + "@" + mailDomain))
                         .map(line -> line.replaceAll("\\s", "")) // remove all whitespace
                         .map(line -> {
@@ -283,7 +278,6 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
                 if (!result.isEmpty()) {
                     emailPassword = result.get(0);
                 }
-            }
 
         }
         return emailPassword.isEmpty() ? Optional.empty() : Optional.of(emailPassword);
@@ -294,7 +288,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
                             String password,
                             String description) throws CommandFailedException {
         if (isDomain.test(mailDomain)) {
-            ProcessBuilder builder = new ProcessBuilder(PLESK_CLI_EXECUTABLE,
+            runCommand(PLESK_CLI_EXECUTABLE,
                     "bin",
                     "mail",
                     "--create",
@@ -307,24 +301,25 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
                     "true",
                     "-description",
                     description);
-            try {
-                Process process = builder.start();
-                int exitCode = -1;
-                try {
-                    exitCode = process.waitFor();
-                    if (exitCode != 0) {
-                        throw new CommandFailedException("Mail creation failed with exit code " + exitCode);
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new CommandFailedException("Mail creation interrupted with exit code " + exitCode, e);
-                }
-            } catch (IOException e) {
-                throw new CommandFailedException(PLESK_CLI_EXECUTABLE + " is not found");
-            }
-
         }
 
+    }
+
+    private List<String> runCommand(String... args) throws CommandFailedException {
+        try {
+            Process process = new ProcessBuilder(args).start();
+            int exitCode = process.waitFor();
+
+            if (exitCode != 0) {
+                throw new CommandFailedException("Command failed: " + String.join(" ", args));
+            }
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                return reader.lines().toList();
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new CommandFailedException("Command execution failed", e);
+        }
     }
 
     static class CommandFailedException extends Exception {
