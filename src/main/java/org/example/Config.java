@@ -14,8 +14,6 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static org.example.sysAdminToolboxBackendTokenExecutor.generatePassword;
-
 class Config {
     private static final String ENV_PATH = ".env.json";
     private static final String DOTENV_PERMISSIONS = "rw-------";
@@ -46,7 +44,7 @@ class Config {
         boolean updated = false;
         updated |= computeIfAbsentOrBlank(values, "DATABASE_USER", Config::resolveUser);
         updated |= computeIfAbsentOrBlank(values, "DATABASE_PASSWORD",
-                () -> generatePassword(DB_USER_PASSWORD_LENGTH));
+                () -> Utils.generatePassword(DB_USER_PASSWORD_LENGTH));
         if (updated) {
             updateDotEnv();
         }

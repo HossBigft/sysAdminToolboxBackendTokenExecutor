@@ -8,8 +8,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import static org.example.sysAdminToolboxBackendTokenExecutor.generatePassword;
-
 public class DatabaseSetup {
     static final String DB_URL = "jdbc:mysql://localhost:3306";
     static final String ADMIN_USER = "root";
@@ -87,7 +85,7 @@ public class DatabaseSetup {
 
     static void regenerateDbUserPassword() {
         Config.values.put("DATABASE_PASSWORD",
-                generatePassword(Config.DB_USER_PASSWORD_LENGTH));
+                Utils.generatePassword(Config.DB_USER_PASSWORD_LENGTH));
     }
 
     static void setDbUserPassword() {
