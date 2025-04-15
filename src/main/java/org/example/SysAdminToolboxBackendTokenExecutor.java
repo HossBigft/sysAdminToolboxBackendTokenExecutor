@@ -14,9 +14,12 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -203,17 +206,46 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     private List<String> runCommand(String... args) throws CommandFailedException {
         try {
             Process process = new ProcessBuilder(args).start();
-            int exitCode = process.waitFor();
 
-            if (exitCode != 0) {
-                throw new CommandFailedException("Command failed: " + String.join(" ", args));
-            }
 
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                return reader.lines().toList();
+            List<String> outputLines = new ArrayList<>();
+            StringBuilder errorBuilder = new StringBuilder();
+
+            try (
+                    BufferedReader stdOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                    BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()))
+            ) {
+                CompletableFuture<Void> outputFuture = CompletableFuture.runAsync(() ->
+                        stdOutput.lines().forEach(outputLines::add));
+
+                CompletableFuture<Void> errorFuture = CompletableFuture.runAsync(() ->
+                        stdError.lines().forEach(line -> errorBuilder.append(line).append("\n")));
+
+                boolean completed = process.waitFor(30, TimeUnit.SECONDS);
+                if (!completed) {
+                    process.destroyForcibly();
+                    throw new CommandFailedException("Command execution timed out: " + String.join(" ", args));
+                }
+
+
+                CompletableFuture.allOf(outputFuture, errorFuture).join();
+
+                int exitCode = process.exitValue();
+                if (exitCode != 0) {
+                    String errorOutput = errorBuilder.toString().trim();
+                    throw new CommandFailedException(
+                            String.format("Command failed with exit code %d: %s\nCommand: %s",
+                                    exitCode, errorOutput, String.join(" ", args))
+                    );
+                }
+
+                return Collections.unmodifiableList(outputLines);
             }
-        } catch (IOException | InterruptedException e) {
-            throw new CommandFailedException("Command execution failed", e);
+        } catch (IOException e) {
+            throw new CommandFailedException("Failed to execute command: " + String.join(" ", args), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Restore interrupted status
+            throw new CommandFailedException("Command execution was interrupted: " + String.join(" ", args), e);
         }
     }
 
