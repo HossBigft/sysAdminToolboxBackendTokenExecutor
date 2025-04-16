@@ -9,7 +9,7 @@ import picocli.CommandLine.Parameters;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.sql.*;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -62,7 +62,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         Optional<List<String>> result = Optional.empty();
         if (isDomain.test(domain)) {
             try {
-                result = Utils.executeSqlQueryJDBC(Utils.prepareSubscriptionInfoStatement(domain));
+                result = Utils.executeSqlQueryJDBC(Utils.prepareFetchSubscriptionInfoSql(domain));
             } catch (SQLException e) {
                 System.out.println("Subscription info fetch failed with " + e);
             }
