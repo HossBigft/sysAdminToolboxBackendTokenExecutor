@@ -20,7 +20,9 @@ import java.util.regex.Pattern;
 @Command(name = "sysadmintoolbox", description = "Executes sudo commands on server", mixinStandardHelpOptions = true)
 public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     private static final String TEST_MAIL_LOGIN = "testsupportmail";
-    private static final String TEST_MAIL_DESCRIPTION = "throwaway mail for troubleshooting purposes. You may delete it at will.";
+    private static final String
+            TEST_MAIL_DESCRIPTION =
+            "throwaway mail for troubleshooting purposes. You may delete it at will.";
     private static final int TEST_MAIL_PASSWORD_LENGTH = 15;
     private static final String PLESK_CLI_EXECUTABLE = "/usr/sbin/plesk";
     private static final String PLESK_CLI_GET_MAIL_USERS_CREDENTIALS = "/usr/local/psa/admin/bin/mail_auth_view";
@@ -47,7 +49,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         Optional<List<String>> mailCredentials;
         try {
             mailCredentials = plesk_fetch_subscription_info_by_domain(domain);
-        } catch (Utils.CommandFailedException e) {
+        } catch (ShellUtils.CommandFailedException e) {
             System.out.println("Test mail creation failed with " + e);
             return 1;
         }
@@ -58,11 +60,11 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     }
 
     private Optional<List<String>> plesk_fetch_subscription_info_by_domain(String domain) throws
-            Utils.CommandFailedException {
+            ShellUtils.CommandFailedException {
         Optional<List<String>> result = Optional.empty();
         if (isDomain.test(domain)) {
             try {
-                result = Utils.executeSqlQueryJDBC(Utils.prepareFetchSubscriptionInfoSql(domain));
+                result = DbUtils.executeSqlQueryJDBC(DbUtils.prepareFetchSubscriptionInfoSql(domain));
             } catch (SQLException e) {
                 System.out.println("Subscription info fetch failed with " + e);
             }
@@ -71,7 +73,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     }
 
     private Optional<ObjectNode> plesk_get_testmail_credentials(String testMailDomain) throws
-            Utils.CommandFailedException {
+            ShellUtils.CommandFailedException {
         ObjectMapper om = new ObjectMapper();
         ObjectNode mailCredentials = om.createObjectNode();
         if (isDomain.test(testMailDomain)) {
@@ -87,9 +89,9 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
                 password = Utils.generatePassword(TEST_MAIL_PASSWORD_LENGTH);
                 try {
                     createMail(TEST_MAIL_LOGIN, domain, password, TEST_MAIL_DESCRIPTION);
-                } catch (Utils.CommandFailedException e) {
+                } catch (ShellUtils.CommandFailedException e) {
                     System.err.println("Email creation for " + domain + " failed with " + e);
-                    throw new Utils.CommandFailedException("Email creation for " + domain + " failed with " + e);
+                    throw new ShellUtils.CommandFailedException("Email creation for " + domain + " failed with " + e);
                 }
             }
             mailCredentials.put("email", TEST_MAIL_LOGIN + "@" + testMailDomain);
@@ -102,10 +104,10 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     }
 
     private Optional<String> getEmailPassword(String login,
-                                              String mailDomain) throws Utils.CommandFailedException {
+                                              String mailDomain) throws ShellUtils.CommandFailedException {
         String emailPassword = "";
         if (isDomain.test(mailDomain)) {
-            List<String> result = Utils.runCommand(PLESK_CLI_GET_MAIL_USERS_CREDENTIALS);
+            List<String> result = ShellUtils.runCommand(PLESK_CLI_GET_MAIL_USERS_CREDENTIALS);
 
             result = result.stream()
                     .filter(line -> line.contains(login + "@" + mailDomain))
@@ -127,9 +129,9 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     private void createMail(String login,
                             String mailDomain,
                             String password,
-                            String description) throws Utils.CommandFailedException {
+                            String description) throws ShellUtils.CommandFailedException {
         if (isDomain.test(mailDomain)) {
-            Utils.runCommand(PLESK_CLI_EXECUTABLE,
+            ShellUtils.runCommand(PLESK_CLI_EXECUTABLE,
                     "bin",
                     "mail",
                     "--create",
