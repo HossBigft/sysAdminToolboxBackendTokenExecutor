@@ -81,7 +81,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             URI login_link = URI.create("https://webmail." + domain + "/roundcube/index.php?_user=" + URLEncoder.encode(
                     TEST_MAIL_LOGIN + "@" + domain,
                     StandardCharsets.UTF_8));
-            Optional<String> existing_password = Optional.empty();
+            Optional<String> existing_password;
             existing_password = getEmailPassword(TEST_MAIL_LOGIN, testMailDomain);
             if (existing_password.isPresent()) {
                 password = existing_password.get();
