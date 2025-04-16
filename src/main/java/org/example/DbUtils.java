@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class DbUtils {
+    private DbUtils(){}
     static Query prepareFetchSubscriptionInfoSql(String domain) throws SQLException {
         String sql = """
                 SELECT
@@ -34,55 +35,55 @@ public class DbUtils {
         return new Query(sql, domain);
     }
 
-    static String buildSqlQueryCLI(String domain) {
-        return """
-                SELECT\s
-                    base.subscription_id AS result,
-                    (SELECT name FROM domains WHERE id = base.subscription_id) AS name,
-                    (SELECT pname FROM clients WHERE id = base.cl_id) AS username,
-                    (SELECT login FROM clients WHERE id = base.cl_id) AS userlogin,
-                    (SELECT GROUP_CONCAT(CONCAT(d2.name, ':', d2.status) SEPARATOR ',')
-                        FROM domains d2\s
-                        WHERE base.subscription_id IN (d2.id, d2.webspace_id)) AS domains,
-                    (SELECT overuse FROM domains WHERE id = base.subscription_id) as is_space_overused,
-                    (SELECT ROUND(real_size/1024/1024) FROM domains WHERE id = base.subscription_id) as subscription_size_mb,
-                    (SELECT status FROM domains WHERE id = base.subscription_id) as subscription_status
-                FROM (
-                    SELECT\s
-                        CASE\s
-                            WHEN webspace_id = 0 THEN id\s
-                            ELSE webspace_id\s
-                        END AS subscription_id,
-                        cl_id,
-                        name
-                    FROM domains\s
-                    WHERE name LIKE '%s'
-                ) AS base;
-                """.formatted(domain);
-    }
-
-    static Optional<List<String>> executeSqlCommandCLI(String cmd) throws ShellUtils.CommandFailedException {
-        String dbHost = "localhost";
-        String dbName = "psa";
-        String dbUser = Config.getDatabaseUser();
-        String dbPassword = Config.getDatabasePassword();
-        String mysqlCliName = ShellUtils.getSqlCliName();
-
-        List<String> lines = ShellUtils.runCommand(mysqlCliName,
-                "--host",
-                dbHost,
-                "--user=" + dbUser,
-                "--password=" + dbPassword,
-                "--database",
-                dbName,
-                "--batch",
-                "--skip-column-names",
-                "--raw",
-                "-e",
-                cmd);
-        return lines.isEmpty() ? Optional.empty() : Optional.of(lines);
-
-    }
+//    static String buildSqlQueryCLI(String domain) {
+//        return """
+//                SELECT\s
+//                    base.subscription_id AS result,
+//                    (SELECT name FROM domains WHERE id = base.subscription_id) AS name,
+//                    (SELECT pname FROM clients WHERE id = base.cl_id) AS username,
+//                    (SELECT login FROM clients WHERE id = base.cl_id) AS userlogin,
+//                    (SELECT GROUP_CONCAT(CONCAT(d2.name, ':', d2.status) SEPARATOR ',')
+//                        FROM domains d2\s
+//                        WHERE base.subscription_id IN (d2.id, d2.webspace_id)) AS domains,
+//                    (SELECT overuse FROM domains WHERE id = base.subscription_id) as is_space_overused,
+//                    (SELECT ROUND(real_size/1024/1024) FROM domains WHERE id = base.subscription_id) as subscription_size_mb,
+//                    (SELECT status FROM domains WHERE id = base.subscription_id) as subscription_status
+//                FROM (
+//                    SELECT\s
+//                        CASE\s
+//                            WHEN webspace_id = 0 THEN id\s
+//                            ELSE webspace_id\s
+//                        END AS subscription_id,
+//                        cl_id,
+//                        name
+//                    FROM domains\s
+//                    WHERE name LIKE '%s'
+//                ) AS base;
+//                """.formatted(domain);
+//    }
+//
+//    static Optional<List<String>> executeSqlCommandCLI(String cmd) throws ShellUtils.CommandFailedException {
+//        String dbHost = "localhost";
+//        String dbName = "psa";
+//        String dbUser = Config.getDatabaseUser();
+//        String dbPassword = Config.getDatabasePassword();
+//        String mysqlCliName = ShellUtils.getSqlCliName();
+//
+//        List<String> lines = ShellUtils.runCommand(mysqlCliName,
+//                "--host",
+//                dbHost,
+//                "--user=" + dbUser,
+//                "--password=" + dbPassword,
+//                "--database",
+//                dbName,
+//                "--batch",
+//                "--skip-column-names",
+//                "--raw",
+//                "-e",
+//                cmd);
+//        return lines.isEmpty() ? Optional.empty() : Optional.of(lines);
+//
+//    }
 
     static Optional<List<String>> executeSqlQueryJDBC(Query query) throws ShellUtils.CommandFailedException {
         try (Connection conn = getConnection();
@@ -129,6 +130,6 @@ public class DbUtils {
         return new Query(sql, id);
     }
 
-    record Query(String sql, Object... params) {
+    public record Query(String sql, Object... params) {
     }
 }
