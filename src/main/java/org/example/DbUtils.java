@@ -89,7 +89,7 @@ public class DbUtils {
              PreparedStatement stmt = conn.prepareStatement(query.sql())) {
 
             for (int i = 0; i < query.params().length; i++) {
-                stmt.setString(i + 1, query.params()[i]);
+                stmt.setObject(i + 1, query.params()[i]);
             }
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -124,6 +124,11 @@ public class DbUtils {
         return DriverManager.getConnection(dbUrl, dbUser, dbPassword);
     }
 
-    record Query(String sql, String... params) {
+    static Query prepareFetchSubscriptionNameById(int id) {
+        String sql = "SELECT name FROM domains WHERE webspace_id=0 AND id=?";
+        return new Query(sql, id);
+    }
+
+    record Query(String sql, Object... params) {
     }
 }

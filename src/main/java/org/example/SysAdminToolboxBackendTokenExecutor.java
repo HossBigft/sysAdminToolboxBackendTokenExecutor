@@ -33,6 +33,8 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     Predicate<String> isDomain = DOMAIN_PATTERN.asMatchPredicate();
     @Parameters(index = "0", description = "The domain to check.")
     private String domain;
+    @Parameters(index = "1", description = "The domain to check.")
+    private int id;
 
 
     public static void main(String[] args) {
@@ -42,13 +44,13 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
     @Override
     public Integer call() {
-        if (!isDomain.test(domain)) {
-            System.err.println("Error: Invalid domain format.");
-            return 1;
-        }
-        Optional<List<String>> mailCredentials;
+//        if (!isDomain.test(domain)) {
+//            System.err.println("Error: Invalid domain format.");
+//            return 1;
+//        }
+        Optional<String> mailCredentials;
         try {
-            mailCredentials = plesk_fetch_subscription_info_by_domain(domain);
+            mailCredentials = pleskGetSubscriptionLoginLinkBySubscriptionId(id, domain);
         } catch (ShellUtils.CommandFailedException e) {
             System.out.println("Test mail creation failed with " + e);
             return 1;
@@ -57,6 +59,26 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
                 () -> System.out.println("Email for " + domain + " was not found"));
 
         return 0;
+    }
+
+    static Optional<String> pleskGetSubscriptionLoginLinkBySubscriptionId(int subscriptionId,
+                                                                          String username) throws ShellUtils.CommandFailedException {
+        final String REDIRECTION_HEADER = "&success_redirect_url=%2Fadmin%2Fsubscription%2Foverview%2Fid%2F";
+
+        Optional<List<String>>
+                result =
+                DbUtils.executeSqlQueryJDBC(DbUtils.prepareFetchSubscriptionNameById(subscriptionId));
+
+        if (result.isPresent()) {
+            String link = pleskGetUserLoginLink(username);
+            return Optional.of(link + REDIRECTION_HEADER + subscriptionId);
+        } else {
+            throw new ShellUtils.CommandFailedException("Subscription with ID " + subscriptionId + " doesn't exist.");
+        }
+    }
+
+    private static String pleskGetUserLoginLink(String username) throws ShellUtils.CommandFailedException {
+        return ShellUtils.runCommand(PLESK_CLI_EXECUTABLE, "login", username).getFirst();
     }
 
     private Optional<List<String>> plesk_fetch_subscription_info_by_domain(String domain) throws
@@ -147,6 +169,4 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         }
 
     }
-
-
 }
