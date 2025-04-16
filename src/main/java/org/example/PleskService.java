@@ -31,12 +31,12 @@ public class PleskService {
 
     public Optional<String> pleskGetSubscriptionLoginLinkBySubscriptionId(int subscriptionId,
                                                                           String username) throws
-            ShellUtils.CommandFailedException {
+            ShellUtils.CommandFailedException, SQLException {
         final String REDIRECTION_HEADER = "&success_redirect_url=%2Fadmin%2Fsubscription%2Foverview%2Fid%2F";
+        Optional<String> result;
 
-        Optional<List<String>>
-                result =
-                DbUtils.executeSqlQueryJDBC(DbUtils.prepareFetchSubscriptionNameById(subscriptionId));
+
+        result = DbUtils.fetchSubscriptionNameById(subscriptionId);
 
         if (result.isPresent()) {
             String link = pleskGetUserLoginLink(username);
@@ -51,14 +51,11 @@ public class PleskService {
     }
 
     public Optional<List<String>> plesk_fetch_subscription_info_by_domain(String domain) throws
-            ShellUtils.CommandFailedException {
+            SQLException {
         Optional<List<String>> result = Optional.empty();
         if (isDomain.test(domain)) {
-            try {
-                result = DbUtils.executeSqlQueryJDBC(DbUtils.prepareFetchSubscriptionInfoSql(domain));
-            } catch (SQLException e) {
-                System.out.println("Subscription info fetch failed with " + e);
-            }
+            result = DbUtils.fetchSubscriptionInfoByDomain(domain);
+
         }
         return result;
     }

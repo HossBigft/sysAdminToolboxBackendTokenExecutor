@@ -6,33 +6,13 @@ import java.util.List;
 import java.util.Optional;
 
 public class DbUtils {
-    private DbUtils(){}
-    static Query prepareFetchSubscriptionInfoSql(String domain) throws SQLException {
-        String sql = """
-                SELECT
-                    base.subscription_id AS result,
-                    (SELECT name FROM domains WHERE id = base.subscription_id) AS name,
-                    (SELECT pname FROM clients WHERE id = base.cl_id) AS username,
-                    (SELECT login FROM clients WHERE id = base.cl_id) AS userlogin,
-                    (SELECT GROUP_CONCAT(CONCAT(d2.name, ':', d2.status) SEPARATOR ',')
-                        FROM domains d2
-                        WHERE base.subscription_id IN (d2.id, d2.webspace_id)) AS domains,
-                    (SELECT overuse FROM domains WHERE id = base.subscription_id) as is_space_overused,
-                    (SELECT ROUND(real_size/1024/1024) FROM domains WHERE id = base.subscription_id) as subscription_size_mb,
-                    (SELECT status FROM domains WHERE id = base.subscription_id) as subscription_status
-                FROM (
-                    SELECT
-                        CASE
-                            WHEN webspace_id = 0 THEN id
-                            ELSE webspace_id
-                        END AS subscription_id,
-                        cl_id,
-                        name
-                    FROM domains
-                    WHERE name LIKE ?
-                ) AS base;
-                """;
-        return new Query(sql, domain);
+    private DbUtils() {
+    }
+
+    public static Optional<String> fetchSubscriptionNameById(int id) throws SQLException {
+        return executeSqlQueryJDBC(prepareFetchSubscriptionNameById(id))
+                .flatMap(list -> list.stream().findFirst());
+
     }
 
 //    static String buildSqlQueryCLI(String domain) {
@@ -85,7 +65,7 @@ public class DbUtils {
 //
 //    }
 
-    static Optional<List<String>> executeSqlQueryJDBC(Query query) throws ShellUtils.CommandFailedException {
+    private static Optional<List<String>> executeSqlQueryJDBC(Query query) throws SQLException {
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query.sql())) {
 
@@ -110,24 +90,55 @@ public class DbUtils {
                 return results.isEmpty() ? Optional.empty() : Optional.of(results);
             }
 
-        } catch (SQLException e) {
-            throw new ShellUtils.CommandFailedException("SQL command execution failed: " + e.getMessage(), e);
         }
     }
 
+    private static Query prepareFetchSubscriptionNameById(int id) {
+        String sql = "SELECT name FROM domains WHERE webspace_id=0 AND id=?";
+        return new Query(sql, id);
+    }
 
-    static Connection getConnection() throws SQLException {
+    private static Connection getConnection() throws SQLException {
         String pleskDbName = "psa";
         String dbUser = Config.getDatabaseUser();
         String dbPassword = Config.getDatabasePassword();
 
-        String dbUrl = String.format("jdbc:mysql://localhost/%s", pleskDbName);
+        String dbUrl = String.format("jdbc:mysql://localho" +
+                "st/%s", pleskDbName);
         return DriverManager.getConnection(dbUrl, dbUser, dbPassword);
     }
 
-    static Query prepareFetchSubscriptionNameById(int id) {
-        String sql = "SELECT name FROM domains WHERE webspace_id=0 AND id=?";
-        return new Query(sql, id);
+    public static Optional<List<String>> fetchSubscriptionInfoByDomain(String domain) throws SQLException {
+        return executeSqlQueryJDBC(prepareFetchSubscriptionInfoByDomain(domain));
+
+    }
+
+    private static Query prepareFetchSubscriptionInfoByDomain(String domain) {
+        String sql = """
+                SELECT
+                    base.subscription_id AS result,
+                    (SELECT name FROM domains WHERE id = base.subscription_id) AS name,
+                    (SELECT pname FROM clients WHERE id = base.cl_id) AS username,
+                    (SELECT login FROM clients WHERE id = base.cl_id) AS userlogin,
+                    (SELECT GROUP_CONCAT(CONCAT(d2.name, ':', d2.status) SEPARATOR ',')
+                        FROM domains d2
+                        WHERE base.subscription_id IN (d2.id, d2.webspace_id)) AS domains,
+                    (SELECT overuse FROM domains WHERE id = base.subscription_id) as is_space_overused,
+                    (SELECT ROUND(real_size/1024/1024) FROM domains WHERE id = base.subscription_id) as subscription_size_mb,
+                    (SELECT status FROM domains WHERE id = base.subscription_id) as subscription_status
+                FROM (
+                    SELECT
+                        CASE
+                            WHEN webspace_id = 0 THEN id
+                            ELSE webspace_id
+                        END AS subscription_id,
+                        cl_id,
+                        name
+                    FROM domains
+                    WHERE name LIKE ?
+                ) AS base;
+                """;
+        return new Query(sql, domain);
     }
 
     public record Query(String sql, Object... params) {

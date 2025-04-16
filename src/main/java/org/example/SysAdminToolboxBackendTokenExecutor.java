@@ -4,6 +4,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
+import java.sql.SQLException;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
@@ -28,12 +29,14 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 //            System.err.println("Error: Invalid domain format.");
 //            return 1;
 //        }
-        Optional<String> mailCredentials;
+        Optional<String> mailCredentials = Optional.empty();
         try {
             mailCredentials = new PleskService().pleskGetSubscriptionLoginLinkBySubscriptionId(id, domain);
         } catch (ShellUtils.CommandFailedException e) {
             System.out.println("Test mail creation failed with " + e);
             return 1;
+        } catch (SQLException e){
+            e.printStackTrace();
         }
         mailCredentials.ifPresentOrElse(creds -> System.out.println(String.join("", creds)),
                 () -> System.out.println("Email for " + domain + " was not found"));
