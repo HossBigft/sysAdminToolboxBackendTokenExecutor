@@ -183,11 +183,12 @@ public class Utils {
 
     static Optional<List<String>> executeSqlQueryJDBC(Query query) throws CommandFailedException {
 
-        try (PreparedStatement stmt = getConnection().prepareStatement(query.sql())) {
+        try (PreparedStatement stmt = getConnection().prepareStatement(query.sql());
+             ResultSet rs = stmt.executeQuery();) {
             for (int i = 0; i < query.params().length; i++) {
                 stmt.setObject(i + 1, query.params()[i]);
             }
-            ResultSet rs = stmt.executeQuery();
+
             ResultSetMetaData meta = rs.getMetaData();
             int columnCount = meta.getColumnCount();
             List<String> results = new ArrayList<>();
