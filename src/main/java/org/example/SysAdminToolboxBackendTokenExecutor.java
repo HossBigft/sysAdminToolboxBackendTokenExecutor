@@ -226,7 +226,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
             result = result.stream()
                     .filter(line -> line.contains(login + "@" + mailDomain))
-                    .map(line -> line.replaceAll("\\s", "")) // remove all whitespace
+                    .map(line -> line.replaceAll("\\s", "")) 
                     .map(line -> {
                         int index = line.indexOf('|');
                         return index >= 0 ? line.split("\\|")[3] : "";
