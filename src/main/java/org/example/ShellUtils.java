@@ -11,7 +11,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class ShellUtils {
-    static String getSqlCliName() throws ShellUtils.CommandFailedException {
+
+    private ShellUtils() {}
+    private static String getSqlCliName() throws ShellUtils.CommandFailedException {
         if (isCommandAvailable("mariadb")) {
             return "mariadb";
         } else if (isCommandAvailable("mysql")) {
@@ -22,11 +24,11 @@ public class ShellUtils {
         }
     }
 
-    static boolean isCommandAvailable(String cmd) {
+    private static boolean isCommandAvailable(String cmd) {
         return new File("/usr/bin/" + cmd).exists() || new File("/usr/local/bin/" + cmd).exists();
     }
 
-    static List<String> runCommand(String... args) throws ShellUtils.CommandFailedException {
+    public static List<String> runCommand(String... args) throws ShellUtils.CommandFailedException {
         try {
             Process process = new ProcessBuilder(args).start();
 
