@@ -6,13 +6,17 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.nio.file.*;
+import java.nio.file.attribute.*;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 public class ShellUtils {
+    private static final String DOTENV_PERMISSIONS = "rw-------";
+    private static final String DOTENV_OWNER = "root";
+    private static final String DOTENV_GROUP = "root";
 
     private ShellUtils() {
     }
@@ -92,4 +96,64 @@ public class ShellUtils {
         }
     }
 
+    public static String resolveUser() {
+        return Stream.of(getSudoUser(), getSystemUser(), getUserFromPath()).flatMap(Optional::stream)
+                .filter(ShellUtils::isValidUser).findFirst().orElseThrow(
+                        () -> new IllegalStateException("Could not determine valid user for running executable."));
+    }
+
+    public static Optional<String> getSudoUser() {
+        return Optional.ofNullable(System.getenv("SUDO_USER"));
+    }
+
+    public static Optional<String> getSystemUser() {
+        String systemUser = System.getProperty("user.name");
+        return Optional.ofNullable(systemUser);
+    }
+
+    public static Optional<String> getUserFromPath() {
+        String cwd = System.getProperty("user.dir");
+        if (cwd == null) return Optional.empty();
+
+        Path path = Paths.get(cwd).toAbsolutePath();
+        for (int i = 0; i < path.getNameCount() - 1; i++) {
+            if ("home".equals(path.getName(i).toString())) {
+                String username = path.getName(i + 1).toString();
+                return Optional.of(username);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static boolean isValidUser(String user) {
+        return !"root".equals(user);
+    }
+
+    public static void setEnvPermissionsOwner(File envFile) throws IOException {
+        Path filePath = envFile.toPath();
+        Files.setPosixFilePermissions(filePath, PosixFilePermissions.fromString(DOTENV_PERMISSIONS));
+        UserPrincipalLookupService lookupService = FileSystems.getDefault().getUserPrincipalLookupService();
+        UserPrincipal userPrincipal = lookupService.lookupPrincipalByName(DOTENV_OWNER);
+        GroupPrincipal groupPrincipal = lookupService.lookupPrincipalByGroupName(DOTENV_GROUP);
+
+        Files.setAttribute(filePath, "posix:owner", userPrincipal, LinkOption.NOFOLLOW_LINKS);
+        Files.setAttribute(filePath, "posix:group", groupPrincipal, LinkOption.NOFOLLOW_LINKS);
+    }
+
+    public static boolean isEnvPermissionsSecure(File envFile) throws IOException {
+        Path envPath = envFile.toPath();
+        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(envPath);
+
+        String permString = PosixFilePermissions.toString(permissions);
+        boolean permsOk = DOTENV_PERMISSIONS.equals(permString);
+
+        UserPrincipal owner = Files.getOwner(envPath);
+        boolean ownerOk = DOTENV_OWNER.equals(owner.getName());
+
+        PosixFileAttributes attrs = Files.readAttributes(envPath, PosixFileAttributes.class);
+        boolean groupOk = DOTENV_GROUP.equals(attrs.group().getName());
+
+        return permsOk && ownerOk && groupOk;
+
+    }
 }

@@ -155,11 +155,6 @@ public class DatabaseSetup {
     }
 
     static void createUser() {
-        if (Config.getDatabaseUser().equalsIgnoreCase(ADMIN_USER)) {
-            System.err.println(
-                    "WARNING: Refusing to modify the root user. Please configure a different database user.");
-            return;
-        }
         try {
             ProcessBuilder pb = new ProcessBuilder(getSqlCliName(), "-u", ADMIN_USER, "-e",
                     String.format("CREATE USER '%s'@'localhost' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;",
@@ -185,7 +180,9 @@ public class DatabaseSetup {
         }
         try {
             String commands = String.format(
-                    "REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s'@'localhost'; " + "GRANT SELECT ON *.* TO '%s'@'localhost'; " + "FLUSH PRIVILEGES;",
+                    "REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s'@'localhost'; " +
+                            "GRANT SELECT ON *.* TO '%s'@'localhost'; " +
+                            "FLUSH PRIVILEGES;",
                     Config.getDatabaseUser(), Config.getDatabaseUser());
 
             ProcessBuilder pb = new ProcessBuilder(getSqlCliName(), "-u", ADMIN_USER, "-e", commands);
