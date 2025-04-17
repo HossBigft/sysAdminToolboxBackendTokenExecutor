@@ -10,6 +10,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
+import org.example.ValueTypes.DomainName;
+
 public class PleskService {
     static final String TEST_MAIL_LOGIN = "testsupportmail";
     static final String
@@ -44,14 +46,14 @@ public class PleskService {
         return ShellUtils.runCommand(PLESK_CLI_EXECUTABLE, "login", username).getFirst();
     }
 
-    public Optional<List<String>> plesk_fetch_subscription_info_by_domain(ValueTypes.DomainName domain) throws
+    public Optional<List<String>> plesk_fetch_subscription_info_by_domain(DomainName domain) throws
             SQLException {
         Optional<List<String>> result;
         result = DbUtils.fetchSubscriptionInfoByDomain(domain.name());
         return result;
     }
 
-    public Optional<ObjectNode> plesk_get_testmail_credentials(ValueTypes.DomainName testMailDomain) throws
+    public Optional<ObjectNode> plesk_get_testmail_credentials(DomainName testMailDomain) throws
             ShellUtils.CommandFailedException {
         ObjectMapper om = new ObjectMapper();
         ObjectNode mailCredentials = om.createObjectNode();
@@ -85,7 +87,7 @@ public class PleskService {
     }
 
     private Optional<String> getEmailPassword(String login,
-                                              ValueTypes.DomainName mailDomain) throws
+                                              DomainName mailDomain) throws
             ShellUtils.CommandFailedException {
         String emailPassword = "";
         List<String> result = ShellUtils.runCommand(PLESK_CLI_GET_MAIL_USERS_CREDENTIALS);
@@ -107,7 +109,7 @@ public class PleskService {
     }
 
     private void createMail(String login,
-                            ValueTypes.DomainName mailDomain,
+                            DomainName mailDomain,
                             String password,
                             String description) throws ShellUtils.CommandFailedException {
         ShellUtils.runCommand(PLESK_CLI_EXECUTABLE,

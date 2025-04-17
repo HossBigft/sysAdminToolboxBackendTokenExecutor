@@ -1,17 +1,13 @@
-package org.example;
+package org.example.ValueTypes;
 
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-public class ValueTypes {
-    static final Pattern DOMAIN_PATTERN = Pattern.compile(
-            "^(?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.(?!-)[A-Za-z0-9.-]{2,}$");
-    Predicate<String> isDomain = DOMAIN_PATTERN.asMatchPredicate();
 
-    public ValueTypes() {
-    }
-
-    public record DomainName(String name) {
+public record DomainName(String name) {
+        static final Pattern DOMAIN_PATTERN = Pattern.compile(
+                "^(?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.(?!-)[A-Za-z0-9.-]{2,}$");
+        static final Predicate<String> isDomain = DOMAIN_PATTERN.asMatchPredicate();
         private static final Predicate<String> IS_VALID = Pattern
                 .compile("^(?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.(?!-)[A-Za-z0-9.-]{2,}$")
                 .asMatchPredicate();
@@ -30,4 +26,3 @@ public class ValueTypes {
             return name;
         }
     }
-}
