@@ -1,4 +1,6 @@
-package org.example;
+package org.example.Utils;
+
+import org.example.Config;
 
 import java.sql.*;
 import java.util.ArrayList;

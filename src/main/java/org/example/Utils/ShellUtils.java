@@ -1,4 +1,6 @@
-package org.example;
+package org.example.Utils;
+
+import org.example.Exceptions.CommandFailedException;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,14 +14,16 @@ import java.util.concurrent.TimeUnit;
 
 public class ShellUtils {
 
-    private ShellUtils() {}
-    private static String getSqlCliName() throws ShellUtils.CommandFailedException {
+    private ShellUtils() {
+    }
+
+    private static String getSqlCliName() throws CommandFailedException {
         if (isCommandAvailable("mariadb")) {
             return "mariadb";
         } else if (isCommandAvailable("mysql")) {
             return "mysql";
         } else {
-            throw new ShellUtils.CommandFailedException(
+            throw new CommandFailedException(
                     "Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
         }
     }
@@ -28,7 +32,7 @@ public class ShellUtils {
         return new File("/usr/bin/" + cmd).exists() || new File("/usr/local/bin/" + cmd).exists();
     }
 
-    public static List<String> runCommand(String... args) throws ShellUtils.CommandFailedException {
+    public static List<String> runCommand(String... args) throws CommandFailedException {
         try {
             Process process = new ProcessBuilder(args).start();
 
@@ -52,7 +56,7 @@ public class ShellUtils {
                                 TimeUnit.SECONDS);
                 if (!completed) {
                     process.destroyForcibly();
-                    throw new ShellUtils.CommandFailedException("Command execution timed out: " + String.join(" ",
+                    throw new CommandFailedException("Command execution timed out: " + String.join(" ",
                             args));
                 }
 
@@ -63,7 +67,7 @@ public class ShellUtils {
                 int exitCode = process.exitValue();
                 if (exitCode != 0) {
                     String errorOutput = errorBuilder.toString().trim();
-                    throw new ShellUtils.CommandFailedException(
+                    throw new CommandFailedException(
                             String.format("Command failed with exit code %d: %s\nCommand: %s",
                                     exitCode,
                                     errorOutput,
@@ -75,28 +79,17 @@ public class ShellUtils {
                 return Collections.unmodifiableList(outputLines);
             }
         } catch (IOException e) {
-            throw new ShellUtils.CommandFailedException("Failed to execute command: " +
+            throw new CommandFailedException("Failed to execute command: " +
                     String.join(" ",
                             args),
                     e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ShellUtils.CommandFailedException("Command execution was interrupted: " +
+            throw new CommandFailedException("Command execution was interrupted: " +
                     String.join(" ",
                             args),
                     e);
         }
     }
 
-    static class CommandFailedException extends Exception {
-        public CommandFailedException(String message) {
-            super(message);
-        }
-
-        public CommandFailedException(String message,
-                                      Throwable cause) {
-            super(message,
-                    cause);
-        }
-    }
 }

@@ -8,11 +8,12 @@ public record LinuxUsername(String name) implements ValueType {
             Pattern.compile("^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\\$)$");
 
     public LinuxUsername {
-        if (name == null ||
-                name.length() < 3 ||
+        if (name.length() < 3 ||
                 name.length() > 32 ||
                 !LINUX_USERNAME_PATTERN.matcher(name).matches()) {
-            throw new IllegalArgumentException("Invalid Linux username: " + name);
+            throw new IllegalArgumentException("name " +
+                    name +
+                    " must be a valid username (e.g., 'johndoe') matching: " + LINUX_USERNAME_PATTERN.pattern());
         }
     }
 

@@ -1,5 +1,6 @@
 package org.example;
 
+import org.example.Exceptions.CommandFailedException;
 import org.example.ValueTypes.LinuxUsername;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -33,7 +34,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         Optional<String> mailCredentials = Optional.empty();
         try {
             mailCredentials = new PleskService().pleskGetSubscriptionLoginLinkBySubscriptionId(id, new LinuxUsername(domain));
-        } catch (ShellUtils.CommandFailedException e) {
+        } catch (CommandFailedException e) {
             System.out.println("Test mail creation failed with " + e);
             return 1;
         } catch (SQLException e){

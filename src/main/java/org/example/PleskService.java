@@ -2,6 +2,10 @@ package org.example;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.example.Exceptions.CommandFailedException;
+import org.example.Utils.DbUtils;
+import org.example.Utils.ShellUtils;
+import org.example.Utils.Utils;
 import org.example.ValueTypes.DomainName;
 import org.example.ValueTypes.LinuxUsername;
 
@@ -27,7 +31,7 @@ public class PleskService {
 
     public Optional<String> pleskGetSubscriptionLoginLinkBySubscriptionId(int subscriptionId,
                                                                           LinuxUsername username) throws
-            ShellUtils.CommandFailedException, SQLException {
+            CommandFailedException, SQLException {
         final String REDIRECTION_HEADER = "&success_redirect_url=%2Fadmin%2Fsubscription%2Foverview%2Fid%2F";
         Optional<String> result;
 
@@ -38,11 +42,11 @@ public class PleskService {
             String link = pleskGetUserLoginLink(username.value());
             return Optional.of(link + REDIRECTION_HEADER + subscriptionId);
         } else {
-            throw new ShellUtils.CommandFailedException("Subscription with ID " + subscriptionId + " doesn't exist.");
+            throw new CommandFailedException("Subscription with ID " + subscriptionId + " doesn't exist.");
         }
     }
 
-    private String pleskGetUserLoginLink(String username) throws ShellUtils.CommandFailedException {
+    private String pleskGetUserLoginLink(String username) throws CommandFailedException {
         return ShellUtils.runCommand(PLESK_CLI_EXECUTABLE, "login", username).getFirst();
     }
 
@@ -54,7 +58,7 @@ public class PleskService {
     }
 
     public Optional<ObjectNode> plesk_get_testmail_credentials(DomainName testMailDomain) throws
-            ShellUtils.CommandFailedException {
+            CommandFailedException {
         ObjectMapper om = new ObjectMapper();
         ObjectNode mailCredentials = om.createObjectNode();
         String password;
@@ -71,10 +75,10 @@ public class PleskService {
             try {
                 createMail(TEST_MAIL_LOGIN, testMailDomain, password,
                         TEST_MAIL_DESCRIPTION);
-            } catch (ShellUtils.CommandFailedException e) {
+            } catch (CommandFailedException e) {
                 System.err.println(
                         "Email creation for " + testMailDomain + " failed with " + e);
-                throw new ShellUtils.CommandFailedException(
+                throw new CommandFailedException(
                         "Email creation for " + testMailDomain + " failed with " + e);
             }
             mailCredentials.put("email", TEST_MAIL_LOGIN + "@" + testMailDomain);
@@ -88,7 +92,7 @@ public class PleskService {
 
     private Optional<String> getEmailPassword(String login,
                                               DomainName mailDomain) throws
-            ShellUtils.CommandFailedException {
+            CommandFailedException {
         String emailPassword = "";
         List<String> result = ShellUtils.runCommand(PLESK_CLI_GET_MAIL_USERS_CREDENTIALS);
 
@@ -111,7 +115,7 @@ public class PleskService {
     private void createMail(String login,
                             DomainName mailDomain,
                             String password,
-                            String description) throws ShellUtils.CommandFailedException {
+                            String description) throws CommandFailedException {
         ShellUtils.runCommand(PLESK_CLI_EXECUTABLE,
                 "bin",
                 "mail",

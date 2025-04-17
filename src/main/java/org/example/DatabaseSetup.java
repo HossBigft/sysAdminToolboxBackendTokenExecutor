@@ -1,5 +1,8 @@
 package org.example;
 
+import org.example.Exceptions.CommandFailedException;
+import org.example.Utils.Utils;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -212,14 +215,14 @@ public class DatabaseSetup {
         }
     }
 
-    static String getSqlCliName() throws ShellUtils.CommandFailedException {
+    static String getSqlCliName() throws CommandFailedException {
         if (isCommandAvailable("mariadb")) {
             return "mariadb";
         } else if (isCommandAvailable("mysql")) {
             return "mysql";
         } else {
             System.err.println("Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
-            throw new ShellUtils.CommandFailedException(
+            throw new CommandFailedException(
                     "Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
         }
     }

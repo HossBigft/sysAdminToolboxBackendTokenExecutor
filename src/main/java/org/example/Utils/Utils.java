@@ -1,14 +1,15 @@
-package org.example;
+package org.example.Utils;
 
 import org.passay.CharacterData;
 import org.passay.CharacterRule;
 import org.passay.EnglishCharacterData;
 import org.passay.PasswordGenerator;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 public class Utils {
-    static String generatePassword(int length) {
+    public static String generatePassword(int length) {
 
         PasswordGenerator generator = new PasswordGenerator();
 

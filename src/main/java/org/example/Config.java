@@ -3,6 +3,7 @@ package org.example;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.example.Utils.Utils;
 
 import java.io.*;
 import java.nio.file.*;
@@ -14,7 +15,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-class Config {
+public class Config {
     private static final String ENV_PATH = ".env.json";
     private static final String DOTENV_PERMISSIONS = "rw-------";
     private static final String DOTENV_OWNER = "root";
@@ -134,11 +135,11 @@ class Config {
         return !"root".equals(user);
     }
 
-    static String getDatabaseUser() {
+    public static String getDatabaseUser() {
         return values.get("DATABASE_USER");
     }
 
-    static String getDatabasePassword() {
+    public static String getDatabasePassword() {
         return values.get("DATABASE_PASSWORD");
     }
 
