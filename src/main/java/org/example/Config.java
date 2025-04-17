@@ -16,6 +16,7 @@ public class Config {
     static final int DB_USER_PASSWORD_LENGTH = 15;
     private static final String ENV_PATH = ".env.json";
     private static final String DB_USER = "sysAdminToolBox";
+    private static final String ENV_DB_PASS_FIELD = "DATABASE_PASSWORD";
     public static Map<String, String> values = new HashMap<>();
 
     static {
@@ -37,7 +38,7 @@ public class Config {
             values = new HashMap<>();
         }
 
-        boolean updated = computeIfAbsentOrBlank(values, "DATABASE_PASSWORD",
+        boolean updated = computeIfAbsentOrBlank(values, ENV_DB_PASS_FIELD,
                 () -> Utils.generatePassword(DB_USER_PASSWORD_LENGTH));
         if (updated) {
             updateDotEnv();
@@ -65,15 +66,15 @@ public class Config {
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         File envFile = new File(ENV_PATH);
 
-        mapper.writeValue(envFile, Map.of(getDatabaseUser(), getDatabasePassword()));
+        mapper.writeValue(envFile, Map.of(ENV_DB_PASS_FIELD, getDatabasePassword()));
+    }
+
+    public static String getDatabasePassword() {
+        return values.get(ENV_DB_PASS_FIELD);
     }
 
     public static String getDatabaseUser() {
         return DB_USER;
-    }
-
-    public static String getDatabasePassword() {
-        return values.get("DATABASE_PASSWORD");
     }
 
 
