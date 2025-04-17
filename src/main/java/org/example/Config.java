@@ -27,6 +27,9 @@ public class Config {
         }
     }
 
+    private Config() {
+    }
+
     private static void loadConfig() throws IOException {
         File envFile = new File(ENV_PATH);
         ObjectMapper mapper = new ObjectMapper();
