@@ -2,6 +2,8 @@ package org.example;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.example.ValueTypes.DomainName;
+import org.example.ValueTypes.LinuxUsername;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -9,8 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
-
-import org.example.ValueTypes.DomainName;
 
 public class PleskService {
     static final String TEST_MAIL_LOGIN = "testsupportmail";
@@ -26,7 +26,7 @@ public class PleskService {
     }
 
     public Optional<String> pleskGetSubscriptionLoginLinkBySubscriptionId(int subscriptionId,
-                                                                          String username) throws
+                                                                          LinuxUsername username) throws
             ShellUtils.CommandFailedException, SQLException {
         final String REDIRECTION_HEADER = "&success_redirect_url=%2Fadmin%2Fsubscription%2Foverview%2Fid%2F";
         Optional<String> result;
@@ -35,7 +35,7 @@ public class PleskService {
         result = DbUtils.fetchSubscriptionNameById(subscriptionId);
 
         if (result.isPresent()) {
-            String link = pleskGetUserLoginLink(username);
+            String link = pleskGetUserLoginLink(username.value());
             return Optional.of(link + REDIRECTION_HEADER + subscriptionId);
         } else {
             throw new ShellUtils.CommandFailedException("Subscription with ID " + subscriptionId + " doesn't exist.");
