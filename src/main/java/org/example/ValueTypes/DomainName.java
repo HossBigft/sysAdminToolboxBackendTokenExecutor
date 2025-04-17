@@ -4,7 +4,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 
-public record DomainName(String name) {
+public record DomainName(String name) implements ValueType {
         static final Pattern DOMAIN_PATTERN = Pattern.compile(
                 "^(?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.(?!-)[A-Za-z0-9.-]{2,}$");
         static final Predicate<String> isDomain = DOMAIN_PATTERN.asMatchPredicate();
