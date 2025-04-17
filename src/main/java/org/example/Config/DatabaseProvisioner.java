@@ -1,4 +1,4 @@
-package org.example;
+package org.example.Config;
 
 import org.example.Exceptions.CommandFailedException;
 import org.example.Utils.Utils;
@@ -11,11 +11,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class DatabaseSetup {
+public class DatabaseProvisioner {
     static final String DB_URL = "jdbc:mysql://localhost:3306";
     static final String ADMIN_USER = "root";
 
-    static void ensureDatabaseSetup() {
+    static public void ensureDatabaseSetup() {
         try {
             ensureDatabaseUser();
             ensureUserIsReadOnly();
@@ -28,14 +28,14 @@ public class DatabaseSetup {
         if (!isDbUserReadOnly()) {
             setReadOnly();
         } else {
-            System.out.printf("User %s is already read-only.%n", Config.getDatabaseUser());
+            System.out.printf("User %s is already read-only.%n", ConfigManager.getDatabaseUser());
         }
     }
 
     static boolean isDbUserReadOnly() {
         try {
             ProcessBuilder pb = new ProcessBuilder(getSqlCliName(), "-u", ADMIN_USER, "--skip-column-names",
-                    "-e", String.format("SHOW GRANTS FOR '%s'@'localhost'", Config.getDatabaseUser()));
+                    "-e", String.format("SHOW GRANTS FOR '%s'@'localhost'", ConfigManager.getDatabaseUser()));
 
             Process process = pb.start();
             String output = readProcessOutput(process.getInputStream());
@@ -71,28 +71,28 @@ public class DatabaseSetup {
         }
     }
 
-    static void ensureDatabaseUser() throws IOException {
+    static  void ensureDatabaseUser() throws IOException {
         if (!isDbUserExists()) {
             createUser();
-            System.out.printf("Created database user %s.%n", Config.getDatabaseUser());
+            System.out.printf("Created database user %s.%n", ConfigManager.getDatabaseUser());
         } else {
-            System.out.printf("Database user %s already exists.%n", Config.getDatabaseUser());
+            System.out.printf("Database user %s already exists.%n", ConfigManager.getDatabaseUser());
             if (!isDbUserAbleToConnect()) {
                 regenerateDbUserPassword();
                 setDbUserPassword();
-                Config.updateDotEnv();
-                System.out.printf("Updated password for user %s.%n", Config.getDatabaseUser());
+                ConfigManager.updateDotEnv();
+                System.out.printf("Updated password for user %s.%n", ConfigManager.getDatabaseUser());
             }
         }
     }
 
     static void regenerateDbUserPassword() {
-        Config.values.put("DATABASE_PASSWORD",
-                Utils.generatePassword(Config.DB_USER_PASSWORD_LENGTH));
+        ConfigManager.values.put("DATABASE_PASSWORD",
+                Utils.generatePassword(ConfigManager.DB_USER_PASSWORD_LENGTH));
     }
 
     static void setDbUserPassword() {
-        if (Config.getDatabaseUser().equalsIgnoreCase(ADMIN_USER)) {
+        if (ConfigManager.getDatabaseUser().equalsIgnoreCase(ADMIN_USER)) {
             System.err.println(
                     "WARNING: Refusing to modify the root user. Please configure a different database user.");
             return;
@@ -100,7 +100,7 @@ public class DatabaseSetup {
         try {
             ProcessBuilder pb = new ProcessBuilder(getSqlCliName(), "-u", ADMIN_USER, "-e",
                     String.format("ALTER USER '%s'@'localhost' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;",
-                            Config.getDatabaseUser(), Config.getDatabasePassword()));
+                            ConfigManager.getDatabaseUser(), ConfigManager.getDatabasePassword()));
 
             Process process = pb.start();
             String error = readProcessOutput(process.getErrorStream());
@@ -115,8 +115,8 @@ public class DatabaseSetup {
     }
 
     static boolean isDbUserAbleToConnect() {
-        try (Connection conn = DriverManager.getConnection(DB_URL, Config.getDatabaseUser(),
-                Config.getDatabasePassword())) {
+        try (Connection conn = DriverManager.getConnection(DB_URL, ConfigManager.getDatabaseUser(),
+                ConfigManager.getDatabasePassword())) {
             return true;
         } catch (SQLException e) {
             System.err.println("User unable to connect: " + e.getMessage());
@@ -129,7 +129,7 @@ public class DatabaseSetup {
             ProcessBuilder pb = new ProcessBuilder(getSqlCliName(), "-u", ADMIN_USER, "--skip-column-names",
                     "-e",
                     String.format("SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '%s') AS user_exists;",
-                            Config.getDatabaseUser()));
+                            ConfigManager.getDatabaseUser()));
 
             Process process = pb.start();
             String output = readProcessOutput(process.getInputStream());
@@ -158,7 +158,7 @@ public class DatabaseSetup {
         try {
             ProcessBuilder pb = new ProcessBuilder(getSqlCliName(), "-u", ADMIN_USER, "-e",
                     String.format("CREATE USER '%s'@'localhost' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;",
-                            Config.getDatabaseUser(), Config.getDatabasePassword()));
+                            ConfigManager.getDatabaseUser(), ConfigManager.getDatabasePassword()));
 
             Process process = pb.start();
             String error = readProcessOutput(process.getErrorStream());
@@ -173,7 +173,7 @@ public class DatabaseSetup {
     }
 
     static void setReadOnly() {
-        if (Config.getDatabaseUser().equalsIgnoreCase(ADMIN_USER)) {
+        if (ConfigManager.getDatabaseUser().equalsIgnoreCase(ADMIN_USER)) {
             System.err.println(
                     "WARNING: Refusing to modify the root user. Please configure a different database user.");
             return;
@@ -183,7 +183,7 @@ public class DatabaseSetup {
                     "REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s'@'localhost'; " +
                             "GRANT SELECT ON *.* TO '%s'@'localhost'; " +
                             "FLUSH PRIVILEGES;",
-                    Config.getDatabaseUser(), Config.getDatabaseUser());
+                    ConfigManager.getDatabaseUser(), ConfigManager.getDatabaseUser());
 
             ProcessBuilder pb = new ProcessBuilder(getSqlCliName(), "-u", ADMIN_USER, "-e", commands);
 
@@ -194,7 +194,7 @@ public class DatabaseSetup {
             if (exitCode != 0) {
                 System.err.println("Failed to set user as read-only: " + error);
             } else {
-                System.out.printf("Set user %s to read-only.%n", Config.getDatabaseUser());
+                System.out.printf("Set user %s to read-only.%n", ConfigManager.getDatabaseUser());
             }
         } catch (Exception e) {
             System.err.println("Error setting user as read-only: " + e.getMessage());

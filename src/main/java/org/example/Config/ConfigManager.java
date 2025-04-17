@@ -1,4 +1,4 @@
-package org.example;
+package org.example.Config;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class Config {
+public class ConfigManager {
     static final int DB_USER_PASSWORD_LENGTH = 15;
     private static final String ENV_PATH = ".env.json";
     private static final String DB_USER = "sysAdminToolBox";
@@ -27,7 +27,7 @@ public class Config {
         }
     }
 
-    private Config() {
+    private ConfigManager() {
     }
 
     private static void loadConfig() throws IOException {
@@ -49,7 +49,7 @@ public class Config {
         if (!ShellUtils.isEnvPermissionsSecure(envFile)) {
             ShellUtils.setEnvPermissionsOwner(envFile);
         }
-        org.example.DatabaseSetup.ensureDatabaseSetup();
+        DatabaseProvisioner.ensureDatabaseSetup();
 
     }
 
