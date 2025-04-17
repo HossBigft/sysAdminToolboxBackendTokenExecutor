@@ -12,7 +12,7 @@ import java.util.List;
 
 public class DataBaseUserManager {
     private final String databaseUser = ConfigManager.getDatabaseUser();
-    private final String databasePassword = ConfigManager.getDatabasePassword();
+    private String databasePassword = ConfigManager.getDatabasePassword();
 
     public void ensureDatabaseUser() throws IOException {
         if (!isDbUserExists()) {
@@ -67,7 +67,6 @@ public class DataBaseUserManager {
     }
 
     private boolean isDbUserAbleToConnect() {
-        System.out.println(databasePassword);
         try (Connection conn = DriverManager.getConnection(DatabaseProvisioner.DB_URL, databaseUser,
                 databasePassword)) {
             return true;
@@ -78,8 +77,9 @@ public class DataBaseUserManager {
     }
 
     private void regenerateDbUserPassword() {
-        ConfigManager.values.put("DATABASE_PASSWORD",
-                Utils.generatePassword(ConfigManager.DB_USER_PASSWORD_LENGTH));
+        databasePassword = Utils.generatePassword(ConfigManager.DB_USER_PASSWORD_LENGTH);
+        ConfigManager.values.put("DATABASE_PASSWORD", databasePassword
+        );
     }
 
     private void setDbUserPassword() {

@@ -104,10 +104,7 @@ public class DbUtils {
         String pleskDbName = "psa";
         String dbUser = ConfigManager.getDatabaseUser();
         String dbPassword = ConfigManager.getDatabasePassword();
-        System.out.println(ConfigManager.getDatabasePassword());
-
-        String dbUrl = String.format("jdbc:mysql://localho" +
-                "st/%s", pleskDbName);
+        String dbUrl = String.format("jdbc:mysql://localhost/%s", pleskDbName);
         return DriverManager.getConnection(dbUrl, dbUser, dbPassword);
     }
 
