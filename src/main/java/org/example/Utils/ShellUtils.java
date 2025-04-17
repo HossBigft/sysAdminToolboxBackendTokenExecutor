@@ -21,7 +21,7 @@ public class ShellUtils {
     private ShellUtils() {
     }
 
-    private static String getSqlCliName() throws CommandFailedException {
+    public static String getSqlCliName() throws CommandFailedException {
         if (isCommandAvailable("mariadb")) {
             return "mariadb";
         } else if (isCommandAvailable("mysql")) {
