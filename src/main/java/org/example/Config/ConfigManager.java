@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.example.Exceptions.CommandFailedException;
-import org.example.Utils.ShellUtils;
 import org.example.Utils.Utils;
 
 import java.io.File;
@@ -16,7 +15,7 @@ import java.util.function.Supplier;
 
 public class ConfigManager {
     static final int DB_USER_PASSWORD_LENGTH = 15;
-    private static final String ENV_PATH = ".env.json";
+    public static final String ENV_PATH = ".env.json";
     private static final String DB_USER = "sysAdminToolBox";
     private static final String ENV_DB_PASS_FIELD = "DATABASE_PASSWORD";
     public static Map<String, String> values = new HashMap<>();
@@ -50,9 +49,7 @@ public class ConfigManager {
         if (updated) {
             updateDotEnv();
         }
-        if (!ShellUtils.isEnvPermissionsSecure(envFile)) {
-            ShellUtils.setEnvPermissionsOwner(envFile);
-        }
+        new PermissionManager().ensureDotEnvPermissions();
         DatabaseProvisioner.ensureDatabaseSetup();
         new SudoersManager().ensureSudoersRuleIsPresent();
 

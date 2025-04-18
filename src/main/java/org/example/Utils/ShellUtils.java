@@ -14,9 +14,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public class ShellUtils {
-    private static final String DOTENV_PERMISSIONS = "rw-------";
-    private static final String DOTENV_OWNER = "root";
-    private static final String DOTENV_GROUP = "root";
 
     private ShellUtils() {
     }
@@ -125,35 +122,42 @@ public class ShellUtils {
         return Optional.empty();
     }
 
-    private static boolean isValidUser(String user) {
+    public static boolean isValidUser(String user) {
         return !"root".equals(user);
     }
 
-    public static void setEnvPermissionsOwner(File envFile) throws IOException {
-        Path filePath = envFile.toPath();
-        Files.setPosixFilePermissions(filePath, PosixFilePermissions.fromString(DOTENV_PERMISSIONS));
-        UserPrincipalLookupService lookupService = FileSystems.getDefault().getUserPrincipalLookupService();
-        UserPrincipal userPrincipal = lookupService.lookupPrincipalByName(DOTENV_OWNER);
-        GroupPrincipal groupPrincipal = lookupService.lookupPrincipalByGroupName(DOTENV_GROUP);
-
-        Files.setAttribute(filePath, "posix:owner", userPrincipal, LinkOption.NOFOLLOW_LINKS);
-        Files.setAttribute(filePath, "posix:group", groupPrincipal, LinkOption.NOFOLLOW_LINKS);
+    public static void setPermissions(Path path, String permissions) throws IOException {
+        Set<PosixFilePermission> perms = PosixFilePermissions.fromString(permissions);
+        Files.setPosixFilePermissions(path, perms);
     }
 
-    public static boolean isEnvPermissionsSecure(File envFile) throws IOException {
-        Path envPath = envFile.toPath();
-        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(envPath);
+    public static void setOwner(Path path, String owner) throws IOException {
+        UserPrincipal userPrincipal = FileSystems.getDefault()
+                .getUserPrincipalLookupService()
+                .lookupPrincipalByName(owner);
+        Files.setAttribute(path, "posix:owner", userPrincipal, LinkOption.NOFOLLOW_LINKS);
+    }
 
-        String permString = PosixFilePermissions.toString(permissions);
-        boolean permsOk = DOTENV_PERMISSIONS.equals(permString);
+    public static void setGroup(Path path, String group) throws IOException {
+        GroupPrincipal groupPrincipal = FileSystems.getDefault()
+                .getUserPrincipalLookupService()
+                .lookupPrincipalByGroupName(group);
+        Files.setAttribute(path, "posix:group", groupPrincipal, LinkOption.NOFOLLOW_LINKS);
+    }
 
-        UserPrincipal owner = Files.getOwner(envPath);
-        boolean ownerOk = DOTENV_OWNER.equals(owner.getName());
+    public static boolean hasCorrectPermissions(Path path, String expectedPerms) throws IOException {
+        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(path);
+        String currentPerms = PosixFilePermissions.toString(permissions);
+        return expectedPerms.equals(currentPerms);
+    }
 
-        PosixFileAttributes attrs = Files.readAttributes(envPath, PosixFileAttributes.class);
-        boolean groupOk = DOTENV_GROUP.equals(attrs.group().getName());
+    public static boolean hasCorrectOwner(Path path, String expectedOwner) throws IOException {
+        UserPrincipal owner = Files.getOwner(path);
+        return expectedOwner.equals(owner.getName());
+    }
 
-        return permsOk && ownerOk && groupOk;
-
+    public static boolean hasCorrectGroup(Path path, String expectedGroup) throws IOException {
+        PosixFileAttributes attrs = Files.readAttributes(path, PosixFileAttributes.class);
+        return expectedGroup.equals(attrs.group().getName());
     }
 }
