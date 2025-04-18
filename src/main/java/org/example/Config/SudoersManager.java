@@ -8,51 +8,60 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.Set;
 
 public class SudoersManager {
     static final String shellUser = ShellUtils.resolveUser();
     private final String SUDOERS_DIR = "/etc/sudoers.d/";
     private final String TEMP_DIR = "/tmp/";
-    private final Set<PosixFilePermission> SUDOERS_PERMISSIONS = PosixFilePermissions.fromString("r--r-----");
+    private final String SUDOERS_PERMISSIONS = "r--r-----";
 
     public void ensureSudoersRuleIsPresent() throws CommandFailedException, IOException, URISyntaxException {
-        Path targetFile = Paths.get(SUDOERS_DIR + ConfigManager.getDatabaseUser());
+        Path sudoersFile = Paths.get(SUDOERS_DIR + ConfigManager.getDatabaseUser());
 
-        // Check if file exists but has incorrect permissions
-        if (Files.exists(targetFile) && !validateFilePermissions(targetFile)) {
+        if (Files.exists(sudoersFile) && isPermissionsInsecure(sudoersFile)) {
             System.out.println("Warning: Existing sudoers file with incorrect permissions detected!");
-            ShellUtils.runCommand("sudo", "rm", targetFile.toString());
+            securePermissions(sudoersFile);
         }
 
-        if (!isSudoRuleNotPresent()) {
+        if (isSudoRuleNotPresent()) {
             createSudoersRuleFile(generateSudoRule());
+            securePermissions(sudoersFile);
 
-
-            if (!isSudoRuleNotPresent()) {
+            if (isSudoRuleNotPresent()) {
                 throw new CommandFailedException("Failed to apply sudo rules correctly!");
             }
+            printRelevantRules();
         }
     }
 
-    private boolean validateFilePermissions(Path file) throws CommandFailedException {
+    private boolean isPermissionsInsecure(Path file) throws IOException {
+        return !ShellUtils.hasCorrectPermissions(file, SUDOERS_PERMISSIONS)
+                || !ShellUtils.hasCorrectOwner(file, "root")
+                || !ShellUtils.hasCorrectGroup(file, "root");
+
+    }
+
+    private void securePermissions(Path file) throws IOException {
+
+        ShellUtils.setPermissions(file, SUDOERS_PERMISSIONS);
+        ShellUtils.setOwner(file, "root");
+        ShellUtils.setGroup(file, "root");
+    }
+
+    private boolean isSudoRuleNotPresent() throws CommandFailedException {
+
+        Path sudoersFile = Paths.get(SUDOERS_DIR + ConfigManager.getDatabaseUser());
         try {
-            if (!Files.exists(file)) {
-                return false;
-            }
-
-
-            String ownerInfo = ShellUtils.runCommand("stat", "-c", "%U:%G", file.toString()).toString();
-            if (!"root:root".equals(ownerInfo.trim())) {
-                return false;
-            }
-
-            String permissions = ShellUtils.runCommand("stat", "-c", "%a", file.toString()).toString();
-            return "440".equals(permissions.trim());
-        } catch (CommandFailedException e) {
-            return false;
+            return Files.readAllLines(sudoersFile).stream().noneMatch(l -> {
+                try {
+                    return l.contains(generateSudoRule());
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } catch (IOException e) {
+            return true;
         }
     }
 
@@ -79,33 +88,12 @@ public class SudoersManager {
     }
 
     private String generateSudoRule() throws URISyntaxException {
-        return shellUser + " ALL=(ALL) NOPASSWD: " + getExecutablePath() + " *";
+        return shellUser + " ALL=(ALL) NOPASSWD: " + ShellUtils.getExecutablePath() + " *";
     }
 
     private void printRelevantRules() throws CommandFailedException {
         ShellUtils.runCommand("cat", "/etc/sudoers").stream().filter(l -> l.contains(shellUser))
                 .forEach(System.out::println);
-    }
-
-    private Path getExecutablePath() throws URISyntaxException {
-        return Paths.get(SudoersManager.class.getProtectionDomain()
-                .getCodeSource().getLocation().toURI());
-    }
-
-    private boolean isSudoRuleNotPresent() throws CommandFailedException {
-
-        Path sudoersFile = Paths.get(SUDOERS_DIR + ConfigManager.getDatabaseUser());
-        try {
-            return Files.readAllLines(sudoersFile).stream().noneMatch(l -> {
-                try {
-                    return l.contains(generateSudoRule());
-                } catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        } catch (IOException e) {
-            return true;
-        }
     }
 
 

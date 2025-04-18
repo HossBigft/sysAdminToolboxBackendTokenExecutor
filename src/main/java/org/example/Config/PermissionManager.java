@@ -14,16 +14,9 @@ public class PermissionManager {
 
     public void ensureDotEnvPermissions() throws IOException {
 
-        if (isEnvPermissionsSecureNot(dotEnv)){
+        if (isEnvPermissionsSecureNot(dotEnv)) {
             secureDotEnvPermissionsOwnerGroup(dotEnv);
         }
-    }
-    private void secureDotEnvPermissionsOwnerGroup(File envFile) throws IOException {
-        Path path = envFile.toPath();
-
-        ShellUtils.setPermissions(path, DOTENV_PERMISSIONS);
-        ShellUtils.setOwner(path, DOTENV_OWNER);
-        ShellUtils.setGroup(path, DOTENV_GROUP);
     }
 
     private boolean isEnvPermissionsSecureNot(File envFile) throws IOException {
@@ -32,5 +25,13 @@ public class PermissionManager {
         return !ShellUtils.hasCorrectPermissions(path, DOTENV_PERMISSIONS)
                 || !ShellUtils.hasCorrectOwner(path, DOTENV_OWNER)
                 || !ShellUtils.hasCorrectGroup(path, DOTENV_GROUP);
+    }
+
+    private void secureDotEnvPermissionsOwnerGroup(File envFile) throws IOException {
+        Path path = envFile.toPath();
+
+        ShellUtils.setPermissions(path, DOTENV_PERMISSIONS);
+        ShellUtils.setOwner(path, DOTENV_OWNER);
+        ShellUtils.setGroup(path, DOTENV_GROUP);
     }
 }

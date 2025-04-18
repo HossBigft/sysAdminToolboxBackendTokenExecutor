@@ -1,11 +1,13 @@
 package org.example.Utils;
 
+import org.example.Config.SudoersManager;
 import org.example.Exceptions.CommandFailedException;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.nio.file.*;
 import java.nio.file.attribute.*;
 import java.util.*;
@@ -159,5 +161,10 @@ public class ShellUtils {
     public static boolean hasCorrectGroup(Path path, String expectedGroup) throws IOException {
         PosixFileAttributes attrs = Files.readAttributes(path, PosixFileAttributes.class);
         return expectedGroup.equals(attrs.group().getName());
+    }
+
+    public static Path getExecutablePath() throws URISyntaxException {
+        return Paths.get(SudoersManager.class.getProtectionDomain()
+                .getCodeSource().getLocation().toURI());
     }
 }
