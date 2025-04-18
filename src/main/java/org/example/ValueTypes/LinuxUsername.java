@@ -15,6 +15,9 @@ public record LinuxUsername(String name) implements ValueType {
                     name +
                     " must be a valid username (e.g., 'johndoe') matching: " + LINUX_USERNAME_PATTERN.pattern());
         }
+        if (name.equalsIgnoreCase("root")) {
+            throw new IllegalArgumentException("name " + name + " must not be root,");
+        }
     }
 
     public static boolean isValid(String candidate) {

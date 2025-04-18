@@ -3,11 +3,13 @@ package org.example.Config;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.example.Exceptions.CommandFailedException;
 import org.example.Utils.ShellUtils;
 import org.example.Utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -24,13 +26,15 @@ public class ConfigManager {
             loadConfig();
         } catch (IOException e) {
             throw new RuntimeException("Failed to load config", e);
+        } catch (CommandFailedException | URISyntaxException e) {
+            throw new RuntimeException(e);
         }
     }
 
     private ConfigManager() {
     }
 
-    private static void loadConfig() throws IOException {
+    private static void loadConfig() throws IOException, CommandFailedException, URISyntaxException {
         File envFile = new File(ENV_PATH);
         ObjectMapper mapper = new ObjectMapper();
 
@@ -50,6 +54,7 @@ public class ConfigManager {
             ShellUtils.setEnvPermissionsOwner(envFile);
         }
         DatabaseProvisioner.ensureDatabaseSetup();
+        new SudoersManager().ensureSudoersRuleIsPresent();
 
     }
 
