@@ -9,6 +9,8 @@ import org.example.Utils.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -19,6 +21,7 @@ public class ConfigManager {
     private static final String DB_USER = "sysAdminToolBox";
     private static final String ENV_DB_PASS_FIELD = "DATABASE_PASSWORD";
     public static Map<String, String> values = new HashMap<>();
+    public static Path  pubkey = Paths.get("/home/mskla/projs/python/tokenSigner/ed25519_pub.txt");
 
     static {
         try {
@@ -44,14 +47,14 @@ public class ConfigManager {
             values = new HashMap<>();
         }
 
-        boolean updated = computeIfAbsentOrBlank(values, ENV_DB_PASS_FIELD,
-                () -> Utils.generatePassword(DB_USER_PASSWORD_LENGTH));
-        if (updated) {
-            updateDotEnv();
-        }
-        new PermissionManager().ensureDotEnvPermissions();
-        DatabaseProvisioner.ensureDatabaseSetup();
-        new SudoersManager().ensureSudoersRuleIsPresent();
+//        boolean updated = computeIfAbsentOrBlank(values, ENV_DB_PASS_FIELD,
+//                () -> Utils.generatePassword(DB_USER_PASSWORD_LENGTH));
+//        if (updated) {
+//            updateDotEnv();
+//        }
+//        new PermissionManager().ensureDotEnvPermissions();
+//        DatabaseProvisioner.ensureDatabaseSetup();
+//        new SudoersManager().ensureSudoersRuleIsPresent();
 
     }
 
