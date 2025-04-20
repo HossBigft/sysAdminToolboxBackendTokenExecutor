@@ -1,44 +1,55 @@
 package org.example;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.example.Commands.GetLoginLinkCliCommand;
+import org.example.Commands.GetSubscriptionInfoCliCommand;
+import org.example.Commands.GetTestMailboxCliCommand;
 import org.example.Exceptions.CommandFailedException;
 import org.example.ValueTypes.DomainName;
+import org.example.ValueTypes.LinuxUsername;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
+import picocli.CommandLine.ParentCommand;
 
+import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
-
-@Command(name = "sysadmintoolbox", description = "Executes sudo commands on server", mixinStandardHelpOptions = true)
+@Command(
+        name = "sysadmintoolbox",
+        description = "Safe root wrapper for executing system administration commands",
+        mixinStandardHelpOptions = true
+)
 public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
+    private final PleskService pleskService;
 
-    @Parameters(index = "0", description = "The domain to check.")
-    private String domain;
+    public SysAdminToolboxBackendTokenExecutor() {
+        this.pleskService = new PleskService();
+    }
 
-
+    public PleskService getPleskService() {
+        return pleskService;
+    }
 
     public static void main(String[] args) {
-        int exitCode = new CommandLine(new SysAdminToolboxBackendTokenExecutor()).execute(args);
+        SysAdminToolboxBackendTokenExecutor app = new SysAdminToolboxBackendTokenExecutor();
+        CommandLine commandLine = new CommandLine(app);
+
+        // Register all command modules dynamically
+        commandLine.addSubcommand(new GetTestMailboxCliCommand(app));
+        commandLine.addSubcommand(new GetLoginLinkCliCommand(app));
+        commandLine.addSubcommand(new GetSubscriptionInfoCliCommand(app));
+
+        int exitCode = commandLine.execute(args);
         System.exit(exitCode);
     }
 
     @Override
     public Integer call() {
-
-        Optional<ObjectNode> mailCredentials;
-        try {
-            mailCredentials = new PleskService().getTestMailbox( new DomainName(domain));
-        } catch (CommandFailedException e) {
-            System.out.println("Test mail creation failed with " + e);
-            return 1;
-        }
-        mailCredentials.ifPresentOrElse(
-                System.out::println,
-                () -> System.out.println("Email for " + domain + " was not found")
-        );
-
+        CommandLine.usage(this, System.out);
         return 0;
     }
 
