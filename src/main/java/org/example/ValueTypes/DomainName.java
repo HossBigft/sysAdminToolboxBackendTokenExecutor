@@ -25,4 +25,9 @@ public record DomainName(String name) implements ValueType {
         public String value() {
             return name;
         }
+
+        @Override
+        public String toString(){
+            return name;
+        }
     }

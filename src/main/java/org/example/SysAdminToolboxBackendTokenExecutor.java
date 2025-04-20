@@ -1,6 +1,8 @@
 package org.example;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.example.Exceptions.CommandFailedException;
+import org.example.ValueTypes.DomainName;
 import org.example.ValueTypes.LinuxUsername;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -16,8 +18,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
     @Parameters(index = "0", description = "The domain to check.")
     private String domain;
-    @Parameters(index = "1", description = "The domain to check.")
-    private int id;
+
 
 
     public static void main(String[] args) {
@@ -28,17 +29,17 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     @Override
     public Integer call() {
 
-        Optional<String> mailCredentials = Optional.empty();
+        Optional<ObjectNode> mailCredentials = Optional.empty();
         try {
-            mailCredentials = new PleskService().pleskGetSubscriptionLoginLinkBySubscriptionId(id, new LinuxUsername(domain));
+            mailCredentials = new PleskService().plesk_get_testmail_credentials( new DomainName(domain));
         } catch (CommandFailedException e) {
             System.out.println("Test mail creation failed with " + e);
             return 1;
-        } catch (SQLException e){
-            e.printStackTrace();
         }
-        mailCredentials.ifPresentOrElse(creds -> System.out.println(String.join("", creds)),
-                () -> System.out.println("Email for " + domain + " was not found"));
+        mailCredentials.ifPresentOrElse(
+                System.out::println,
+                () -> System.out.println("Email for " + domain + " was not found")
+        );
 
         return 0;
     }

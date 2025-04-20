@@ -17,13 +17,14 @@ import java.util.Optional;
 import static org.example.Constants.PleskConstants.PLESK_CLI_EXECUTABLE;
 import static org.example.Constants.PleskConstants.PLESK_CLI_GET_MAIL_USERS_CREDENTIALS;
 
+
 public class PleskGetTestMailboxCommand implements Command<Optional<ObjectNode>> {
+
     static final String TEST_MAIL_LOGIN = "testsupportmail";
     static final String
             TEST_MAIL_DESCRIPTION =
             "This is a throwaway mail for troubleshooting purposes. You may delete it will.";
     static final int TEST_MAIL_PASSWORD_LENGTH = 15;
-
     final DomainName testMailDomain;
 
     public PleskGetTestMailboxCommand(DomainName testmailDomain) {
@@ -41,10 +42,8 @@ public class PleskGetTestMailboxCommand implements Command<Optional<ObjectNode>>
                         StandardCharsets.UTF_8));
         Optional<String> existing_password;
         existing_password = getEmailPassword(TEST_MAIL_LOGIN, testMailDomain);
-        if (existing_password.isPresent()) {
-            password = existing_password.get();
-        } else {
-            password = Utils.generatePassword(TEST_MAIL_PASSWORD_LENGTH);
+        password = existing_password.orElseGet(() -> Utils.generatePassword(TEST_MAIL_PASSWORD_LENGTH));
+        if (existing_password.isEmpty()) {
             try {
                 createMail(TEST_MAIL_LOGIN, testMailDomain, password,
                         TEST_MAIL_DESCRIPTION);
@@ -54,10 +53,10 @@ public class PleskGetTestMailboxCommand implements Command<Optional<ObjectNode>>
                 throw new CommandFailedException(
                         "Email creation for " + testMailDomain + " failed with " + e);
             }
-            mailCredentials.put("email", TEST_MAIL_LOGIN + "@" + testMailDomain);
-            mailCredentials.put("password", password);
-            mailCredentials.put("login_link", login_link.toString());
         }
+        mailCredentials.put("email", TEST_MAIL_LOGIN + "@" + testMailDomain);
+        mailCredentials.put("password", password);
+        mailCredentials.put("login_link", login_link.toString());
         return mailCredentials.isEmpty() ? Optional.empty() : Optional.of(mailCredentials);
     }
 
@@ -66,14 +65,12 @@ public class PleskGetTestMailboxCommand implements Command<Optional<ObjectNode>>
             CommandFailedException {
         String emailPassword = "";
         List<String> result = ShellUtils.runCommand(PLESK_CLI_GET_MAIL_USERS_CREDENTIALS);
-
+        String email = login + "@" + mailDomain;
         result = result.stream()
-                .filter(line -> line.contains(login + "@" + mailDomain))
-                .map(line -> line.replaceAll("\\s", ""))
-                .map(line -> {
-                    int index = line.indexOf('|');
-                    return index >= 0 ? line.split("\\|")[3] : "";
-                })
+                .filter(line -> line.contains(email))
+                .map(line -> line.split("\\|"))
+                .filter(parts -> parts.length >= 4)
+                .map(parts -> parts[3].trim())
                 .toList();
 
         if (!result.isEmpty()) {
@@ -87,13 +84,12 @@ public class PleskGetTestMailboxCommand implements Command<Optional<ObjectNode>>
                             DomainName mailDomain,
                             String password,
                             String description) throws CommandFailedException {
+        String email = login + "@" + mailDomain;
         ShellUtils.runCommand(PLESK_CLI_EXECUTABLE,
                 "bin",
                 "mail",
                 "--create",
-                login,
-                "@",
-                mailDomain.name(),
+                email,
                 "-passwd",
                 password,
                 "-mailbox",
