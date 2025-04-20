@@ -2,7 +2,7 @@ package org.example;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.example.Commands.Plesk.PleskFetchSubscriptionInfoByDomainCommand;
-import org.example.Commands.Plesk.PleskGetSubscriptionLoginLinkBySubscriptionIdCommand;
+import org.example.Commands.Plesk.PleskLoginLinkCommand;
 import org.example.Exceptions.CommandFailedException;
 import org.example.Utils.DbUtils;
 import org.example.Utils.ShellUtils;
@@ -25,7 +25,7 @@ public class PleskService {
     public Optional<String> pleskGetSubscriptionLoginLinkBySubscriptionId(int subscriptionId,
                                                                           LinuxUsername username) throws
             CommandFailedException, SQLException {
-        return new PleskGetSubscriptionLoginLinkBySubscriptionIdCommand(subscriptionId, username).execute();
+        return new PleskLoginLinkCommand(subscriptionId, username).execute();
     }
 
     private String pleskGetUserLoginLink(String username) throws CommandFailedException {

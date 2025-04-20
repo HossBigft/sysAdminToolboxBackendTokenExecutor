@@ -11,13 +11,13 @@ import java.util.Optional;
 
 import static org.example.Constants.PleskConstants.PLESK_CLI_EXECUTABLE;
 
-public class PleskGetSubscriptionLoginLinkBySubscriptionIdCommand implements Command<Optional<String>> {
+public class PleskLoginLinkCommand implements Command<Optional<String>> {
     final int subscriptionId;
     final LinuxUsername username;
 
 
-    public PleskGetSubscriptionLoginLinkBySubscriptionIdCommand(int subscriptionId,
-                                                                LinuxUsername username) {
+    public PleskLoginLinkCommand(int subscriptionId,
+                                 LinuxUsername username) {
         this.subscriptionId = subscriptionId;
         this.username = username;
     }
