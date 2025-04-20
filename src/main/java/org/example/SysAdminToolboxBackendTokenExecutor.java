@@ -27,10 +27,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
     @Override
     public Integer call() {
-//        if (!isDomain.test(domain)) {
-//            System.err.println("Error: Invalid domain format.");
-//            return 1;
-//        }
+
         Optional<String> mailCredentials = Optional.empty();
         try {
             mailCredentials = new PleskService().pleskGetSubscriptionLoginLinkBySubscriptionId(id, new LinuxUsername(domain));
