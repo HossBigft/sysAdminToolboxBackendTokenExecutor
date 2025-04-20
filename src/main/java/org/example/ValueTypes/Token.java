@@ -1,6 +1,6 @@
 package org.example.ValueTypes;
 
-import org.example.Config.ConfigManager;
+import org.example.Config.KeyManager;
 import org.example.Utils.Utils;
 
 import java.util.Arrays;
@@ -43,7 +43,7 @@ public class Token implements ValueType {
     }
 
     public boolean isSignatureValid() throws Exception {
-        return Utils.verifyDigitalSignature(value(), signature, ConfigManager.pubkey);
+        return Utils.verifyDigitalSignature(value(), signature);
     }
 
     public String value() {

@@ -4,13 +4,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.example.Exceptions.CommandFailedException;
-import org.example.Utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -21,7 +18,6 @@ public class ConfigManager {
     private static final String DB_USER = "sysAdminToolBox";
     private static final String ENV_DB_PASS_FIELD = "DATABASE_PASSWORD";
     public static Map<String, String> values = new HashMap<>();
-    public static Path  pubkey = Paths.get("/home/mskla/projs/python/tokenSigner/ed25519_pub.txt");
 
     static {
         try {
