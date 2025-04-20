@@ -1,10 +1,10 @@
 package org.example;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.example.Commands.Plesk.PleskFetchSubscriptionInfoCommand;
 import org.example.Commands.Plesk.PleskGetTestMailboxCommand;
 import org.example.Commands.Plesk.PleskLoginLinkCommand;
 import org.example.Exceptions.CommandFailedException;
-import org.example.Utils.DbUtils;
 import org.example.Utils.ShellUtils;
 import org.example.ValueTypes.DomainName;
 import org.example.ValueTypes.LinuxUsername;
@@ -32,14 +32,12 @@ public class PleskService {
         return ShellUtils.runCommand(PLESK_CLI_EXECUTABLE, "login", username).getFirst();
     }
 
-    public Optional<List<String>> plesk_fetch_subscription_info_by_domain(DomainName domain) throws
+    public Optional<List<String>> fetchSubscriptionInfo(DomainName domain) throws
             SQLException {
-        Optional<List<String>> result;
-        result = DbUtils.fetchSubscriptionInfoByDomain(domain.name());
-        return result;
+        return new PleskFetchSubscriptionInfoCommand(domain).execute();
     }
 
-    public Optional<ObjectNode> plesk_get_testmail_credentials(DomainName testMailDomain) throws
+    public Optional<ObjectNode> getTestMailbox(DomainName testMailDomain) throws
             CommandFailedException {
         return new PleskGetTestMailboxCommand(testMailDomain).execute();
     }

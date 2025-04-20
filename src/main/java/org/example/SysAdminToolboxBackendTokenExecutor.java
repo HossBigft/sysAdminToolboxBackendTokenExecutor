@@ -3,12 +3,10 @@ package org.example;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.example.Exceptions.CommandFailedException;
 import org.example.ValueTypes.DomainName;
-import org.example.ValueTypes.LinuxUsername;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
-import java.sql.SQLException;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
@@ -31,7 +29,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
         Optional<ObjectNode> mailCredentials = Optional.empty();
         try {
-            mailCredentials = new PleskService().plesk_get_testmail_credentials( new DomainName(domain));
+            mailCredentials = new PleskService().getTestMailbox( new DomainName(domain));
         } catch (CommandFailedException e) {
             System.out.println("Test mail creation failed with " + e);
             return 1;
