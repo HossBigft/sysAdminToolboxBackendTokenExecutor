@@ -17,7 +17,7 @@ import java.util.Optional;
 import static org.example.Constants.PleskConstants.PLESK_CLI_EXECUTABLE;
 import static org.example.Constants.PleskConstants.PLESK_CLI_GET_MAIL_USERS_CREDENTIALS;
 
-public class PleskFetchSubscriptionInfoByDomainCommand implements Command {
+public class PleskFetchSubscriptionInfoByDomainCommand implements Command<Optional<ObjectNode>> {
     static final String TEST_MAIL_LOGIN = "testsupportmail";
     static final String
             TEST_MAIL_DESCRIPTION =
