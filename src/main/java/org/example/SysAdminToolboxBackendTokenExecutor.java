@@ -27,7 +27,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     @Override
     public Integer call() {
 
-        Optional<ObjectNode> mailCredentials = Optional.empty();
+        Optional<ObjectNode> mailCredentials;
         try {
             mailCredentials = new PleskService().getTestMailbox( new DomainName(domain));
         } catch (CommandFailedException e) {
