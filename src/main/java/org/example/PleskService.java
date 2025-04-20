@@ -1,7 +1,7 @@
 package org.example;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.example.Commands.Plesk.PleskFetchSubscriptionInfoByDomainCommand;
+import org.example.Commands.Plesk.PleskGetTestMailboxCommand;
 import org.example.Commands.Plesk.PleskLoginLinkCommand;
 import org.example.Exceptions.CommandFailedException;
 import org.example.Utils.DbUtils;
@@ -41,7 +41,7 @@ public class PleskService {
 
     public Optional<ObjectNode> plesk_get_testmail_credentials(DomainName testMailDomain) throws
             CommandFailedException {
-        return new PleskFetchSubscriptionInfoByDomainCommand(testMailDomain).execute();
+        return new PleskGetTestMailboxCommand(testMailDomain).execute();
     }
 
 
