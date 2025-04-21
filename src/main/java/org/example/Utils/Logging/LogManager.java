@@ -46,9 +46,11 @@ public class LogManager {
             System.err.println("Failed to initialize audit log: " + e.getMessage());
         }
     }
-    protected static void setGlobalLogLevel(LogLevel level){
-        globalLogLevel=level;
+
+    protected static void setGlobalLogLevel(LogLevel level) {
+        globalLogLevel = level;
     }
+
     private static void initializeLogFile() throws IOException {
         Path logDir = Paths.get(LOG_DIRECTORY);
         if (!Files.exists(logDir)) {
@@ -255,18 +257,25 @@ public class LogManager {
 
             if (args != null && args.length > 0) {
                 message.append(" Args=");
-                for (int i = 0; i < args.length; i++) {
-                    String arg = args[i];
-                    if (arg.toLowerCase().contains("password") ||
-                            (i > 0 && args[i - 1].toLowerCase().contains("password"))) {
-                        message.append("[REDACTED] ");
-                    } else {
-                        message.append(arg).append(" ");
-                    }
+                for (String arg : args) {
+                    message.append(maskSecrets(arg)).append(" ");
                 }
             }
 
             writeLog(level, message.toString().trim());
+        }
+
+        private String maskSecrets(String input) {
+            if (input == null) return null;
+
+            String masked = input;
+
+            masked = masked.replaceAll("(?i)(IDENTIFIED BY\\s+')(.*?)(')", "$1[REDACTED]$3");
+            masked = masked.replaceAll("(?i)(SET PASSWORD\\s*=\\s*')(.*?)(')", "$1[REDACTED]$3");
+            masked = masked.replaceAll("(?i)(--password=)([^\\s]+)", "$1[REDACTED]");
+            masked = masked.replaceAll("(?i)(password\\s*[:=]\\s*)([^\\s'\"]+)", "$1[REDACTED]");
+
+            return masked;
         }
 
         /**
@@ -290,24 +299,6 @@ public class LogManager {
             logCommandInternal(LogLevel.DEBUG);
         }
 
-        /**
-         * Log command with automatic level selection based on sensitivity
-         */
-        public void auto() {
-            String[] fullCommand = new String[args.length + 1];
-            fullCommand[0] = command;
-            System.arraycopy(args, 0, fullCommand, 1, args.length);
-
-            if (isSensitiveCommand(fullCommand)) {
-                writeLog(LogLevel.INFO, command + " [sensitive command]");
-                if (isLoggable(LogLevel.DEBUG)) {
-                    writeLog(LogLevel.DEBUG,
-                            "Executing: " + command + " " + String.join(" ", args));
-                }
-            } else {
-                logCommandInternal(LogLevel.INFO);
-            }
-        }
     }
 
     /**
