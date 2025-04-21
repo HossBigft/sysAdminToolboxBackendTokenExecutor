@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.example.Exceptions.CommandFailedException;
+import org.example.Utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,20 +38,20 @@ public class ConfigManager {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            values = mapper.readValue(envFile, new TypeReference<Map<String, String>>() {
+            values = mapper.readValue(envFile, new TypeReference<>() {
             });
         } catch (IOException e) {
             values = new HashMap<>();
         }
 
-//        boolean updated = computeIfAbsentOrBlank(values, ENV_DB_PASS_FIELD,
-//                () -> Utils.generatePassword(DB_USER_PASSWORD_LENGTH));
-//        if (updated) {
-//            updateDotEnv();
-//        }
-//        new PermissionManager().ensureDotEnvPermissions();
-//        DatabaseProvisioner.ensureDatabaseSetup();
-//        new SudoersManager().ensureSudoersRuleIsPresent();
+        boolean updated = computeIfAbsentOrBlank(values, ENV_DB_PASS_FIELD,
+                () -> Utils.generatePassword(DB_USER_PASSWORD_LENGTH));
+        if (updated) {
+            updateDotEnv();
+        }
+        new PermissionManager().ensureDotEnvPermissions();
+        DatabaseProvisioner.ensureDatabaseSetup();
+        new SudoersManager().ensureSudoersRuleIsPresent();
 
     }
 
