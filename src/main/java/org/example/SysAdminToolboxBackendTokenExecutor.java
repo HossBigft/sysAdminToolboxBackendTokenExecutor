@@ -5,6 +5,7 @@ import org.example.Commands.GetLoginLinkCliCommand;
 import org.example.Commands.GetSubscriptionInfoCliCommand;
 import org.example.Commands.GetTestMailboxCliCommand;
 import org.example.Exceptions.CommandFailedException;
+import org.example.Utils.Logging.LogManager;
 import org.example.ValueTypes.DomainName;
 import org.example.ValueTypes.LinuxUsername;
 import picocli.CommandLine;
@@ -26,6 +27,9 @@ import java.util.concurrent.Callable;
 public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     private final PleskService pleskService;
 
+    @Option(names = {"--debug"}, description = "Enable debug output", scope = CommandLine.ScopeType.INHERIT)
+    boolean debug;
+
     public SysAdminToolboxBackendTokenExecutor() {
         this.pleskService = new PleskService();
     }
@@ -35,15 +39,22 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     }
 
     public static void main(String[] args) {
+
         SysAdminToolboxBackendTokenExecutor app = new SysAdminToolboxBackendTokenExecutor();
         CommandLine commandLine = new CommandLine(app);
 
-        // Register all command modules dynamically
+
         commandLine.addSubcommand(new GetTestMailboxCliCommand(app));
         commandLine.addSubcommand(new GetLoginLinkCliCommand(app));
         commandLine.addSubcommand(new GetSubscriptionInfoCliCommand(app));
+        commandLine.parseArgs(args);
+
+        if (app.debug){
+            LogManager.Builder.config().globalLogLevel(LogManager.LogLevel.DEBUG);
+        }
 
         int exitCode = commandLine.execute(args);
+
         System.exit(exitCode);
     }
 

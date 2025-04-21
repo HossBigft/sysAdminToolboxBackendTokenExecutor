@@ -13,14 +13,12 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Supplier;
 
-/**
- * LogManager provides centralized logging capabilities with configurable log levels
- * for the SysAdminToolBox application using a fluent API.
- */
+
 public class LogManager {
     // Configuration constants
     private static final String LOG_DIRECTORY = "/var/log/sysAdminToolBox/";
@@ -38,32 +36,9 @@ public class LogManager {
             "password", "secret", "key", "token", "credential",
             "auth", "-p", "--password", "shadow"
     ));
-
-    // Log levels, ordered by severity (lowest to highest value)
-    public enum LogLevel {
-        ERROR(0), WARN(1), INFO(2), DEBUG(3);
-
-        private final int value;
-
-        LogLevel(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
-    }
-
-    // Default log level
+    private static final Log log = new Log();
     private static LogLevel globalLogLevel = LogLevel.INFO;
 
-    // Category-specific log levels
-    private static final Map<String, LogLevel> categoryLogLevels = new ConcurrentHashMap<>();
-
-    // Fluent API logger instance
-    private static final Log log = new Log();
-
-    // Initialize the log file upon class loading
     static {
         try {
             initializeLogFile();
@@ -71,12 +46,10 @@ public class LogManager {
             System.err.println("Failed to initialize audit log: " + e.getMessage());
         }
     }
-
-    /**
-     * Create and set permissions for log directory and file
-     */
+    protected static void setGlobalLogLevel(LogLevel level){
+        globalLogLevel=level;
+    }
     private static void initializeLogFile() throws IOException {
-        // Create and secure log directory
         Path logDir = Paths.get(LOG_DIRECTORY);
         if (!Files.exists(logDir)) {
             Files.createDirectories(logDir);
@@ -89,7 +62,7 @@ public class LogManager {
             }
         }
 
-        // Create and secure log file
+
         Path logFilePath = Paths.get(LOG_DIRECTORY, LOG_FILE);
         if (!Files.exists(logFilePath)) {
             Files.createFile(logFilePath);
@@ -104,73 +77,35 @@ public class LogManager {
     }
 
     /**
-     * Set the global log level
-     */
-    public static void setGlobalLogLevel(LogLevel level) {
-        globalLogLevel = level;
-        writeLog(LogLevel.INFO, "LOG_SYSTEM", "Changed global log level to " + level);
-    }
-
-    /**
-     * Set log level for a specific category
-     */
-    public static void setCategoryLogLevel(String category, LogLevel level) {
-        categoryLogLevels.put(category.toUpperCase(), level);
-        writeLog(LogLevel.INFO, "LOG_SYSTEM", "Set log level for category " + category + " to " + level);
-    }
-
-    /**
-     * Remove category-specific log level
-     */
-    public static void removeCategoryLogLevel(String category) {
-        categoryLogLevels.remove(category.toUpperCase());
-        writeLog(LogLevel.INFO, "LOG_SYSTEM", "Removed specific log level for category " + category);
-    }
-
-    /**
-     * Get the log level for a category
-     */
-    public static LogLevel getLogLevel(String category) {
-        return categoryLogLevels.getOrDefault(category.toUpperCase(), globalLogLevel);
-    }
-
-    /**
-     * Get the global log level
-     */
-    public static LogLevel getGlobalLogLevel() {
-        return globalLogLevel;
-    }
-
-    /**
-     * Check if a message with the given level should be logged for a specific category
-     */
-    private static boolean isLoggable(LogLevel level, String category) {
-        LogLevel categoryLevel = categoryLogLevels.getOrDefault(category.toUpperCase(), globalLogLevel);
-        return level.getValue() <= categoryLevel.getValue();
-    }
-
-    /**
      * Core logging method - all logging goes through here
      */
-    private static synchronized void writeLog(LogLevel level, String category, String message) {
-        if (!isLoggable(level, category)) {
+    private static synchronized void writeLog(LogLevel level,
+                                              String message) {
+        if (!isLoggable(level)) {
             return;
         }
 
         String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT);
-        String logEntry = String.format("[%s] [%s] User=%s Category=%s Message=%s",
-                timestamp, level, USER, category, message);
+        String logEntry = String.format("[%s] [%s] User=%s  Message=%s",
+                timestamp, level, USER, message);
 
-        // Print to console for immediate feedback
-        System.out.println(logEntry);
+        if (level == LogLevel.DEBUG) {
+            System.out.println(logEntry);
+        }
 
-        // Write to log file
         try (FileWriter fw = new FileWriter(new File(LOG_DIRECTORY, LOG_FILE), true);
              PrintWriter pw = new PrintWriter(fw)) {
             pw.println(logEntry);
         } catch (IOException e) {
             System.err.println("Failed to write to audit log: " + e.getMessage());
         }
+    }
+
+    /**
+     * Check if a message with the given level should be logged for a specific category
+     */
+    private static boolean isLoggable(LogLevel level) {
+        return level.getValue() <= globalLogLevel.getValue();
     }
 
     /**
@@ -197,17 +132,25 @@ public class LogManager {
     }
 
     /**
-     * Get the fluent API logger instance
-     */
-    public static Log getLog() {
-        return log;
-    }
-
-    /**
      * Main fluent API entry point
      */
     public static Log log() {
         return log;
+    }
+
+    // Log levels, ordered by severity (lowest to highest value)
+    public enum LogLevel {
+        ERROR(0), WARN(1), INFO(2), DEBUG(3);
+
+        private final int value;
+
+        LogLevel(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
     }
 
     /**
@@ -217,72 +160,72 @@ public class LogManager {
         /**
          * Command logger
          */
-        public CommandLogger command(String command, String... args) {
+        public CommandLogger command(String command,
+                                     String... args) {
             return new CommandLogger(command, args);
         }
 
         /**
          * Action logger
          */
-        public ActionLogger action(String action, String target) {
+        public ActionLogger action(String action,
+                                   String target) {
             return new ActionLogger(action, target);
         }
 
         /**
          * Action logger with success indicator
          */
-        public ActionLogger action(String action, String target, boolean success) {
+        public ActionLogger action(String action,
+                                   String target,
+                                   boolean success) {
             return new ActionLogger(action, target, success);
-        }
-
-        /**
-         * Category logger
-         */
-        public CategoryLogger category(String category) {
-            return new CategoryLogger(category);
         }
 
         /**
          * Config change logger
          */
-        public ConfigChangeLogger configChange(String component, String property, String oldValue, String newValue) {
+        public ConfigChangeLogger configChange(String component,
+                                               String property,
+                                               String oldValue,
+                                               String newValue) {
             return new ConfigChangeLogger(component, property, oldValue, newValue);
         }
 
         /**
          * Direct error logging
          */
-        public void error(String category, String message) {
-            writeLog(LogLevel.ERROR, category, message);
+        public void error(String message) {
+            writeLog(LogLevel.ERROR, message);
         }
 
         /**
          * Direct warning logging
          */
-        public void warn(String category, String message) {
-            writeLog(LogLevel.WARN, category, message);
+        public void warn(String message) {
+            writeLog(LogLevel.WARN, message);
         }
 
         /**
          * Direct info logging
          */
-        public void info(String category, String message) {
-            writeLog(LogLevel.INFO, category, message);
+        public void info(String message) {
+            writeLog(LogLevel.INFO, message);
         }
 
         /**
          * Direct debug logging
          */
-        public void debug(String category, String message) {
-            writeLog(LogLevel.DEBUG, category, message);
+        public void debug(String message) {
+            writeLog(LogLevel.DEBUG, message);
         }
 
         /**
          * Direct debug logging with lazy evaluation
          */
-        public void debug(String category, Supplier<String> messageSupplier) {
-            if (isLoggable(LogLevel.DEBUG, category)) {
-                writeLog(LogLevel.DEBUG, category, messageSupplier.get());
+        public void debug(Supplier<String> messageSupplier) {
+            if (isLoggable(LogLevel.DEBUG)) {
+                writeLog(LogLevel.DEBUG, messageSupplier.get());
             }
         }
     }
@@ -294,7 +237,8 @@ public class LogManager {
         private final String command;
         private final String[] args;
 
-        private CommandLogger(String command, String... args) {
+        private CommandLogger(String command,
+                              String... args) {
             this.command = command;
             this.args = args;
         }
@@ -304,6 +248,25 @@ public class LogManager {
          */
         public void error() {
             logCommandInternal(LogLevel.ERROR);
+        }
+
+        private void logCommandInternal(LogLevel level) {
+            StringBuilder message = new StringBuilder("Command=" + command);
+
+            if (args != null && args.length > 0) {
+                message.append(" Args=");
+                for (int i = 0; i < args.length; i++) {
+                    String arg = args[i];
+                    if (arg.toLowerCase().contains("password") ||
+                            (i > 0 && args[i - 1].toLowerCase().contains("password"))) {
+                        message.append("[REDACTED] ");
+                    } else {
+                        message.append(arg).append(" ");
+                    }
+                }
+            }
+
+            writeLog(level, message.toString().trim());
         }
 
         /**
@@ -336,33 +299,14 @@ public class LogManager {
             System.arraycopy(args, 0, fullCommand, 1, args.length);
 
             if (isSensitiveCommand(fullCommand)) {
-                writeLog(LogLevel.INFO, "COMMAND", command + " [sensitive command]");
-                if (isLoggable(LogLevel.DEBUG, "SENSITIVE_COMMAND")) {
-                    writeLog(LogLevel.DEBUG, "SENSITIVE_COMMAND", "Executing: " + command + " " + String.join(" ", args));
+                writeLog(LogLevel.INFO, command + " [sensitive command]");
+                if (isLoggable(LogLevel.DEBUG)) {
+                    writeLog(LogLevel.DEBUG,
+                            "Executing: " + command + " " + String.join(" ", args));
                 }
             } else {
                 logCommandInternal(LogLevel.INFO);
             }
-        }
-
-        private void logCommandInternal(LogLevel level) {
-            StringBuilder message = new StringBuilder("Command=" + command);
-
-            if (args != null && args.length > 0) {
-                message.append(" Args=");
-                for (int i = 0; i < args.length; i++) {
-                    String arg = args[i];
-                    // Mask sensitive information like passwords
-                    if (arg.toLowerCase().contains("password") ||
-                            (i > 0 && args[i-1].toLowerCase().contains("password"))) {
-                        message.append("[REDACTED] ");
-                    } else {
-                        message.append(arg).append(" ");
-                    }
-                }
-            }
-
-            writeLog(level, "COMMAND", message.toString().trim());
         }
     }
 
@@ -374,13 +318,16 @@ public class LogManager {
         private final String target;
         private final Boolean success;
 
-        private ActionLogger(String action, String target) {
+        private ActionLogger(String action,
+                             String target) {
             this.action = action;
             this.target = target;
             this.success = null;
         }
 
-        private ActionLogger(String action, String target, boolean success) {
+        private ActionLogger(String action,
+                             String target,
+                             boolean success) {
             this.action = action;
             this.target = target;
             this.success = success;
@@ -391,6 +338,14 @@ public class LogManager {
          */
         public void error() {
             logActionInternal(LogLevel.ERROR);
+        }
+
+        private void logActionInternal(LogLevel level) {
+            if (success == null) {
+                writeLog(level, "Target=" + target);
+            } else {
+                writeLog(level, "Target=" + target + " Result=" + (success ? "SUCCESS" : "FAILURE"));
+            }
         }
 
         /**
@@ -413,14 +368,6 @@ public class LogManager {
         public void debug() {
             logActionInternal(LogLevel.DEBUG);
         }
-
-        private void logActionInternal(LogLevel level) {
-            if (success == null) {
-                writeLog(level, action, "Target=" + target);
-            } else {
-                writeLog(level, action, "Target=" + target + " Result=" + (success ? "SUCCESS" : "FAILURE"));
-            }
-        }
     }
 
     /**
@@ -437,36 +384,36 @@ public class LogManager {
          * Log message at ERROR level
          */
         public void error(String message) {
-            writeLog(LogLevel.ERROR, category, message);
+            writeLog(LogLevel.ERROR, message);
         }
 
         /**
          * Log message at WARN level
          */
         public void warn(String message) {
-            writeLog(LogLevel.WARN, category, message);
+            writeLog(LogLevel.WARN, message);
         }
 
         /**
          * Log message at INFO level
          */
         public void info(String message) {
-            writeLog(LogLevel.INFO, category, message);
+            writeLog(LogLevel.INFO, message);
         }
 
         /**
          * Log message at DEBUG level
          */
         public void debug(String message) {
-            writeLog(LogLevel.DEBUG, category, message);
+            writeLog(LogLevel.DEBUG, message);
         }
 
         /**
          * Log message at DEBUG level with lazy evaluation
          */
         public void debug(Supplier<String> messageSupplier) {
-            if (isLoggable(LogLevel.DEBUG, category)) {
-                writeLog(LogLevel.DEBUG, category, messageSupplier.get());
+            if (isLoggable(LogLevel.DEBUG)) {
+                writeLog(LogLevel.DEBUG, messageSupplier.get());
             }
         }
     }
@@ -480,7 +427,10 @@ public class LogManager {
         private final String oldValue;
         private final String newValue;
 
-        private ConfigChangeLogger(String component, String property, String oldValue, String newValue) {
+        private ConfigChangeLogger(String component,
+                                   String property,
+                                   String oldValue,
+                                   String newValue) {
             this.component = component;
             this.property = property;
 
@@ -499,6 +449,12 @@ public class LogManager {
          */
         public void error() {
             logConfigChangeInternal(LogLevel.ERROR);
+        }
+
+        private void logConfigChangeInternal(LogLevel level) {
+            writeLog(level,
+                    String.format("Component=%s Property=%s OldValue=%s NewValue=%s",
+                            component, property, oldValue, newValue));
         }
 
         /**
@@ -520,12 +476,6 @@ public class LogManager {
          */
         public void debug() {
             logConfigChangeInternal(LogLevel.DEBUG);
-        }
-
-        private void logConfigChangeInternal(LogLevel level) {
-            writeLog(level, "CONFIG_CHANGE",
-                    String.format("Component=%s Property=%s OldValue=%s NewValue=%s",
-                            component, property, oldValue, newValue));
         }
     }
 
@@ -552,27 +502,5 @@ public class LogManager {
             return this;
         }
 
-        /**
-         * Set a category-specific log level
-         */
-        public Builder categoryLogLevel(String category, LogLevel level) {
-            setCategoryLogLevel(category, level);
-            return this;
-        }
-
-        /**
-         * Set multiple category-specific log levels
-         */
-        public Builder categoryLogLevels(Map<String, LogLevel> levels) {
-            levels.forEach((category, level) -> setCategoryLogLevel(category, level));
-            return this;
-        }
-
-        /**
-         * Apply the configuration
-         */
-        public void apply() {
-            log().info("LOG_SYSTEM", "Applied log configuration");
-        }
     }
 }

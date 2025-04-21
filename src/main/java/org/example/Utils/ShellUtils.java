@@ -73,7 +73,7 @@ public class ShellUtils {
                 if (exitCode != 0) {
                     String errorMessage = String.format("Command '%s' failed with exit code %d: %s",
                             String.join(" ", args), exitCode, String.join("\n", outputLines));
-                    LogManager.log().error(args[0], errorMessage);
+                    LogManager.log().error(errorMessage);
                     throw new CommandFailedException(errorMessage);
                 }
 
@@ -82,13 +82,13 @@ public class ShellUtils {
         } catch (IOException e) {
             String errorMessage = String.format("Failed to execute command '%s': %s",
                     String.join(" ", args), e.getMessage());
-            LogManager.log().error(args[0], errorMessage);
+            LogManager.log().error(errorMessage);
             throw new CommandFailedException(errorMessage);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             String errorMessage = String.format("Failed to execute command '%s': %s",
                     String.join(" ", args), e.getMessage());
-            LogManager.log().error(args[0], errorMessage);
+            LogManager.log().error(errorMessage);
             throw new CommandFailedException(errorMessage);
         }
     }
