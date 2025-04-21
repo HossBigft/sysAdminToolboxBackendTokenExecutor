@@ -36,17 +36,17 @@ public class SudoersManager {
     }
 
     private boolean isPermissionsInsecure(Path file) throws IOException {
-        return !ShellUtils.hasCorrectPermissions(file, SUDOERS_PERMISSIONS)
-                || !ShellUtils.hasCorrectOwner(file, "root")
-                || !ShellUtils.hasCorrectGroup(file, "root");
+        return !PermissionManager.hasCorrectPermissions(file, SUDOERS_PERMISSIONS)
+                || !PermissionManager.hasCorrectOwner(file, "root")
+                || !PermissionManager.hasCorrectGroup(file, "root");
 
     }
 
     private void securePermissions(Path file) throws IOException {
 
-        ShellUtils.setPermissions(file, SUDOERS_PERMISSIONS);
-        ShellUtils.setOwner(file, "root");
-        ShellUtils.setGroup(file, "root");
+        PermissionManager.setPermissions(file, SUDOERS_PERMISSIONS);
+        PermissionManager.setOwner(file, "root");
+        PermissionManager.setGroup(file, "root");
     }
 
     private boolean isSudoRuleNotPresent() throws CommandFailedException {

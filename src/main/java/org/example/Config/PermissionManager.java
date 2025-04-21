@@ -1,16 +1,63 @@
 package org.example.Config;
 
-import org.example.Utils.ShellUtils;
+import org.example.Utils.Logging.LogManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.attribute.*;
+import java.util.Set;
 
 public class PermissionManager {
     private static final String DOTENV_PERMISSIONS = "rw-------";
     private static final String DOTENV_OWNER = "root";
     private static final String DOTENV_GROUP = "root";
     private static File dotEnv = new File(ConfigManager.ENV_PATH);
+
+    public static void setPermissions(Path path, String permissions) throws IOException {
+        LogManager.log().action("SET_PERMISSIONS "+ "["+permissions+"]", path.toString()).info();
+        Set<PosixFilePermission> perms = PosixFilePermissions.fromString(permissions);
+        Files.setPosixFilePermissions(path, perms);
+        LogManager.log().action("SET_PERMISSIONS "+ "["+permissions+"]", path.toString(), true).info();
+    }
+
+    public static void setOwner(Path path, String owner) throws IOException {
+
+        LogManager.log().action("SET_OWNER "+ "["+owner+"]", path.toString()).info();
+        UserPrincipal userPrincipal = FileSystems.getDefault()
+                .getUserPrincipalLookupService()
+                .lookupPrincipalByName(owner);
+        Files.setAttribute(path, "posix:owner", userPrincipal, LinkOption.NOFOLLOW_LINKS);
+        LogManager.log().action("SET_OWNER "+ "["+owner+"]", path.toString(), true).info();
+    }
+
+    public static void setGroup(Path path, String group) throws IOException {
+        LogManager.log().action("SET_GROUP "+ "["+group+"]", path.toString()).info();
+        GroupPrincipal groupPrincipal = FileSystems.getDefault()
+                .getUserPrincipalLookupService()
+                .lookupPrincipalByGroupName(group);
+        Files.setAttribute(path, "posix:group", groupPrincipal, LinkOption.NOFOLLOW_LINKS);
+        LogManager.log().action("SET_GROUP "+ "["+group+"]", path.toString(), true).info();
+    }
+
+    public static boolean hasCorrectPermissions(Path path, String expectedPerms) throws IOException {
+        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(path);
+        String currentPerms = PosixFilePermissions.toString(permissions);
+        return expectedPerms.equals(currentPerms);
+    }
+
+    public static boolean hasCorrectOwner(Path path, String expectedOwner) throws IOException {
+        UserPrincipal owner = Files.getOwner(path);
+        return expectedOwner.equals(owner.getName());
+    }
+
+    public static boolean hasCorrectGroup(Path path, String expectedGroup) throws IOException {
+        PosixFileAttributes attrs = Files.readAttributes(path, PosixFileAttributes.class);
+        return expectedGroup.equals(attrs.group().getName());
+    }
 
     public void ensureDotEnvPermissions() throws IOException {
 
@@ -22,16 +69,16 @@ public class PermissionManager {
     private boolean isEnvPermissionsSecureNot(File envFile) throws IOException {
         Path path = envFile.toPath();
 
-        return !ShellUtils.hasCorrectPermissions(path, DOTENV_PERMISSIONS)
-                || !ShellUtils.hasCorrectOwner(path, DOTENV_OWNER)
-                || !ShellUtils.hasCorrectGroup(path, DOTENV_GROUP);
+        return !hasCorrectPermissions(path, DOTENV_PERMISSIONS)
+                || !hasCorrectOwner(path, DOTENV_OWNER)
+                || !hasCorrectGroup(path, DOTENV_GROUP);
     }
 
     private void secureDotEnvPermissionsOwnerGroup(File envFile) throws IOException {
         Path path = envFile.toPath();
 
-        ShellUtils.setPermissions(path, DOTENV_PERMISSIONS);
-        ShellUtils.setOwner(path, DOTENV_OWNER);
-        ShellUtils.setGroup(path, DOTENV_GROUP);
+        setPermissions(path, DOTENV_PERMISSIONS);
+        setOwner(path, DOTENV_OWNER);
+        setGroup(path, DOTENV_GROUP);
     }
 }

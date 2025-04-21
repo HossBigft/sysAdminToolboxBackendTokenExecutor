@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.example.Exceptions.CommandFailedException;
+import org.example.Utils.Logging.LogManager;
 import org.example.Utils.Utils;
 
 import java.io.File;
@@ -14,18 +15,21 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class ConfigManager {
-    static final int DB_USER_PASSWORD_LENGTH = 15;
     public static final String ENV_PATH = ".env.json";
+    static final int DB_USER_PASSWORD_LENGTH = 15;
     private static final String DB_USER = "sysAdminToolBox";
     private static final String ENV_DB_PASS_FIELD = "DATABASE_PASSWORD";
     public static Map<String, String> values = new HashMap<>();
 
     static {
         try {
+            LogManager.log().action("INIT", "ConfigManager loaded").info();
             loadConfig();
+            LogManager.log() .action("INIT", "ConfigManager loaded", true).info();
         } catch (IOException e) {
             throw new RuntimeException("Failed to load config", e);
         } catch (CommandFailedException | URISyntaxException e) {
+            LogManager.log().action("INIT", "Initialization error: " + e.getMessage()).error();
             throw new RuntimeException(e);
         }
     }
@@ -42,13 +46,18 @@ public class ConfigManager {
             });
         } catch (IOException e) {
             values = new HashMap<>();
+            LogManager.log().action("LOAD_CONFIG", "Config file not found or invalid, creating new one", false).info();
         }
 
         boolean updated = computeIfAbsentOrBlank(values, ENV_DB_PASS_FIELD,
                 () -> Utils.generatePassword(DB_USER_PASSWORD_LENGTH));
         if (updated) {
+            LogManager.log().action("UPDATE_CONFIG", "Configuration updating").info();
             updateDotEnv();
+            LogManager.log().action("UPDATE_CONFIG", "Configuration updated", true).info();
         }
+
+        LogManager.log().action("ENSURING_DOTENV_PERMISSIONS", "Configuration file", true).info();
         new PermissionManager().ensureDotEnvPermissions();
         DatabaseProvisioner.ensureDatabaseSetup();
         new SudoersManager().ensureSudoersRuleIsPresent();
@@ -61,6 +70,11 @@ public class ConfigManager {
         String val = map.get(key);
         if (val == null || val.isBlank()) {
             map.put(key, supplier.get());
+            if (!key.toLowerCase().contains("password")) {
+                LogManager.log().configChange("ConfigManager", key, "(empty)", val).info();
+            } else {
+                LogManager.log().configChange("ConfigManager", key, "(empty)", "[REDACTED]").info();
+            }
             return true;
         }
         return false;

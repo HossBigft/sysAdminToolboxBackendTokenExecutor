@@ -2,14 +2,15 @@ package org.example.Utils;
 
 import org.example.Config.SudoersManager;
 import org.example.Exceptions.CommandFailedException;
+import org.example.Utils.Logging.LogManager;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
-import java.nio.file.*;
-import java.nio.file.attribute.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +38,7 @@ public class ShellUtils {
 
     public static List<String> runCommand(String... args) throws CommandFailedException {
         try {
+            LogManager.log().command(args[0], Arrays.copyOfRange(args, 1, args.length)).debug();
             Process process = new ProcessBuilder(args).start();
 
 
@@ -69,29 +71,25 @@ public class ShellUtils {
 
                 int exitCode = process.exitValue();
                 if (exitCode != 0) {
-                    String errorOutput = errorBuilder.toString().trim();
-                    throw new CommandFailedException(
-                            String.format("Command failed with exit code %d: %s\nCommand: %s",
-                                    exitCode,
-                                    errorOutput,
-                                    String.join(" ",
-                                            args))
-                    );
+                    String errorMessage = String.format("Command '%s' failed with exit code %d: %s",
+                            String.join(" ", args), exitCode, String.join("\n", outputLines));
+                    LogManager.log().error(args[0], errorMessage);
+                    throw new CommandFailedException(errorMessage);
                 }
 
                 return Collections.unmodifiableList(outputLines);
             }
         } catch (IOException e) {
-            throw new CommandFailedException("Failed to execute command: " +
-                    String.join(" ",
-                            args),
-                    e);
+            String errorMessage = String.format("Failed to execute command '%s': %s",
+                    String.join(" ", args), e.getMessage());
+            LogManager.log().error(args[0], errorMessage);
+            throw new CommandFailedException(errorMessage);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new CommandFailedException("Command execution was interrupted: " +
-                    String.join(" ",
-                            args),
-                    e);
+            String errorMessage = String.format("Failed to execute command '%s': %s",
+                    String.join(" ", args), e.getMessage());
+            LogManager.log().error(args[0], errorMessage);
+            throw new CommandFailedException(errorMessage);
         }
     }
 
@@ -126,41 +124,6 @@ public class ShellUtils {
 
     public static boolean isValidUser(String user) {
         return !"root".equals(user);
-    }
-
-    public static void setPermissions(Path path, String permissions) throws IOException {
-        Set<PosixFilePermission> perms = PosixFilePermissions.fromString(permissions);
-        Files.setPosixFilePermissions(path, perms);
-    }
-
-    public static void setOwner(Path path, String owner) throws IOException {
-        UserPrincipal userPrincipal = FileSystems.getDefault()
-                .getUserPrincipalLookupService()
-                .lookupPrincipalByName(owner);
-        Files.setAttribute(path, "posix:owner", userPrincipal, LinkOption.NOFOLLOW_LINKS);
-    }
-
-    public static void setGroup(Path path, String group) throws IOException {
-        GroupPrincipal groupPrincipal = FileSystems.getDefault()
-                .getUserPrincipalLookupService()
-                .lookupPrincipalByGroupName(group);
-        Files.setAttribute(path, "posix:group", groupPrincipal, LinkOption.NOFOLLOW_LINKS);
-    }
-
-    public static boolean hasCorrectPermissions(Path path, String expectedPerms) throws IOException {
-        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(path);
-        String currentPerms = PosixFilePermissions.toString(permissions);
-        return expectedPerms.equals(currentPerms);
-    }
-
-    public static boolean hasCorrectOwner(Path path, String expectedOwner) throws IOException {
-        UserPrincipal owner = Files.getOwner(path);
-        return expectedOwner.equals(owner.getName());
-    }
-
-    public static boolean hasCorrectGroup(Path path, String expectedGroup) throws IOException {
-        PosixFileAttributes attrs = Files.readAttributes(path, PosixFileAttributes.class);
-        return expectedGroup.equals(attrs.group().getName());
     }
 
     public static Path getExecutablePath() throws URISyntaxException {
