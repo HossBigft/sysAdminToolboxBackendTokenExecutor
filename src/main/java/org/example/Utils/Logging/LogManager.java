@@ -26,16 +26,6 @@ public class LogManager {
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final String USER = ShellUtils.resolveUser();
 
-    // Sensitive command detection
-    private static final Set<String> SENSITIVE_COMMANDS = new HashSet<>(Arrays.asList(
-            "mysql", "psql", "openssl", "ssh", "scp", "keytool",
-            "htpasswd", "usermod", "useradd", "passwd", "su"
-    ));
-
-    private static final Set<String> SENSITIVE_KEYWORDS = new HashSet<>(Arrays.asList(
-            "password", "secret", "key", "token", "credential",
-            "auth", "-p", "--password", "shadow"
-    ));
     private static final Log log = new Log();
     private static LogLevel globalLogLevel = LogLevel.INFO;
 
@@ -108,29 +98,6 @@ public class LogManager {
      */
     private static boolean isLoggable(LogLevel level) {
         return level.getValue() <= globalLogLevel.getValue();
-    }
-
-    /**
-     * Determine if a command is sensitive based on common patterns
-     */
-    public static boolean isSensitiveCommand(String[] args) {
-        if (args == null || args.length == 0) return false;
-
-        // Check command name
-        if (SENSITIVE_COMMANDS.contains(args[0].toLowerCase())) {
-            return true;
-        }
-
-        // Check arguments for sensitive keywords
-        for (String arg : args) {
-            for (String keyword : SENSITIVE_KEYWORDS) {
-                if (arg.toLowerCase().contains(keyword.toLowerCase())) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     /**
