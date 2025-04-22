@@ -93,10 +93,10 @@ public class ShellUtils {
         }
     }
 
-    public static String resolveUser() {
+    public static String resolveToolBoxUser() {
         return Stream.of(getSudoUser(), getSystemUser(), getUserFromPath()).flatMap(Optional::stream)
                 .filter(ShellUtils::isValidUser).findFirst().orElseThrow(
-                        () -> new IllegalStateException("Could not determine valid user for running executable."));
+                        () -> new IllegalStateException("Could not determine valid user for toolbox."));
     }
 
     public static Optional<String> getSudoUser() {
@@ -124,6 +124,14 @@ public class ShellUtils {
 
     public static boolean isValidUser(String user) {
         return !"root".equals(user);
+    }
+
+    public static String resolveShellUser() {
+        return Stream.of(getSudoUser(), getSystemUser())
+                .flatMap(Optional::stream)
+                .findFirst()
+                .orElseThrow(
+                        () -> new IllegalStateException("Could not determine valid user for running executable."));
     }
 
     public static Path getExecutablePath() throws URISyntaxException {

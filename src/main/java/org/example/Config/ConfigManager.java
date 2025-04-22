@@ -25,7 +25,7 @@ public class ConfigManager {
         try {
             LogManager.log().action("INIT", "ConfigManager loaded").info();
             loadConfig();
-            LogManager.log() .action("INIT", "ConfigManager loaded", true).info();
+            LogManager.log().action("INIT", "ConfigManager loaded", true).info();
         } catch (IOException e) {
             throw new RuntimeException("Failed to load config", e);
         } catch (CommandFailedException | URISyntaxException e) {
@@ -44,20 +44,19 @@ public class ConfigManager {
         try {
             values = mapper.readValue(envFile, new TypeReference<>() {
             });
+            LogManager.log().action("LOAD_DOTENV", "Dotenv loaded").debug();
         } catch (IOException e) {
             values = new HashMap<>();
-            LogManager.log().action("LOAD_CONFIG", "Config file not found or invalid, creating new one", false).info();
+            LogManager.log().action("LOAD_CONFIG", "Dotenv file not found or invalid, creating new one").info();
         }
 
         boolean updated = computeIfAbsentOrBlank(values, ENV_DB_PASS_FIELD,
                 () -> Utils.generatePassword(DB_USER_PASSWORD_LENGTH));
         if (updated) {
-            LogManager.log().action("UPDATE_CONFIG", "Configuration updating").info();
             updateDotEnv();
-            LogManager.log().action("UPDATE_CONFIG", "Configuration updated", true).info();
         }
 
-        LogManager.log().action("ENSURING_DOTENV_PERMISSIONS", "Configuration file", true).info();
+        LogManager.log().action("ENSURING_DOTENV_PERMISSIONS", "Dotenv file").info();
         new PermissionManager().ensureDotEnvPermissions();
         DatabaseProvisioner.ensureDatabaseSetup();
         new SudoersManager().ensureSudoersRuleIsPresent();
@@ -81,11 +80,13 @@ public class ConfigManager {
     }
 
     static void updateDotEnv() throws IOException {
+        LogManager.log().action("UPDATE_DOTENV", "New values will be written to dotenv.").info();
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         File envFile = new File(ENV_PATH);
 
         mapper.writeValue(envFile, Map.of(ENV_DB_PASS_FIELD, getDatabasePassword()));
+        LogManager.log().action("UPDATE_DOTENV", "Dotenv updated", true).info();
     }
 
     public static String getDatabasePassword() {

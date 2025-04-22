@@ -21,7 +21,7 @@ public class LogManager {
     private static final String LOG_DIRECTORY = "/var/log/sysAdminToolBox/";
     private static final String LOG_FILE = "audit.log";
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final String USER = ShellUtils.resolveUser();
+    private static final String USER = ShellUtils.resolveShellUser();
 
     private static final Log log = new Log();
     private static LogLevel globalLogLevel = LogLevel.INFO;
@@ -75,7 +75,7 @@ public class LogManager {
         }
 
         String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT);
-        String logEntry = String.format("[%s] [%s] User=%s  Message=%s",
+        String logEntry = String.format("[%s] [%s] User=%s  Message[%s]",
                 timestamp, level, USER, message);
 
         if (level == LogLevel.DEBUG) {

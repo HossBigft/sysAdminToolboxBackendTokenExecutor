@@ -11,7 +11,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
 
 public class SudoersManager {
-    static final String shellUser = ShellUtils.resolveUser();
+    static final String shellUser = ShellUtils.resolveToolBoxUser();
     private final String SUDOERS_DIR = "/etc/sudoers.d/";
     private final String TEMP_DIR = "/tmp/";
     private final String SUDOERS_PERMISSIONS = "r--r-----";
