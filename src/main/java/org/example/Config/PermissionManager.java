@@ -43,18 +43,18 @@ public class PermissionManager {
         LogManager.log().action("SET_GROUP "+ "["+group+"]", path.toString(), true).info();
     }
 
-    public static boolean hasCorrectPermissions(Path path, String expectedPerms) throws IOException {
+    public static boolean hasPermissions(Path path, String expectedPerms) throws IOException {
         Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(path);
         String currentPerms = PosixFilePermissions.toString(permissions);
         return expectedPerms.equals(currentPerms);
     }
 
-    public static boolean hasCorrectOwner(Path path, String expectedOwner) throws IOException {
+    public static boolean hasOwner(Path path, String expectedOwner) throws IOException {
         UserPrincipal owner = Files.getOwner(path);
         return expectedOwner.equals(owner.getName());
     }
 
-    public static boolean hasCorrectGroup(Path path, String expectedGroup) throws IOException {
+    public static boolean hasOwnerGroup(Path path, String expectedGroup) throws IOException {
         PosixFileAttributes attrs = Files.readAttributes(path, PosixFileAttributes.class);
         return expectedGroup.equals(attrs.group().getName());
     }
@@ -69,9 +69,9 @@ public class PermissionManager {
     private boolean isEnvPermissionsSecureNot(File envFile) throws IOException {
         Path path = envFile.toPath();
 
-        return !hasCorrectPermissions(path, DOTENV_PERMISSIONS)
-                || !hasCorrectOwner(path, DOTENV_OWNER)
-                || !hasCorrectGroup(path, DOTENV_GROUP);
+        return !hasPermissions(path, DOTENV_PERMISSIONS)
+                || !hasOwner(path, DOTENV_OWNER)
+                || !hasOwnerGroup(path, DOTENV_GROUP);
     }
 
     private void secureDotEnvPermissionsOwnerGroup(File envFile) throws IOException {

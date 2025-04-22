@@ -36,9 +36,9 @@ public class SudoersManager {
     }
 
     private boolean isPermissionsInsecure(Path file) throws IOException {
-        return !PermissionManager.hasCorrectPermissions(file, SUDOERS_PERMISSIONS)
-                || !PermissionManager.hasCorrectOwner(file, "root")
-                || !PermissionManager.hasCorrectGroup(file, "root");
+        return !PermissionManager.hasPermissions(file, SUDOERS_PERMISSIONS)
+                || !PermissionManager.hasOwner(file, "root")
+                || !PermissionManager.hasOwnerGroup(file, "root");
 
     }
 
