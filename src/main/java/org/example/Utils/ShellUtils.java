@@ -11,7 +11,10 @@ import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -38,11 +41,11 @@ public class ShellUtils {
 
     public static List<String> runCommand(String... args) throws CommandFailedException {
         try {
-            LogManager.log().command(args[0], Arrays.copyOfRange(args, 1, args.length)).debug();
+            LogManager.log().command(args).debug();
             Process process = new ProcessBuilder(args).start();
 
 
-            List<String> outputLines = new ArrayList<String>();
+            List<String> outputLines = new ArrayList<>();
             StringBuilder errorBuilder = new StringBuilder();
 
             try (

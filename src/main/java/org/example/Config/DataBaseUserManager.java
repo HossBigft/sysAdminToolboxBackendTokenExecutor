@@ -52,7 +52,7 @@ public class DataBaseUserManager {
                 return false;
             } catch (CommandFailedException e) {
                 LogManager.log()
-                        .command(command[0], Arrays.copyOfRange(command, 1, command.length))
+                        .command(command)
                         .error(e);
                 return false;
             }
@@ -78,7 +78,7 @@ public class DataBaseUserManager {
                 LogManager.log().action("Create database user", databaseUser, true).info();
             } catch (CommandFailedException e) {
                 LogManager.log()
-                        .command(command[0], Arrays.copyOfRange(command, 1, command.length))
+                        .command(command)
                         .error(e);
             }
         } catch (CommandFailedException e) {
@@ -123,7 +123,7 @@ public class DataBaseUserManager {
             } catch (CommandFailedException e) {
 
                 LogManager.log()
-                        .command(command[0], Arrays.copyOfRange(command, 1, command.length))
+                        .command(command)
                         .error(e);
             }
         } catch (CommandFailedException e) {

@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.function.Supplier;
 
 
@@ -129,9 +130,8 @@ public class LogManager {
         /**
          * Command logger
          */
-        public CommandLogger command(String command,
-                                     String... args) {
-            return new CommandLogger(command, args);
+        public CommandLogger command(String... args) {
+            return new CommandLogger(args);
         }
 
         /**
@@ -206,10 +206,9 @@ public class LogManager {
         private final String command;
         private final String[] args;
 
-        private CommandLogger(String command,
-                              String... args) {
-            this.command = command;
-            this.args = args;
+        private CommandLogger(String... args) {
+            this.command = args[0];
+            this.args = Arrays.stream(args, 1, args.length).toArray(String[]::new);
         }
 
         /**
@@ -236,19 +235,6 @@ public class LogManager {
             writeLog(LogLevel.ERROR, message.toString().trim());
         }
 
-        private void logCommandInternal(LogLevel level) {
-            StringBuilder message = new StringBuilder("Command=" + command);
-
-            if (args != null && args.length > 0) {
-                message.append(" Args=");
-                for (String arg : args) {
-                    message.append(maskSecrets(arg)).append(" ");
-                }
-            }
-
-            writeLog(level, message.toString().trim());
-        }
-
         private String maskSecrets(String input) {
             if (input == null) return null;
 
@@ -267,6 +253,19 @@ public class LogManager {
          */
         public void warn() {
             logCommandInternal(LogLevel.WARN);
+        }
+
+        private void logCommandInternal(LogLevel level) {
+            StringBuilder message = new StringBuilder("Command=" + command);
+
+            if (args != null && args.length > 0) {
+                message.append(" Args=");
+                for (String arg : args) {
+                    message.append(maskSecrets(arg)).append(" ");
+                }
+            }
+
+            writeLog(level, message.toString().trim());
         }
 
         /**
@@ -329,6 +328,13 @@ public class LogManager {
             writeLog(LogLevel.ERROR, message.toString().trim());
         }
 
+        /**
+         * Log action at WARN level
+         */
+        public void warn() {
+            logActionInternal(LogLevel.WARN);
+        }
+
         private void logActionInternal(LogLevel level) {
             if (success == null) {
                 writeLog(level, "Target=" + target + " Action= " + action);
@@ -336,13 +342,6 @@ public class LogManager {
                 writeLog(level,
                         "Target=" + target + " Action= " + action + " Result=" + (success ? "SUCCESS" : "FAILURE"));
             }
-        }
-
-        /**
-         * Log action at WARN level
-         */
-        public void warn() {
-            logActionInternal(LogLevel.WARN);
         }
 
         /**
