@@ -75,8 +75,8 @@ public class LogManager {
         }
 
         String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT);
-        String logEntry = String.format("[%s] [%s] User=%s  Message[%s]",
-                timestamp, level, USER, message);
+        String logEntry = String.format("[%s] [%s] User=%s | %s",
+                timestamp, level, USER, formatMessage(message));
 
         if (level == LogLevel.DEBUG) {
             System.out.println(logEntry);
@@ -95,6 +95,12 @@ public class LogManager {
      */
     private static boolean isLoggable(LogLevel level) {
         return level.getValue() <= globalLogLevel.getValue();
+    }
+
+    private static String formatMessage(String raw) {
+        return raw.replace("Message[", "")
+                .replace("]", "")
+                .replaceAll(" (?=\\w+=)", " | ");
     }
 
     /**
@@ -234,8 +240,8 @@ public class LogManager {
 
             String masked = input;
 
-            masked = masked.replaceAll("(?i)(IDENTIFIED BY\\s+')(.*?)(')", "$1[REDACTED]$3");
-            masked = masked.replaceAll("(?i)(SET PASSWORD\\s*=\\s*')(.*?)(')", "$1[REDACTED]$3");
+            masked = masked.replaceAll("(?i)(IDENTIFIED BY\\s+)'[^']*'", "$1'[REDACTED]'");
+            masked = masked.replaceAll("(?i)(SET PASSWORD\\s*=\\s*)'[^']*'", "$1'[REDACTED]'");
             masked = masked.replaceAll("(?i)(--password=)([^\\s]+)", "$1[REDACTED]");
             masked = masked.replaceAll("(?i)(password\\s*[:=]\\s*)([^\\s'\"]+)", "$1[REDACTED]");
 
@@ -297,10 +303,10 @@ public class LogManager {
 
         private void logActionInternal(LogLevel level) {
             if (success == null) {
-                writeLog(level, "Target=" + target + "Action= " + action);
+                writeLog(level, "Target=" + target + " Action= " + action);
             } else {
                 writeLog(level,
-                        "Target=" + target + "Action= " + action + " Result=" + (success ? "SUCCESS" : "FAILURE"));
+                        "Target=" + target + " Action= " + action + " Result=" + (success ? "SUCCESS" : "FAILURE"));
             }
         }
 
@@ -326,53 +332,6 @@ public class LogManager {
         }
     }
 
-    /**
-     * CategoryLogger for fluent category-based logging
-     */
-    public static class CategoryLogger {
-        private final String category;
-
-        private CategoryLogger(String category) {
-            this.category = category;
-        }
-
-        /**
-         * Log message at ERROR level
-         */
-        public void error(String message) {
-            writeLog(LogLevel.ERROR, message);
-        }
-
-        /**
-         * Log message at WARN level
-         */
-        public void warn(String message) {
-            writeLog(LogLevel.WARN, message);
-        }
-
-        /**
-         * Log message at INFO level
-         */
-        public void info(String message) {
-            writeLog(LogLevel.INFO, message);
-        }
-
-        /**
-         * Log message at DEBUG level
-         */
-        public void debug(String message) {
-            writeLog(LogLevel.DEBUG, message);
-        }
-
-        /**
-         * Log message at DEBUG level with lazy evaluation
-         */
-        public void debug(Supplier<String> messageSupplier) {
-            if (isLoggable(LogLevel.DEBUG)) {
-                writeLog(LogLevel.DEBUG, messageSupplier.get());
-            }
-        }
-    }
 
     /**
      * ConfigChangeLogger for fluent configuration change logging
