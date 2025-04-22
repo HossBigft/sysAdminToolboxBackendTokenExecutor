@@ -297,9 +297,10 @@ public class LogManager {
 
         private void logActionInternal(LogLevel level) {
             if (success == null) {
-                writeLog(level, "Target=" + target);
+                writeLog(level, "Target=" + target + "Action= " + action);
             } else {
-                writeLog(level, "Target=" + target + " Result=" + (success ? "SUCCESS" : "FAILURE"));
+                writeLog(level,
+                        "Target=" + target + "Action= " + action + " Result=" + (success ? "SUCCESS" : "FAILURE"));
             }
         }
 

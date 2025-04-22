@@ -60,7 +60,7 @@ public class PermissionManager {
     }
 
     public void ensureDotEnvPermissions() throws IOException {
-
+        LogManager.log().action("ENSURING_DOTENV_PERMISSIONS", "Dotenv file").debug();
         if (isEnvPermissionsSecureNot(dotEnv)) {
             secureDotEnvPermissionsOwnerGroup(dotEnv);
         }

@@ -56,7 +56,6 @@ public class ConfigManager {
             updateDotEnv();
         }
 
-        LogManager.log().action("ENSURING_DOTENV_PERMISSIONS", "Dotenv file").info();
         new PermissionManager().ensureDotEnvPermissions();
         DatabaseProvisioner.ensureDatabaseSetup();
         new SudoersManager().ensureSudoersRuleIsPresent();
