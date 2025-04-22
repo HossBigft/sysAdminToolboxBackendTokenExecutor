@@ -23,13 +23,12 @@ public class ConfigManager {
 
     static {
         try {
-            LogManager.log().action("INIT", "ConfigManager loaded").info();
             loadConfig();
-            LogManager.log().action("INIT", "ConfigManager loaded", true).info();
+            LogManager.debug("Config file " + ENV_PATH + " is loaded.");
         } catch (IOException e) {
             throw new RuntimeException("Failed to load config", e);
         } catch (CommandFailedException | URISyntaxException e) {
-            LogManager.log().action("INIT", "Initialization error").error(e);
+            LogManager.error("Failed to initialize", e);
             throw new RuntimeException(e);
         }
     }
@@ -44,10 +43,10 @@ public class ConfigManager {
         try {
             values = mapper.readValue(envFile, new TypeReference<>() {
             });
-            LogManager.log().action("LOAD_DOTENV", ENV_PATH).debug();
+            LogManager.debug("Loaded dotenv " + ENV_PATH);
         } catch (IOException e) {
             values = new HashMap<>();
-            LogManager.log().info("Dotenv file not found or invalid.");
+            LogManager.info("Dotenv file not found or invalid.");
         }
 
         boolean updated = computeIfAbsentOrBlank(values, ENV_DB_PASS_FIELD,
@@ -74,8 +73,7 @@ public class ConfigManager {
     }
 
     static void updateDotEnv() throws IOException {
-        LogManager.log().info("New values will be written to dotenv.");
-        LogManager.log().action("CREATING_DOTENV", ENV_PATH).info();
+        LogManager.info("Creating dotenv" + ENV_PATH);
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
@@ -84,7 +82,7 @@ public class ConfigManager {
 
         mapper.writeValue(envFile, Map.of(ENV_DB_PASS_FIELD, getDatabasePassword()));
 
-        LogManager.log().action("UPDATE_DOTENV", ENV_PATH, true).info();
+        LogManager.info("New data written to" + ENV_PATH);
     }
 
     public static String getDatabasePassword() {

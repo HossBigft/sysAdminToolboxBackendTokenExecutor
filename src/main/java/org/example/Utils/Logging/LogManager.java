@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class LogManager {
-    // Configuration constants
     private static final String LOG_DIRECTORY = "/var/log/sysAdminToolBox/";
     private static final String LOG_FILE = "audit.log";
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -40,6 +39,28 @@ public class LogManager {
 
     protected static void enableVerbose() {
         verboseFlag = true;
+    }
+
+    public static void debug(String message) {
+        log.debug(message);
+    }
+
+
+    public static void info(String message) {
+        log.info(message);
+    }
+
+    public static void warn(String message) {
+        log.warn(message);
+    }
+
+    public static void error(String message) {
+        log.error(message);
+    }
+
+    public static void error(String message,
+                             Throwable t) {
+        log.error(message, t);
     }
 
     private static void initializeLogFile() throws IOException {
@@ -69,9 +90,20 @@ public class LogManager {
     }
 
     /**
+     * Simplified text logging method that leverages the map-based method
+     */
+    private static synchronized void writeLog(LogLevel level,
+                                              String message) {
+        Map<String, Object> fields = new HashMap<>();
+        fields.put("Message", message);
+        writeLog(level, fields);
+    }
+
+    /**
      * Core logging method - all logging goes through here
      */
-    private static synchronized void writeLog(LogLevel level, Map<String, Object> fields) {
+    private static synchronized void writeLog(LogLevel level,
+                                              Map<String, Object> fields) {
         if (!isLoggable(level)) {
             return;
         }
@@ -96,15 +128,6 @@ public class LogManager {
         } catch (IOException e) {
             System.err.println("Failed to write to audit log: " + e.getMessage());
         }
-    }
-
-    /**
-     * Simplified text logging method that leverages the map-based method
-     */
-    private static synchronized void writeLog(LogLevel level, String message) {
-        Map<String, Object> fields = new HashMap<>();
-        fields.put("Message", message);
-        writeLog(level, fields);
     }
 
     /**
@@ -147,19 +170,6 @@ public class LogManager {
             this.level = level;
         }
 
-        public LogEntryBuilder field(String key, Object value) {
-            if (value != null) {
-                if (key.toLowerCase().contains("password") ||
-                        key.toLowerCase().contains("secret") ||
-                        key.toLowerCase().contains("token")) {
-                    fields.put(key, "[REDACTED]");
-                } else {
-                    fields.put(key, value);
-                }
-            }
-            return this;
-        }
-
         public LogEntryBuilder exception(Throwable t) {
             fields.put("Exception", t.toString());
 
@@ -170,7 +180,22 @@ public class LogManager {
             return this;
         }
 
-        public LogEntryBuilder command(String command, String... args) {
+        public LogEntryBuilder message(String message) {
+            field("Message", message);
+            StringWriter sw = new StringWriter();
+            return this;
+        }
+
+        public LogEntryBuilder field(String key,
+                                     Object value) {
+            if (value != null) {
+                fields.put(key, value);
+            }
+            return this;
+        }
+
+        public LogEntryBuilder command(String command,
+                                       String... args) {
             field("Command", command);
 
             if (args != null && args.length > 0) {
@@ -184,26 +209,6 @@ public class LogManager {
             return this;
         }
 
-        public LogEntryBuilder action(String action, String target) {
-            return field("Action", action).field("Target", target);
-        }
-
-        public LogEntryBuilder result(boolean success) {
-            return field("Result", success ? "SUCCESS" : "FAILURE");
-        }
-
-        public LogEntryBuilder configChange(String component, String property, String oldValue, String newValue) {
-            field("Component", component);
-            field("Property", property);
-            field("OldValue", oldValue);
-            field("NewValue", newValue);
-            return this;
-        }
-
-        public void log() {
-            writeLog(level, fields);
-        }
-
         private String maskSecrets(String input) {
             if (input == null) return null;
 
@@ -215,6 +220,20 @@ public class LogManager {
 
             return masked;
         }
+
+        public LogEntryBuilder action(String action,
+                                      String target) {
+            return field("Action", action).field("Target", target);
+        }
+
+        public LogEntryBuilder result(boolean success) {
+            return field("Result", success ? "SUCCESS" : "FAILURE");
+        }
+
+        public void log() {
+            writeLog(level, fields);
+        }
+
     }
 
     /**
@@ -231,30 +250,39 @@ public class LogManager {
         /**
          * Action logger
          */
-        public ActionLogger action(String action, String target) {
+        public ActionLogger action(String action,
+                                   String target) {
             return new ActionLogger(action, target);
         }
 
         /**
          * Action logger with success indicator
          */
-        public ActionLogger action(String action, String target, boolean success) {
+        public ActionLogger action(String action,
+                                   String target,
+                                   boolean success) {
             return new ActionLogger(action, target, success);
         }
 
 
-        /**
-         * Create a new log entry at ERROR level
-         */
-        public LogEntryBuilder error() {
-            return new LogEntryBuilder(LogLevel.ERROR);
+        public void error(String message) {
+            new LogEntryBuilder(LogLevel.ERROR)
+                    .field("Message", message)
+                    .log();
         }
 
-        /**
-         * Direct error logging
-         */
-        public void error(String message) {
-            writeLog(LogLevel.ERROR, message);
+        public void error(Throwable t) {
+            new LogEntryBuilder(LogLevel.ERROR)
+                    .exception(t)
+                    .log();
+        }
+
+        public void error(String message,
+                          Throwable t) {
+            new LogEntryBuilder(LogLevel.ERROR)
+                    .field("Message", message)
+                    .exception(t)
+                    .log();
         }
 
         /**
@@ -355,13 +383,16 @@ public class LogManager {
         private final String target;
         private final Boolean success;
 
-        private ActionLogger(String action, String target) {
+        private ActionLogger(String action,
+                             String target) {
             this.action = action;
             this.target = target;
             this.success = null;
         }
 
-        private ActionLogger(String action, String target, boolean success) {
+        private ActionLogger(String action,
+                             String target,
+                             boolean success) {
             this.action = action;
             this.target = target;
             this.success = success;
