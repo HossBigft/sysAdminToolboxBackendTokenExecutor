@@ -7,6 +7,7 @@ import org.passay.EnglishCharacterData;
 import org.passay.PasswordGenerator;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
@@ -41,7 +42,7 @@ public class Utils {
     public static boolean verifyDigitalSignature(String message,
                                                  String digitalSignature) throws
             IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        byte[] messageBytes = message.getBytes();
+        byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
         byte[] signatureBytes = Base64.getDecoder().decode(digitalSignature);
         if (signatureBytes.length != 64) {
             throw new IllegalArgumentException("Invalid signature length: " + signatureBytes.length);
@@ -53,7 +54,6 @@ public class Utils {
         signature.update(messageBytes);
 
         return signature.verify(signatureBytes);
-
     }
 
 }

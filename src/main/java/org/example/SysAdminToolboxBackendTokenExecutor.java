@@ -1,5 +1,6 @@
 package org.example;
 
+import org.example.Commands.ExecuteCliCommand;
 import org.example.Commands.GetLoginLinkCliCommand;
 import org.example.Commands.GetSubscriptionInfoCliCommand;
 import org.example.Commands.GetTestMailboxCliCommand;
@@ -36,6 +37,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         commandLine.addSubcommand(new GetTestMailboxCliCommand(app));
         commandLine.addSubcommand(new GetLoginLinkCliCommand(app));
         commandLine.addSubcommand(new GetSubscriptionInfoCliCommand(app));
+        commandLine.addSubcommand(new ExecuteCliCommand(app));
         commandLine.parseArgs(args);
 
         if (app.debug) {
