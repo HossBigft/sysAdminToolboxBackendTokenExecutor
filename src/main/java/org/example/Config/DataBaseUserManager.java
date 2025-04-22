@@ -17,51 +17,45 @@ public class DataBaseUserManager {
     private String databasePassword = ConfigManager.getDatabasePassword();
 
     public void ensureDatabaseUser() throws IOException {
-        if (!isDbUserExists()) {
-            createUser();
-        } else {
-            if (!isDbUserAbleToConnect()) {
-                regenerateDbUserPassword();
-                setDbUserPassword();
-                ConfigManager.updateDotEnv();
+        try {
+            if (!isDbUserExists()) {
+                createUser();
+            } else {
+                if (!isDbUserAbleToConnect()) {
+                    regenerateDbUserPassword();
+                    setDbUserPassword();
+                    ConfigManager.updateDotEnv();
+                }
             }
+        } catch (CommandFailedException e){
+            LogManager.log().action("Failed to ensure database user", databaseUser).error(e);
         }
     }
 
-    private boolean isDbUserExists() {
-        String mysqlCliName;
+
+    boolean isDbUserExists() throws CommandFailedException {
+        String mysqlCliName = ShellUtils.getSqlCliName();
+        String query = String.format(
+                "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '%s') AS user_exists;",
+                databaseUser);
+
+        String[] command = new String[]{
+                mysqlCliName,
+                "-u", DatabaseProvisioner.ADMIN_USER,
+                "--skip-column-names",
+                "-e", query
+        };
+
         try {
-            mysqlCliName = ShellUtils.getSqlCliName();
-            String[] command = new String[]{mysqlCliName,
-                    "-u", DatabaseProvisioner.ADMIN_USER,
-                    "--skip-column-names",
-                    "-e",
-                    String.format("SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '%s') AS user_exists;",
-                            databaseUser)};
-            try {
+            List<String> output = ShellUtils.runCommand(command);
+            boolean exists = output.getFirst().trim().equals("1");
 
-                List<String> output = ShellUtils.runCommand(command);
-
-                for (String line : output.getFirst().split("\n")) {
-                    if (line.trim().equals("1")) {
-                        LogManager.log().action("Check if database user is present", databaseUser, true).debug();
-                        return true;
-                    }
-                }
-                LogManager.log().action("Check if database user is present", databaseUser, false).debug();
-                return false;
-            } catch (CommandFailedException e) {
-                LogManager.log()
-                        .command(command)
-                        .error(e);
-                return false;
-            }
+            LogManager.log().action("Check if database user is present", databaseUser, exists);
+            return exists;
         } catch (CommandFailedException e) {
-            LogManager.log()
-                    .action("Get MySQL cli executable name to check database user", databaseUser, false)
-                    .error(e);
+            LogManager.log().command( command).error(e);
+            throw e;
         }
-        return false;
     }
 
     private void createUser() {
