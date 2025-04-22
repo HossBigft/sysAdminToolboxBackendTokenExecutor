@@ -1,22 +1,13 @@
 package org.example;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.example.Commands.GetLoginLinkCliCommand;
 import org.example.Commands.GetSubscriptionInfoCliCommand;
 import org.example.Commands.GetTestMailboxCliCommand;
-import org.example.Exceptions.CommandFailedException;
 import org.example.Utils.Logging.LogManager;
-import org.example.ValueTypes.DomainName;
-import org.example.ValueTypes.LinuxUsername;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
-import picocli.CommandLine.ParentCommand;
 
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 
 @Command(
@@ -29,13 +20,11 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
     @Option(names = {"--debug"}, description = "Enable debug output", scope = CommandLine.ScopeType.INHERIT)
     boolean debug;
+    @Option(names = {"--verbose"}, description = "Enable debug output", scope = CommandLine.ScopeType.INHERIT)
+    boolean verbose;
 
     public SysAdminToolboxBackendTokenExecutor() {
         this.pleskService = new PleskService();
-    }
-
-    public PleskService getPleskService() {
-        return pleskService;
     }
 
     public static void main(String[] args) {
@@ -49,13 +38,20 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         commandLine.addSubcommand(new GetSubscriptionInfoCliCommand(app));
         commandLine.parseArgs(args);
 
-        if (app.debug){
+        if (app.debug) {
             LogManager.Builder.config().globalLogLevel(LogManager.LogLevel.DEBUG);
+        }
+        if (app.verbose) {
+            LogManager.Builder.config().setVerbose();
         }
 
         int exitCode = commandLine.execute(args);
 
         System.exit(exitCode);
+    }
+
+    public PleskService getPleskService() {
+        return pleskService;
     }
 
     @Override

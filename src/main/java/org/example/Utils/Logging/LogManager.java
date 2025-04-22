@@ -23,6 +23,7 @@ public class LogManager {
 
     private static final Log log = new Log();
     private static LogLevel globalLogLevel = LogLevel.INFO;
+    private static boolean verboseFlag = false;
 
     static {
         try {
@@ -34,6 +35,10 @@ public class LogManager {
 
     protected static void setGlobalLogLevel(LogLevel level) {
         globalLogLevel = level;
+    }
+
+    protected static void enableVerbose() {
+        verboseFlag = true;
     }
 
     private static void initializeLogFile() throws IOException {
@@ -76,7 +81,7 @@ public class LogManager {
         String logEntry = String.format("[%s] [%s] User=%s | %s",
                 timestamp, level, USER, formatMessage(message));
 
-        if (level == LogLevel.DEBUG) {
+        if (level == LogLevel.DEBUG || verboseFlag) {
             System.out.println(logEntry);
         }
 
@@ -441,6 +446,11 @@ public class LogManager {
          */
         public Builder globalLogLevel(LogLevel level) {
             setGlobalLogLevel(level);
+            return this;
+        }
+
+        public Builder setVerbose() {
+            enableVerbose();
             return this;
         }
 
