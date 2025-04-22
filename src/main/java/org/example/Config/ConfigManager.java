@@ -29,7 +29,7 @@ public class ConfigManager {
         } catch (IOException e) {
             throw new RuntimeException("Failed to load config", e);
         } catch (CommandFailedException | URISyntaxException e) {
-            LogManager.log().action("INIT", "Initialization error: " + e.getMessage()).error();
+            LogManager.log().action("INIT", "Initialization error").error(e);
             throw new RuntimeException(e);
         }
     }
@@ -44,10 +44,10 @@ public class ConfigManager {
         try {
             values = mapper.readValue(envFile, new TypeReference<>() {
             });
-            LogManager.log().action("LOAD_DOTENV", "Dotenv loaded").debug();
+            LogManager.log().action("LOAD_DOTENV", ENV_PATH).debug();
         } catch (IOException e) {
             values = new HashMap<>();
-            LogManager.log().action("LOAD_CONFIG", "Dotenv file not found or invalid, creating new one").info();
+            LogManager.log().info("Dotenv file not found or invalid.");
         }
 
         boolean updated = computeIfAbsentOrBlank(values, ENV_DB_PASS_FIELD,
@@ -71,7 +71,7 @@ public class ConfigManager {
             if (!key.toLowerCase().contains("password")) {
                 LogManager.log().configChange("ConfigManager", key, "(empty)", val).info();
             } else {
-                LogManager.log().configChange("ConfigManager", key, "(empty)", "[REDACTED]").info();
+                LogManager.log().configChange("ConfigManager", key, "(empty)", "REDACTED").info();
             }
             return true;
         }
@@ -79,13 +79,17 @@ public class ConfigManager {
     }
 
     static void updateDotEnv() throws IOException {
-        LogManager.log().action("UPDATE_DOTENV", "New values will be written to dotenv.").info();
+        LogManager.log().info("New values will be written to dotenv.");
+        LogManager.log().action("CREATING_DOTENV", ENV_PATH).info();
+
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         File envFile = new File(ENV_PATH);
 
+
         mapper.writeValue(envFile, Map.of(ENV_DB_PASS_FIELD, getDatabasePassword()));
-        LogManager.log().action("UPDATE_DOTENV", "Dotenv updated", true).info();
+
+        LogManager.log().action("UPDATE_DOTENV", ENV_PATH, true).info();
     }
 
     public static String getDatabasePassword() {

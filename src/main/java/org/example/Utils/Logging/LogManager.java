@@ -3,10 +3,7 @@ package org.example.Utils.Logging;
 import org.example.Config.PermissionManager;
 import org.example.Utils.ShellUtils;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -218,8 +215,25 @@ public class LogManager {
         /**
          * Log command at ERROR level
          */
-        public void error() {
-            logCommandInternal(LogLevel.ERROR);
+        public void error(Throwable t) {
+            StringBuilder message = new StringBuilder("Command=" + command);
+
+            if (args != null && args.length > 0) {
+                message.append(" Args=");
+                for (String arg : args) {
+                    message.append(maskSecrets(arg)).append(" ");
+                }
+            }
+
+            message.append(" | Exception=").append(t.toString());
+
+            StringWriter sw = new StringWriter();
+            t.printStackTrace(new PrintWriter(sw));
+            String stackTrace = sw.toString();
+
+            message.append(" | StackTrace=").append(stackTrace);
+
+            writeLog(LogLevel.ERROR, message.toString().trim());
         }
 
         private void logCommandInternal(LogLevel level) {
@@ -297,8 +311,22 @@ public class LogManager {
         /**
          * Log action at ERROR level
          */
-        public void error() {
-            logActionInternal(LogLevel.ERROR);
+        public void error(Throwable t) {
+            StringBuilder message = new StringBuilder();
+
+            // Structured logging format
+            message.append("Target=").append(target)
+                    .append(" Action=").append(action)
+                    .append(" Result=FAILURE")
+                    .append(" Exception=").append(t.toString());
+
+            StringWriter sw = new StringWriter();
+            t.printStackTrace(new PrintWriter(sw));
+            String stackTrace = sw.toString();
+
+            message.append(" StackTrace=").append(stackTrace);
+
+            writeLog(LogLevel.ERROR, message.toString().trim());
         }
 
         private void logActionInternal(LogLevel level) {
