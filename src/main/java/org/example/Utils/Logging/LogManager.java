@@ -11,8 +11,9 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
-
 
 public class LogManager {
     // Configuration constants
@@ -54,7 +55,6 @@ public class LogManager {
             }
         }
 
-
         Path logFilePath = Paths.get(LOG_DIRECTORY, LOG_FILE);
         if (!Files.exists(logFilePath)) {
             Files.createFile(logFilePath);
@@ -71,15 +71,20 @@ public class LogManager {
     /**
      * Core logging method - all logging goes through here
      */
-    private static synchronized void writeLog(LogLevel level,
-                                              String message) {
+    private static synchronized void writeLog(LogLevel level, Map<String, Object> fields) {
         if (!isLoggable(level)) {
             return;
         }
 
         String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT);
-        String logEntry = String.format("[%s] [%s] User=%s | %s",
-                timestamp, level, USER, formatMessage(message));
+        StringBuilder logEntry = new StringBuilder();
+
+        logEntry.append(String.format("[%s] [%s] User=%s", timestamp, level, USER));
+
+        // Format all fields with consistent separator
+        for (Map.Entry<String, Object> entry : fields.entrySet()) {
+            logEntry.append(" | ").append(entry.getKey()).append("=").append(entry.getValue());
+        }
 
         if (level == LogLevel.DEBUG || verboseFlag) {
             System.out.println(logEntry);
@@ -94,16 +99,19 @@ public class LogManager {
     }
 
     /**
-     * Check if a message with the given level should be logged for a specific category
+     * Simplified text logging method that leverages the map-based method
+     */
+    private static synchronized void writeLog(LogLevel level, String message) {
+        Map<String, Object> fields = new HashMap<>();
+        fields.put("Message", message);
+        writeLog(level, fields);
+    }
+
+    /**
+     * Check if a message with the given level should be logged
      */
     private static boolean isLoggable(LogLevel level) {
         return level.getValue() <= globalLogLevel.getValue();
-    }
-
-    private static String formatMessage(String raw) {
-        return raw.replace("Message[", "")
-                .replace("]", "")
-                .replaceAll(" (?=\\w+=)", " | ");
     }
 
     /**
@@ -129,6 +137,87 @@ public class LogManager {
     }
 
     /**
+     * Unified log entry builder for all log types
+     */
+    public static class LogEntryBuilder {
+        private final Map<String, Object> fields = new HashMap<>();
+        private LogLevel level;
+
+        public LogEntryBuilder(LogLevel level) {
+            this.level = level;
+        }
+
+        public LogEntryBuilder field(String key, Object value) {
+            if (value != null) {
+                if (key.toLowerCase().contains("password") ||
+                        key.toLowerCase().contains("secret") ||
+                        key.toLowerCase().contains("token")) {
+                    fields.put(key, "[REDACTED]");
+                } else {
+                    fields.put(key, value);
+                }
+            }
+            return this;
+        }
+
+        public LogEntryBuilder exception(Throwable t) {
+            fields.put("Exception", t.toString());
+
+            StringWriter sw = new StringWriter();
+            t.printStackTrace(new PrintWriter(sw));
+            fields.put("StackTrace", sw.toString());
+
+            return this;
+        }
+
+        public LogEntryBuilder command(String command, String... args) {
+            field("Command", command);
+
+            if (args != null && args.length > 0) {
+                StringBuilder argsStr = new StringBuilder();
+                for (String arg : args) {
+                    argsStr.append(maskSecrets(arg)).append(" ");
+                }
+                field("Args", argsStr.toString().trim());
+            }
+
+            return this;
+        }
+
+        public LogEntryBuilder action(String action, String target) {
+            return field("Action", action).field("Target", target);
+        }
+
+        public LogEntryBuilder result(boolean success) {
+            return field("Result", success ? "SUCCESS" : "FAILURE");
+        }
+
+        public LogEntryBuilder configChange(String component, String property, String oldValue, String newValue) {
+            field("Component", component);
+            field("Property", property);
+            field("OldValue", oldValue);
+            field("NewValue", newValue);
+            return this;
+        }
+
+        public void log() {
+            writeLog(level, fields);
+        }
+
+        private String maskSecrets(String input) {
+            if (input == null) return null;
+
+            String masked = input;
+            masked = masked.replaceAll("(?i)(IDENTIFIED BY\\s+)'[^']*'", "$1'REDACTED'");
+            masked = masked.replaceAll("(?i)(SET PASSWORD\\s*=\\s*)'[^']*'", "$1'REDACTED'");
+            masked = masked.replaceAll("(?i)(--password=)([^\\s]+)", "$1REDACTED");
+            masked = masked.replaceAll("(?i)(password\\s*[:=]\\s*)([^\\s'\"]+)", "$1REDACTED");
+
+            return masked;
+        }
+    }
+
+    /**
      * Fluent API for logging
      */
     public static class Log {
@@ -142,28 +231,29 @@ public class LogManager {
         /**
          * Action logger
          */
-        public ActionLogger action(String action,
-                                   String target) {
+        public ActionLogger action(String action, String target) {
             return new ActionLogger(action, target);
         }
 
         /**
          * Action logger with success indicator
          */
-        public ActionLogger action(String action,
-                                   String target,
-                                   boolean success) {
+        public ActionLogger action(String action, String target, boolean success) {
             return new ActionLogger(action, target, success);
         }
 
         /**
          * Config change logger
          */
-        public ConfigChangeLogger configChange(String component,
-                                               String property,
-                                               String oldValue,
-                                               String newValue) {
+        public ConfigChangeLogger configChange(String component, String property, String oldValue, String newValue) {
             return new ConfigChangeLogger(component, property, oldValue, newValue);
+        }
+
+        /**
+         * Create a new log entry at ERROR level
+         */
+        public LogEntryBuilder error() {
+            return new LogEntryBuilder(LogLevel.ERROR);
         }
 
         /**
@@ -174,6 +264,13 @@ public class LogManager {
         }
 
         /**
+         * Create a new log entry at WARN level
+         */
+        public LogEntryBuilder warn() {
+            return new LogEntryBuilder(LogLevel.WARN);
+        }
+
+        /**
          * Direct warning logging
          */
         public void warn(String message) {
@@ -181,10 +278,24 @@ public class LogManager {
         }
 
         /**
+         * Create a new log entry at INFO level
+         */
+        public LogEntryBuilder info() {
+            return new LogEntryBuilder(LogLevel.INFO);
+        }
+
+        /**
          * Direct info logging
          */
         public void info(String message) {
             writeLog(LogLevel.INFO, message);
+        }
+
+        /**
+         * Create a new log entry at DEBUG level
+         */
+        public LogEntryBuilder debug() {
+            return new LogEntryBuilder(LogLevel.DEBUG);
         }
 
         /**
@@ -205,7 +316,7 @@ public class LogManager {
     }
 
     /**
-     * CommandLogger for fluent command logging
+     * CommandLogger for backward compatibility
      */
     public static class CommandLogger {
         private final String command;
@@ -216,157 +327,100 @@ public class LogManager {
             this.args = Arrays.stream(args, 1, args.length).toArray(String[]::new);
         }
 
-        /**
-         * Log command at ERROR level
-         */
         public void error(Throwable t) {
-            StringBuilder message = new StringBuilder("Command=" + command);
-
-            if (args != null && args.length > 0) {
-                message.append(" Args=");
-                for (String arg : args) {
-                    message.append(maskSecrets(arg)).append(" ");
-                }
-            }
-
-            message.append(" | Exception=").append(t.toString());
-
-            StringWriter sw = new StringWriter();
-            t.printStackTrace(new PrintWriter(sw));
-            String stackTrace = sw.toString();
-
-            message.append(" | StackTrace=").append(stackTrace);
-
-            writeLog(LogLevel.ERROR, message.toString().trim());
+            new LogEntryBuilder(LogLevel.ERROR)
+                    .command(command, args)
+                    .exception(t)
+                    .log();
         }
 
-        private String maskSecrets(String input) {
-            if (input == null) return null;
-
-            String masked = input;
-
-            masked = masked.replaceAll("(?i)(IDENTIFIED BY\\s+)'[^']*'", "$1'REDACTED'");
-            masked = masked.replaceAll("(?i)(SET PASSWORD\\s*=\\s*)'[^']*'", "$1'REDACTED'");
-            masked = masked.replaceAll("(?i)(--password=)([^\\s]+)", "$1REDACTED");
-            masked = masked.replaceAll("(?i)(password\\s*[:=]\\s*)([^\\s'\"]+)", "$1REDACTED");
-
-            return masked;
-        }
-
-        /**
-         * Log command at WARN level
-         */
         public void warn() {
-            logCommandInternal(LogLevel.WARN);
+            new LogEntryBuilder(LogLevel.WARN)
+                    .command(command, args)
+                    .log();
         }
 
-        private void logCommandInternal(LogLevel level) {
-            StringBuilder message = new StringBuilder("Command=" + command);
-
-            if (args != null && args.length > 0) {
-                message.append(" Args=");
-                for (String arg : args) {
-                    message.append(maskSecrets(arg)).append(" ");
-                }
-            }
-
-            writeLog(level, message.toString().trim());
-        }
-
-        /**
-         * Log command at INFO level
-         */
         public void info() {
-            logCommandInternal(LogLevel.INFO);
+            new LogEntryBuilder(LogLevel.INFO)
+                    .command(command, args)
+                    .log();
         }
 
-        /**
-         * Log command at DEBUG level
-         */
         public void debug() {
-            logCommandInternal(LogLevel.DEBUG);
+            new LogEntryBuilder(LogLevel.DEBUG)
+                    .command(command, args)
+                    .log();
         }
-
     }
 
     /**
-     * ActionLogger for fluent action logging
+     * ActionLogger for backward compatibility
      */
     public static class ActionLogger {
         private final String action;
         private final String target;
         private final Boolean success;
 
-        private ActionLogger(String action,
-                             String target) {
+        private ActionLogger(String action, String target) {
             this.action = action;
             this.target = target;
             this.success = null;
         }
 
-        private ActionLogger(String action,
-                             String target,
-                             boolean success) {
+        private ActionLogger(String action, String target, boolean success) {
             this.action = action;
             this.target = target;
             this.success = success;
         }
 
-        /**
-         * Log action at ERROR level
-         */
         public void error(Throwable t) {
-            StringBuilder message = new StringBuilder();
+            LogEntryBuilder builder = new LogEntryBuilder(LogLevel.ERROR)
+                    .action(action, target)
+                    .exception(t);
 
-            // Structured logging format
-            message.append("Target=").append(target)
-                    .append(" Action=").append(action)
-                    .append(" Result=FAILURE")
-                    .append(" Exception=").append(t.toString());
-
-            StringWriter sw = new StringWriter();
-            t.printStackTrace(new PrintWriter(sw));
-            String stackTrace = sw.toString();
-
-            message.append(" StackTrace=").append(stackTrace);
-
-            writeLog(LogLevel.ERROR, message.toString().trim());
-        }
-
-        /**
-         * Log action at WARN level
-         */
-        public void warn() {
-            logActionInternal(LogLevel.WARN);
-        }
-
-        private void logActionInternal(LogLevel level) {
-            if (success == null) {
-                writeLog(level, "Target=" + target + " Action= " + action);
-            } else {
-                writeLog(level,
-                        "Target=" + target + " Action= " + action + " Result=" + (success ? "SUCCESS" : "FAILURE"));
+            if (success != null) {
+                builder.result(false);
             }
+
+            builder.log();
         }
 
-        /**
-         * Log action at INFO level
-         */
+        public void warn() {
+            LogEntryBuilder builder = new LogEntryBuilder(LogLevel.WARN)
+                    .action(action, target);
+
+            if (success != null) {
+                builder.result(success);
+            }
+
+            builder.log();
+        }
+
         public void info() {
-            logActionInternal(LogLevel.INFO);
+            LogEntryBuilder builder = new LogEntryBuilder(LogLevel.INFO)
+                    .action(action, target);
+
+            if (success != null) {
+                builder.result(success);
+            }
+
+            builder.log();
         }
 
-        /**
-         * Log action at DEBUG level
-         */
         public void debug() {
-            logActionInternal(LogLevel.DEBUG);
+            LogEntryBuilder builder = new LogEntryBuilder(LogLevel.DEBUG)
+                    .action(action, target);
+
+            if (success != null) {
+                builder.result(success);
+            }
+
+            builder.log();
         }
     }
 
-
     /**
-     * ConfigChangeLogger for fluent configuration change logging
+     * ConfigChangeLogger for backward compatibility
      */
     public static class ConfigChangeLogger {
         private final String component;
@@ -374,55 +428,37 @@ public class LogManager {
         private final String oldValue;
         private final String newValue;
 
-        private ConfigChangeLogger(String component,
-                                   String property,
-                                   String oldValue,
-                                   String newValue) {
+        private ConfigChangeLogger(String component, String property, String oldValue, String newValue) {
             this.component = component;
             this.property = property;
 
-            // Redact sensitive values
-            if (property.toLowerCase().contains("password")) {
-                this.oldValue = "[REDACTED]";
-                this.newValue = "[REDACTED]";
-            } else {
-                this.oldValue = oldValue;
-                this.newValue = newValue;
-            }
+            // Values already redacted in LogEntryBuilder
+            this.oldValue = oldValue;
+            this.newValue = newValue;
         }
 
-        /**
-         * Log config change at ERROR level
-         */
         public void error() {
-            logConfigChangeInternal(LogLevel.ERROR);
+            new LogEntryBuilder(LogLevel.ERROR)
+                    .configChange(component, property, oldValue, newValue)
+                    .log();
         }
 
-        private void logConfigChangeInternal(LogLevel level) {
-            writeLog(level,
-                    String.format("Component=%s Property=%s OldValue=%s NewValue=%s",
-                            component, property, oldValue, newValue));
-        }
-
-        /**
-         * Log config change at WARN level
-         */
         public void warn() {
-            logConfigChangeInternal(LogLevel.WARN);
+            new LogEntryBuilder(LogLevel.WARN)
+                    .configChange(component, property, oldValue, newValue)
+                    .log();
         }
 
-        /**
-         * Log config change at INFO level
-         */
         public void info() {
-            logConfigChangeInternal(LogLevel.INFO);
+            new LogEntryBuilder(LogLevel.INFO)
+                    .configChange(component, property, oldValue, newValue)
+                    .log();
         }
 
-        /**
-         * Log config change at DEBUG level
-         */
         public void debug() {
-            logConfigChangeInternal(LogLevel.DEBUG);
+            new LogEntryBuilder(LogLevel.DEBUG)
+                    .configChange(component, property, oldValue, newValue)
+                    .log();
         }
     }
 
@@ -434,16 +470,10 @@ public class LogManager {
             // Private constructor to enforce use of factory method
         }
 
-        /**
-         * Create a new Builder instance
-         */
         public static Builder config() {
             return new Builder();
         }
 
-        /**
-         * Set the global log level
-         */
         public Builder globalLogLevel(LogLevel level) {
             setGlobalLogLevel(level);
             return this;
@@ -453,6 +483,5 @@ public class LogManager {
             enableVerbose();
             return this;
         }
-
     }
 }
