@@ -242,12 +242,6 @@ public class LogManager {
             return new ActionLogger(action, target, success);
         }
 
-        /**
-         * Config change logger
-         */
-        public ConfigChangeLogger configChange(String component, String property, String oldValue, String newValue) {
-            return new ConfigChangeLogger(component, property, oldValue, newValue);
-        }
 
         /**
          * Create a new log entry at ERROR level
@@ -419,48 +413,6 @@ public class LogManager {
         }
     }
 
-    /**
-     * ConfigChangeLogger for backward compatibility
-     */
-    public static class ConfigChangeLogger {
-        private final String component;
-        private final String property;
-        private final String oldValue;
-        private final String newValue;
-
-        private ConfigChangeLogger(String component, String property, String oldValue, String newValue) {
-            this.component = component;
-            this.property = property;
-
-            // Values already redacted in LogEntryBuilder
-            this.oldValue = oldValue;
-            this.newValue = newValue;
-        }
-
-        public void error() {
-            new LogEntryBuilder(LogLevel.ERROR)
-                    .configChange(component, property, oldValue, newValue)
-                    .log();
-        }
-
-        public void warn() {
-            new LogEntryBuilder(LogLevel.WARN)
-                    .configChange(component, property, oldValue, newValue)
-                    .log();
-        }
-
-        public void info() {
-            new LogEntryBuilder(LogLevel.INFO)
-                    .configChange(component, property, oldValue, newValue)
-                    .log();
-        }
-
-        public void debug() {
-            new LogEntryBuilder(LogLevel.DEBUG)
-                    .configChange(component, property, oldValue, newValue)
-                    .log();
-        }
-    }
 
     /**
      * Builder for configuring the LogManager

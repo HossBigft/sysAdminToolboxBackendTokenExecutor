@@ -68,11 +68,6 @@ public class ConfigManager {
         String val = map.get(key);
         if (val == null || val.isBlank()) {
             map.put(key, supplier.get());
-            if (!key.toLowerCase().contains("password")) {
-                LogManager.log().configChange("ConfigManager", key, "(empty)", val).info();
-            } else {
-                LogManager.log().configChange("ConfigManager", key, "(empty)", "REDACTED").info();
-            }
             return true;
         }
         return false;
