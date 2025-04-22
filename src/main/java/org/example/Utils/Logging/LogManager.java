@@ -240,10 +240,10 @@ public class LogManager {
 
             String masked = input;
 
-            masked = masked.replaceAll("(?i)(IDENTIFIED BY\\s+)'[^']*'", "$1'[REDACTED]'");
-            masked = masked.replaceAll("(?i)(SET PASSWORD\\s*=\\s*)'[^']*'", "$1'[REDACTED]'");
-            masked = masked.replaceAll("(?i)(--password=)([^\\s]+)", "$1[REDACTED]");
-            masked = masked.replaceAll("(?i)(password\\s*[:=]\\s*)([^\\s'\"]+)", "$1[REDACTED]");
+            masked = masked.replaceAll("(?i)(IDENTIFIED BY\\s+)'[^']*'", "$1'REDACTED'");
+            masked = masked.replaceAll("(?i)(SET PASSWORD\\s*=\\s*)'[^']*'", "$1'REDACTED'");
+            masked = masked.replaceAll("(?i)(--password=)([^\\s]+)", "$1REDACTED");
+            masked = masked.replaceAll("(?i)(password\\s*[:=]\\s*)([^\\s'\"]+)", "$1REDACTED");
 
             return masked;
         }
