@@ -26,21 +26,8 @@ public class TokenLifecycleManager {
 
     public static boolean isTokenUsed(Token token) {
         try (Stream<String> lines = Files.lines(FULLPATH)) {
-            boolean tokenUsed = lines.anyMatch(line -> line.contains(token.signature()));
 
-            if (tokenUsed) {
-                LogManager.log().warn()
-                        .message("Token has already been used")
-                        .field("Token", token.value())
-                        .log();
-            } else {
-                LogManager.log().info()
-                        .message("Token is not used yet")
-                        .field("Token", token.value())
-                        .log();
-            }
-
-            return tokenUsed;
+            return lines.anyMatch(line -> line.contains(token.signature()));
         } catch (IOException e) {
             new LogManager.LogEntryBuilder(LogManager.LogLevel.ERROR)
                     .message("Storage file could not be read")
@@ -50,7 +37,7 @@ public class TokenLifecycleManager {
         }
     }
 
-    public static void markTokenAsUsed(Token token) {
+    public static void markTokenAsUsed(Token token) throws IOException {
         try {
             Files.createDirectories(STORAGE_DIR);
 
@@ -83,6 +70,7 @@ public class TokenLifecycleManager {
                     .field("Path", FULLPATH.toString())
                     .exception(e)
                     .log();
+            throw new IOException(e);
         }
     }
 
