@@ -1,6 +1,5 @@
 package org.example.ValueTypes;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -66,10 +65,11 @@ public record Token(
 
     @Override
     public String toString() {
-        try {
-            return new ObjectMapper().writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        return String.join("|",
+                Long.toString(timestamp),
+                nonce,
+                Long.toString(expiry),
+                command,
+                signature);
     }
 }

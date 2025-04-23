@@ -1,5 +1,6 @@
 package org.example.Commands;
 
+import org.example.Config.TokenManager;
 import org.example.SysAdminToolboxBackendTokenExecutor;
 import org.example.Utils.TokenValidator;
 import org.example.ValueTypes.Token;
@@ -22,7 +23,11 @@ public class ExecuteCliCommand extends AbstractCliCommand {
         try {
             Token token = Token.fromJson(rawToken);
             if (TokenValidator.isValid(token)) {
-                System.out.println("Extracted command " + token.command());
+                if (!TokenManager.isTokenUsed(token)) {
+                    TokenManager.markTokenAsUsed(token);
+                    System.out.println("Extracted command " + token.command());
+                }
+
             }
             return 0;
         } catch (Exception e) {
