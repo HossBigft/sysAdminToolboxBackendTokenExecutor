@@ -1,6 +1,7 @@
 package org.example.Utils;
 
 import org.example.Config.KeyManager;
+import org.example.Utils.Logging.LogManager;
 import org.passay.CharacterData;
 import org.passay.CharacterRule;
 import org.passay.EnglishCharacterData;
@@ -42,6 +43,8 @@ public class Utils {
     public static boolean verifyDigitalSignature(String message,
                                                  String digitalSignature) throws
             IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+        LogManager.debug("Signed message " + message);
+        LogManager.debug("Digital signature " + digitalSignature);
         byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
         byte[] signatureBytes = Base64.getDecoder().decode(digitalSignature);
         if (signatureBytes.length != 64) {

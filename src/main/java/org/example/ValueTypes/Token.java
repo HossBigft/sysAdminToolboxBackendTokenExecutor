@@ -57,21 +57,10 @@ public class Token implements ValueType {
     }
 
     public boolean isSignatureValid() throws Exception {
-        // Create a new JSON object without the signature field to match Python's signing approach
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(com.fasterxml.jackson.core.JsonGenerator.Feature.ESCAPE_NON_ASCII, false);
 
-        // Create a clean object with the exact same field order as Python
-        JsonNode tokenDataNode = mapper.createObjectNode()
-                .put("timestamp", timestamp)
-                .put("nonce", nonce)
-                .put("expiry", expiry)
-                .put("command", command);
 
-        // Convert to string with compact formatting (no whitespace)
-        String dataToVerify = mapper.writeValueAsString(tokenDataNode);
 
-        return Utils.verifyDigitalSignature(dataToVerify, signature);
+        return Utils.verifyDigitalSignature(value(), signature);
     }
 
     public String value() {
