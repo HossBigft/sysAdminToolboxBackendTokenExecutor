@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -114,7 +115,6 @@ public class LogManager {
 
         logEntry.append(String.format("[%s] [%s] User=%s", timestamp, level, USER));
 
-        // Format all fields with consistent separator
         for (Map.Entry<String, Object> entry : fields.entrySet()) {
             logEntry.append(" | ").append(entry.getKey()).append("=").append(entry.getValue());
         }
@@ -164,7 +164,7 @@ public class LogManager {
      * Unified log entry builder for all log types
      */
     public static class LogEntryBuilder {
-        private final Map<String, Object> fields = new HashMap<>();
+        private final Map<String, Object> fields = new LinkedHashMap<>();
         private LogLevel level;
 
         public LogEntryBuilder(LogLevel level) {
