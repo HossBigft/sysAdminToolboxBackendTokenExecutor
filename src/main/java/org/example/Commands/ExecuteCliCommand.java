@@ -1,8 +1,7 @@
 package org.example.Commands;
 
-import org.example.Config.TokenManager;
 import org.example.SysAdminToolboxBackendTokenExecutor;
-import org.example.Utils.TokenValidator;
+import org.example.Utils.TokenProcessor;
 import org.example.ValueTypes.Token;
 import picocli.CommandLine;
 
@@ -22,13 +21,9 @@ public class ExecuteCliCommand extends AbstractCliCommand {
     public Integer call() {
         try {
             Token token = Token.fromJson(rawToken);
-            if (TokenValidator.isValid(token)) {
-                if (!TokenManager.isTokenUsed(token)) {
-                    TokenManager.markTokenAsUsed(token);
-                    System.out.println("Extracted command " + token.command());
-                }
+            String command = new TokenProcessor().processToken(token);
+            System.out.println("Extracted command " + command);
 
-            }
             return 0;
         } catch (Exception e) {
             System.out.println("Failed to parse token" + rawToken + " ");

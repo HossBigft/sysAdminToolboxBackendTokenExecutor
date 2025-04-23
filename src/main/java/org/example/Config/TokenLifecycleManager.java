@@ -11,7 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.stream.Stream;
 
-public class TokenManager {
+public class TokenLifecycleManager {
     private static final Path STORAGE_DIR = Path.of("/tmp/" + EnvironmentConstants.APP_USER + "/");
     private static final String STORAGE_FILENAME = "used_tokens.txt";
     private static final Path FULLPATH = STORAGE_DIR.resolve(STORAGE_FILENAME);
