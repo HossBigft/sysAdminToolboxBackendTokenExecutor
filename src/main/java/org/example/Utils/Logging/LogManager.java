@@ -1,6 +1,7 @@
 package org.example.Utils.Logging;
 
 import org.example.Config.PermissionManager;
+import org.example.Constants.EnvironmentConstants;
 import org.example.Utils.ShellUtils;
 
 import java.io.*;
@@ -16,7 +17,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class LogManager {
-    private static final String LOG_DIRECTORY = "/var/log/sysAdminToolBox/";
+    private static final String LOG_DIRECTORY = "/var/log/"+ EnvironmentConstants.APP_USER +"/";
     private static final String LOG_FILE = "audit.log";
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final String USER = ShellUtils.resolveShellUser();

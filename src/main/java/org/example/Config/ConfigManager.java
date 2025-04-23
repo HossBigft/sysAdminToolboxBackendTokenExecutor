@@ -89,7 +89,7 @@ public class ConfigManager {
     }
 
     public static String getDatabaseUser() {
-        return EnvironmentConstants.DB_USER;
+        return EnvironmentConstants.APP_USER;
     }
 
 
