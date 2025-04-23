@@ -19,7 +19,7 @@ public class ExecuteCliCommand extends AbstractCliCommand {
     @Override
     public Integer call() {
         try {
-            System.out.println("Extracted command " + new Token(rawToken).getCommand());
+            System.out.println("Extracted command " + Token.fromJson(rawToken).command());
             return 0;
         } catch (Exception e) {
             System.out.println("Failed to parse token" + rawToken+ " ");
