@@ -1,5 +1,7 @@
 package org.example.Config;
 
+import org.example.Utils.Logging.LogManager;
+
 import java.io.IOException;
 
 public class DatabaseProvisioner {
@@ -11,7 +13,7 @@ public class DatabaseProvisioner {
             new DataBaseUserManager().ensureDatabaseUser();
             new DatabasePermissionManager().ensureUserIsReadOnly();
         } catch (IOException e) {
-            System.err.println("Database setup failed: " + e.getMessage());
+            LogManager.error("Database setup failed: ", e);
         }
     }
 

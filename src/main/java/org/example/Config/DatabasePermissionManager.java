@@ -1,6 +1,7 @@
 package org.example.Config;
 
 import org.example.Exceptions.CommandFailedException;
+import org.example.Utils.Logging.LogManager;
 import org.example.Utils.ShellUtils;
 
 import java.util.List;
@@ -10,10 +11,11 @@ public class DatabasePermissionManager {
     private static final String databaseUser = ConfigManager.getDatabaseUser();
 
     void ensureUserIsReadOnly() {
+        LogManager.debug("Checking if user " + databaseUser + " is read-only.");
         if (!isDbUserReadOnly()) {
             setReadOnly();
         } else {
-            System.out.printf("User %s is already read-only.%n", databaseUser);
+            LogManager.debug("User " + databaseUser + " is already read-only.");
         }
     }
 
@@ -37,8 +39,7 @@ public class DatabasePermissionManager {
                         break;
                     }
 
-                    if (line.matches(
-                            ".*\\b(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|INDEX|EXECUTE|ALL PRIVILEGES)\\b.*")) {
+                    if (line.matches(".*\\b(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|INDEX|EXECUTE|ALL PRIVILEGES)\\b.*")) {
                         hasOnlySelectPrivileges = false;
                         break;
                     }
@@ -47,28 +48,27 @@ public class DatabasePermissionManager {
 
             return hasOnlySelectPrivileges;
         } catch (CommandFailedException e) {
-            System.err.println("Error checking user permissions: " + e.getMessage());
+            LogManager.error("Error checking user permissions for " + databaseUser, e);
             return false;
         }
     }
 
     private void setReadOnly() {
         if (databaseUser.equalsIgnoreCase(DatabaseProvisioner.ADMIN_USER)) {
-            System.err.println(
-                    "WARNING: Refusing to modify the root user. Please configure a different database user.");
+            LogManager.warn("Refusing to modify the root user. Please configure a different database user.");
             return;
         }
         try {
-            String commands = String.format(
-                    "REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s'@'localhost'; " +
+            String
+                    commands =
+                    String.format("REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s'@'localhost'; " +
                             "GRANT SELECT ON *.* TO '%s'@'localhost'; " +
-                            "FLUSH PRIVILEGES;",
-                    databaseUser, databaseUser);
+                            "FLUSH PRIVILEGES;", databaseUser, databaseUser);
 
             ShellUtils.runCommand(ShellUtils.getSqlCliName(), "-u", DatabaseProvisioner.ADMIN_USER, "-e", commands);
-
+            LogManager.info(String.format("Set user %s as read-only successfully.", databaseUser));
         } catch (CommandFailedException e) {
-            System.err.println("Error setting user as read-only: " + e.getMessage());
+            LogManager.error("Error setting database user " + databaseUser + " as read-only.", e);
         }
     }
 }
