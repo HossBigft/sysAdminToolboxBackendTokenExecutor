@@ -1,6 +1,7 @@
 package org.example.Commands;
 
 import org.example.SysAdminToolboxBackendTokenExecutor;
+import org.example.Utils.TokenValidator;
 import org.example.ValueTypes.Token;
 import picocli.CommandLine;
 
@@ -19,10 +20,13 @@ public class ExecuteCliCommand extends AbstractCliCommand {
     @Override
     public Integer call() {
         try {
-            System.out.println("Extracted command " + Token.fromJson(rawToken).command());
+            Token token = Token.fromJson(rawToken);
+            if (TokenValidator.isValid(token)) {
+                System.out.println("Extracted command " + token.command());
+            }
             return 0;
         } catch (Exception e) {
-            System.out.println("Failed to parse token" + rawToken+ " ");
+            System.out.println("Failed to parse token" + rawToken + " ");
             e.printStackTrace();
             return 1;
         }

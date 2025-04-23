@@ -1,5 +1,6 @@
 package org.example.Config;
 
+import org.example.Constants.EnvironmentConstants;
 import org.example.Utils.Logging.LogManager;
 
 import java.io.File;
@@ -18,7 +19,7 @@ public class PermissionManager {
     private static final FileAccessPolicy
             dotenvFilePolicy =
             new FileAccessPolicy(DOTENV_PERMISSIONS, DOTENV_OWNER, DOTENV_GROUP);
-    private static final File dotEnvFile = new File(ConfigManager.ENV_PATH);
+    private static final File dotEnvFile = new File(EnvironmentConstants.ENV_PATH);
 
     public void ensureDotEnvPermissions() throws IOException {
         LogManager.log().action("ENSURING_DOTENV_PERMISSIONS", dotEnvFile.getName()).debug();

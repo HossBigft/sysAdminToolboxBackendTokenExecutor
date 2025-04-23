@@ -3,7 +3,6 @@ package org.example.ValueTypes;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.Utils.Utils;
 
 import java.util.Map;
 
@@ -46,10 +45,6 @@ public record Token(
     public boolean isExpired() {
         long currentTime = System.currentTimeMillis() / 1000;
         return currentTime > expiry;
-    }
-
-    public boolean isSignatureValid() throws Exception {
-        return Utils.verifyDigitalSignature(getMessage(), signature);
     }
 
     public String getMessage() {
