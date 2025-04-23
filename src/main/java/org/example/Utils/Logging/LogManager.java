@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class LogManager {
-    private static final String LOG_DIRECTORY = "/var/log/"+ EnvironmentConstants.APP_USER +"/";
+    private static final String LOG_DIRECTORY = "/var/log/" + EnvironmentConstants.APP_USER + "/";
     private static final String LOG_FILE = "audit.log";
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final String USER = ShellUtils.resolveShellUser();
@@ -248,23 +248,6 @@ public class LogManager {
             return new CommandLogger(args);
         }
 
-        /**
-         * Action logger
-         */
-        public ActionLogger action(String action,
-                                   String target) {
-            return new ActionLogger(action, target);
-        }
-
-        /**
-         * Action logger with success indicator
-         */
-        public ActionLogger action(String action,
-                                   String target,
-                                   boolean success) {
-            return new ActionLogger(action, target, success);
-        }
-
 
         public void error(String message) {
             new LogEntryBuilder(LogLevel.ERROR)
@@ -373,75 +356,6 @@ public class LogManager {
             new LogEntryBuilder(LogLevel.DEBUG)
                     .command(command, args)
                     .log();
-        }
-    }
-
-    /**
-     * ActionLogger for backward compatibility
-     */
-    public static class ActionLogger {
-        private final String action;
-        private final String target;
-        private final Boolean success;
-
-        private ActionLogger(String action,
-                             String target) {
-            this.action = action;
-            this.target = target;
-            this.success = null;
-        }
-
-        private ActionLogger(String action,
-                             String target,
-                             boolean success) {
-            this.action = action;
-            this.target = target;
-            this.success = success;
-        }
-
-        public void error(Throwable t) {
-            LogEntryBuilder builder = new LogEntryBuilder(LogLevel.ERROR)
-                    .action(action, target)
-                    .exception(t);
-
-            if (success != null) {
-                builder.result(false);
-            }
-
-            builder.log();
-        }
-
-        public void warn() {
-            LogEntryBuilder builder = new LogEntryBuilder(LogLevel.WARN)
-                    .action(action, target);
-
-            if (success != null) {
-                builder.result(success);
-            }
-
-            builder.log();
-        }
-
-        public void info() {
-            LogEntryBuilder builder = new LogEntryBuilder(LogLevel.INFO)
-                    .action(action, target);
-
-            if (success != null) {
-                builder.result(success);
-            }
-
-            builder.log();
-        }
-
-        public void debug() {
-            LogEntryBuilder builder = new LogEntryBuilder(LogLevel.DEBUG)
-                    .action(action, target);
-
-            if (success != null) {
-                builder.result(success);
-            }
-
-            builder.log();
         }
     }
 

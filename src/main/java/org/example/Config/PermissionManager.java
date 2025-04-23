@@ -22,7 +22,6 @@ public class PermissionManager {
     private static final File dotEnvFile = new File(EnvironmentConstants.ENV_PATH);
 
     public void ensureDotEnvPermissions() throws IOException {
-        LogManager.log().action("ENSURING_DOTENV_PERMISSIONS", dotEnvFile.getName()).debug();
         if (isFilePermissionsSecureNot(dotEnvFile, dotenvFilePolicy)) {
             secureDotEnvPermissionsOwnerGroup(dotEnvFile);
         }
@@ -71,13 +70,12 @@ public class PermissionManager {
 
 
     private void secureDotEnvPermissionsOwnerGroup(File envFile) throws IOException {
-        LogManager.log().action("Applying permissions " + DOTENV_PERMISSIONS, dotEnvFile.getName()).debug();
         Path path = envFile.toPath();
 
         setPermissions(path, DOTENV_PERMISSIONS);
         setOwner(path, DOTENV_OWNER);
         setGroup(path, DOTENV_GROUP);
-        LogManager.log().action("Permissions " + DOTENV_PERMISSIONS + " applied", dotEnvFile.getName(), true).debug();
+        LogManager.debug("Permissions " + DOTENV_PERMISSIONS + " applied to " + dotEnvFile.getName());
     }
 
     public static boolean hasPermissions(Path path, String expectedPerms) throws IOException {
@@ -97,28 +95,25 @@ public class PermissionManager {
     }
 
     public static void setPermissions(Path path, String permissions) throws IOException {
-        LogManager.log().action("SET_PERMISSIONS " + "[" + permissions + "]", path.toString()).info();
         Set<PosixFilePermission> perms = PosixFilePermissions.fromString(permissions);
         Files.setPosixFilePermissions(path, perms);
-        LogManager.log().action("SET_PERMISSIONS " + "[" + permissions + "]", path.toString(), true).info();
+        LogManager.info("Set permissions" + "[" + permissions + "] to" + path.toString());
     }
 
     public static void setOwner(Path path, String owner) throws IOException {
-
-        LogManager.log().action("SET_OWNER " + "[" + owner + "]", path.toString()).info();
         UserPrincipal userPrincipal = FileSystems.getDefault()
                 .getUserPrincipalLookupService()
                 .lookupPrincipalByName(owner);
         Files.setAttribute(path, "posix:owner", userPrincipal, LinkOption.NOFOLLOW_LINKS);
-        LogManager.log().action("SET_OWNER " + "[" + owner + "]", path.toString(), true).info();
+        LogManager.info("SET_OWNER " + "[" + owner + "] to " + path);
     }
 
     public static void setGroup(Path path, String group) throws IOException {
-        LogManager.log().action("SET_GROUP " + "[" + group + "]", path.toString()).info();
+
         GroupPrincipal groupPrincipal = FileSystems.getDefault()
                 .getUserPrincipalLookupService()
                 .lookupPrincipalByGroupName(group);
         Files.setAttribute(path, "posix:group", groupPrincipal, LinkOption.NOFOLLOW_LINKS);
-        LogManager.log().action("SET_GROUP " + "[" + group + "]", path.toString(), true).info();
+        LogManager.info("SET_GROUP " + "[" + group + "] to " + path);
     }
 }

@@ -27,7 +27,7 @@ public class DataBaseUserManager {
                 }
             }
         } catch (CommandFailedException e) {
-            LogManager.log().action("Failed to ensure database user", databaseUser).error(e);
+            LogManager.error("Failed to ensure database user" + databaseUser, e);
         }
     }
 
@@ -87,10 +87,10 @@ public class DataBaseUserManager {
     private boolean isDbUserAbleToConnect() {
         try (Connection conn = DriverManager.getConnection(DatabaseProvisioner.DB_URL, databaseUser,
                 databasePassword)) {
-            LogManager.log().action("Check if database user can connect", databaseUser, true).debug();
+            LogManager.debug(databaseUser + " can connec to to database.");
             return true;
         } catch (SQLException e) {
-            LogManager.log().action("Check if database user can connect", databaseUser, true).error(e);
+            LogManager.error(databaseUser + " can't connect to to database.", e);
             return false;
         }
     }
