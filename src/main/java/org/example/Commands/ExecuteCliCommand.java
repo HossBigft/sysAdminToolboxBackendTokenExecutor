@@ -21,7 +21,7 @@ public class ExecuteCliCommand extends AbstractCliCommand {
     public Integer call() {
         try {
             Token token = Token.fromJson(rawToken);
-            String command = new TokenProcessor().processToken(token);
+            String command = new TokenProcessor().processToken(token).get();
             System.out.println("Extracted command " + command);
 
             return 0;

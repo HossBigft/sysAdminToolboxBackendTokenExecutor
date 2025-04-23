@@ -5,24 +5,25 @@ import org.example.Utils.Logging.LogManager;
 import org.example.ValueTypes.Token;
 
 import java.io.IOException;
+import java.util.Optional;
 
 
 public class TokenProcessor {
 
 
-    public String processToken(Token token) {
+    public Optional<String> processToken(Token token) {
         LogManager.log().info()
                 .message("Processing command token")
                 .field("Token", token.value())
                 .log();
-
+        Optional<String> command = Optional.empty();
 
         if (!TokenValidator.isValid(token)) {
             LogManager.log().warn()
                     .message("Token validation failed")
                     .field("Token", token.value())
                     .log();
-            return null;
+            return command;
         }
 
         LogManager.log().debug()
@@ -36,7 +37,7 @@ public class TokenProcessor {
                     .message("Token has already been used")
                     .field("Token", token.value())
                     .log();
-            return null;
+            return command;
         }
 
         LogManager.log().debug()
@@ -51,14 +52,14 @@ public class TokenProcessor {
                     .field("Token", token.value())
                     .exception(e)
                     .log();
-            return null;
+            return command;
         }
-        
-        LogManager.log().info()
+
+        LogManager.log().debug()
                 .message("Token processed successfully")
                 .field("Command", token.command())
                 .log();
 
-        return token.command();
+        return Optional.of(token.command());
     }
 }
