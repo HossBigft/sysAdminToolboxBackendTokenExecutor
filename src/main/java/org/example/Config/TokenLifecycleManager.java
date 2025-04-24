@@ -1,7 +1,8 @@
 package org.example.Config;
 
 import org.example.Constants.EnvironmentConstants;
-import org.example.Utils.Logging.LogManager;
+import org.example.Utils.Logging.facade.LogManager;
+import org.example.Utils.Logging.implementations.DefaultCliLogger;
 import org.example.ValueTypes.Token;
 
 import java.io.File;
@@ -16,11 +17,13 @@ public class TokenLifecycleManager {
     private static final String STORAGE_FILENAME = "used_tokens.txt";
     private static final Path FULLPATH = STORAGE_DIR.resolve(STORAGE_FILENAME);
 
+    private static final DefaultCliLogger logger = LogManager.getExtendedLogger();
+
     static {
         File directory = new File(String.valueOf(STORAGE_DIR));
         if (!directory.exists()) {
             directory.mkdirs();
-            LogManager.log().info("Created token storage directory: " + STORAGE_DIR);
+            LogManager.info("Created token storage directory: " + STORAGE_DIR);
         }
     }
 
@@ -29,10 +32,8 @@ public class TokenLifecycleManager {
 
             return lines.anyMatch(line -> line.contains(token.signature()));
         } catch (IOException e) {
-            new LogManager.LogEntryBuilder(LogManager.LogLevel.ERROR)
-                    .message("Storage file could not be read")
-                    .field("Path", FULLPATH.toString())
-                    .log();
+            logger.errorEntry().message("Storage file could not be read")
+                    .field("Path", FULLPATH.toString()).log();
             return false;
         }
     }
@@ -44,10 +45,10 @@ public class TokenLifecycleManager {
 
             boolean fileExistsBefore = Files.exists(FULLPATH);
             if (!fileExistsBefore) {
-                LogManager.log().info()
+                logger.infoEntry()
                         .message("Token file created")
-                        .field("Path", FULLPATH.toString())
-                        .log();
+                        .field("Path", FULLPATH.toString()).log();
+
             }
 
             Files.write(
@@ -58,13 +59,18 @@ public class TokenLifecycleManager {
             );
 
 
-            LogManager.log().info()
+            logger.infoEntry()
                     .message("Token was marked as used")
                     .field("Token", token.value())
                     .log();
 
+            logger.infoEntry()
+                    .message("Token file created")
+                    .field("Path", FULLPATH.toString()).log();
+
+
         } catch (IOException e) {
-            new LogManager.LogEntryBuilder(LogManager.LogLevel.ERROR)
+            logger.errorEntry()
                     .message("Failed to mark token as used")
                     .field("Token", token.value())
                     .field("Path", FULLPATH.toString())

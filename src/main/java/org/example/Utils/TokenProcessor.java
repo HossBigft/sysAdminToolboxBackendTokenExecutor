@@ -1,7 +1,8 @@
 package org.example.Utils;
 
 import org.example.Config.TokenLifecycleManager;
-import org.example.Utils.Logging.LogManager;
+import org.example.Utils.Logging.facade.LogManager;
+import org.example.Utils.Logging.implementations.DefaultCliLogger;
 import org.example.ValueTypes.Token;
 
 import java.io.IOException;
@@ -10,55 +11,39 @@ import java.util.Optional;
 
 public class TokenProcessor {
 
+    private static final DefaultCliLogger logger = LogManager.getExtendedLogger();
 
     public Optional<String> processToken(Token token) {
-        LogManager.log().info()
-                .message("Processing command token")
-                .field("Token", token.value())
-                .log();
+        logger.infoEntry().message("Processing command token").field("Token", token.value()).log();
         Optional<String> command = Optional.empty();
 
         if (!TokenValidator.isValid(token)) {
-            LogManager.log().warn()
-                    .message("Token validation failed")
-                    .field("Token", token.value())
-                    .log();
+            logger.warnEntry().message("Token validation failed").field("Token", token.value()).log();
             return command;
         }
 
-        LogManager.log().debug()
-                .message("Token signature validated successfully")
-                .field("Token", token.value())
-                .log();
+        logger.debugEntry().message("Token signature validated successfully").field("Token", token.value()).log();
 
         boolean tokenUsed = TokenLifecycleManager.isTokenUsed(token);
         if (tokenUsed) {
-            LogManager.log().warn()
-                    .message("Token has already been used")
-                    .field("Token", token.value())
-                    .log();
+            logger.warnEntry().message("Token has already been used").field("Token", token.value()).log();
             return command;
         }
 
-        LogManager.log().debug()
-                .message("Token is not used yet")
-                .field("Token", token.value())
-                .log();
+        logger.debugEntry().message("Token is not used yet").field("Token", token.value()).log();
 
         try {
             TokenLifecycleManager.markTokenAsUsed(token);
         } catch (IOException e) {
-            new LogManager.LogEntryBuilder(LogManager.LogLevel.ERROR).message("Failed to mark token as used")
+            logger.errorEntry()
+                    .message("Failed to mark token as used")
                     .field("Token", token.value())
                     .exception(e)
                     .log();
             return command;
         }
 
-        LogManager.log().debug()
-                .message("Token processed successfully")
-                .field("Command", token.command())
-                .log();
+        logger.debugEntry().message("Token processed successfully").field("Command", token.command()).log();
 
         return Optional.of(token.command());
     }

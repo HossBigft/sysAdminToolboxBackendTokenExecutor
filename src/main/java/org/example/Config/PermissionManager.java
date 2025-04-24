@@ -1,7 +1,8 @@
 package org.example.Config;
 
 import org.example.Constants.EnvironmentConstants;
-import org.example.Utils.Logging.LogManager;
+import org.example.Utils.Logging.facade.LogManager;
+import org.example.Utils.Logging.implementations.DefaultCliLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +22,8 @@ public class PermissionManager {
             new FileAccessPolicy(DOTENV_PERMISSIONS, DOTENV_OWNER, DOTENV_GROUP);
     private static final File dotEnvFile = new File(EnvironmentConstants.ENV_PATH);
 
+    private static final DefaultCliLogger logger = LogManager.getExtendedLogger();
+
     public void ensureDotEnvPermissions() throws IOException {
         if (isFilePermissionsSecureNot(dotEnvFile, dotenvFilePolicy)) {
             secureDotEnvPermissionsOwnerGroup(dotEnvFile);
@@ -38,31 +41,18 @@ public class PermissionManager {
         String filename = path.getFileName().toString();
 
         if (!permsOk) {
-            LogManager.log()
-                    .warn("[" +
-                            filename +
-                            "] File permissions are incorrect: expected " +
-                            policy.permissions() +
-                            " for path " +
-                            path);
+            logger.warn("[" +
+                    filename +
+                    "] File permissions are incorrect: expected " +
+                    policy.permissions() +
+                    " for path " +
+                    path);
         }
         if (!ownerOk) {
-            LogManager.log()
-                    .warn("[" +
-                            filename +
-                            "] File owner is incorrect: expected " +
-                            policy.owner() +
-                            " for path " +
-                            path);
+            logger.warn("[" + filename + "] File owner is incorrect: expected " + policy.owner() + " for path " + path);
         }
         if (!groupOk) {
-            LogManager.log()
-                    .warn("[" +
-                            filename +
-                            "] File group is incorrect: expected " +
-                            policy.group() +
-                            " for path " +
-                            path);
+            logger.warn("[" + filename + "] File group is incorrect: expected " + policy.group() + " for path " + path);
         }
 
         return !permsOk || !ownerOk || !groupOk;
@@ -101,18 +91,18 @@ public class PermissionManager {
     }
 
     public static void setOwner(Path path, String owner) throws IOException {
-        UserPrincipal userPrincipal = FileSystems.getDefault()
-                .getUserPrincipalLookupService()
-                .lookupPrincipalByName(owner);
+        UserPrincipal
+                userPrincipal =
+                FileSystems.getDefault().getUserPrincipalLookupService().lookupPrincipalByName(owner);
         Files.setAttribute(path, "posix:owner", userPrincipal, LinkOption.NOFOLLOW_LINKS);
         LogManager.info("SET_OWNER " + "[" + owner + "] to " + path);
     }
 
     public static void setGroup(Path path, String group) throws IOException {
 
-        GroupPrincipal groupPrincipal = FileSystems.getDefault()
-                .getUserPrincipalLookupService()
-                .lookupPrincipalByGroupName(group);
+        GroupPrincipal
+                groupPrincipal =
+                FileSystems.getDefault().getUserPrincipalLookupService().lookupPrincipalByGroupName(group);
         Files.setAttribute(path, "posix:group", groupPrincipal, LinkOption.NOFOLLOW_LINKS);
         LogManager.info("SET_GROUP " + "[" + group + "] to " + path);
     }

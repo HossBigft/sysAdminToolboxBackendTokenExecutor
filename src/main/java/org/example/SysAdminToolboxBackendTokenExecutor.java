@@ -4,7 +4,8 @@ import org.example.Commands.ExecuteCliCommand;
 import org.example.Commands.GetLoginLinkCliCommand;
 import org.example.Commands.GetSubscriptionInfoCliCommand;
 import org.example.Commands.GetTestMailboxCliCommand;
-import org.example.Utils.Logging.LogManager;
+import org.example.Utils.Logging.core.LogLevel;
+import org.example.Utils.Logging.facade.LogManager;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -41,7 +42,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         commandLine.parseArgs(args);
 
         if (app.debug) {
-            LogManager.Builder.config().globalLogLevel(LogManager.LogLevel.DEBUG);
+            LogManager.Builder.config().globalLogLevel(LogLevel.DEBUG);
         }
         if (app.verbose) {
             LogManager.Builder.config().setVerbose();

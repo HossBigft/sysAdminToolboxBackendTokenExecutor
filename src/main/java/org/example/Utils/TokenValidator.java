@@ -1,7 +1,8 @@
 package org.example.Utils;
 
 import org.example.Config.KeyManager;
-import org.example.Utils.Logging.LogManager;
+import org.example.Utils.Logging.facade.LogManager;
+import org.example.Utils.Logging.implementations.DefaultCliLogger;
 import org.example.ValueTypes.Token;
 
 import java.io.IOException;
@@ -11,10 +12,12 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 
 public class TokenValidator {
+    private static final DefaultCliLogger logger = LogManager.getExtendedLogger();
     public static boolean isValid(Token token) {
+
         try {
             if (token.isExpired()) {
-                LogManager.log().debug()
+                logger.debugEntry()
                         .message("Token is expired")
                         .field("Token", token.toString())
                         .log();
@@ -22,7 +25,7 @@ public class TokenValidator {
             }
 
             boolean signatureValid = isSignatureValid(token);
-            LogManager.log().debug()
+            logger.debugEntry()
                     .message("Token signature verification result")
                     .field("Token", token.toString())
                     .field("SignatureValid", signatureValid)
@@ -31,7 +34,7 @@ public class TokenValidator {
             return signatureValid;
 
         } catch (Exception e) {
-            LogManager.log().error("Token validation failed", e);
+            logger.error("Token validation failed", e);
             return false;
         }
     }
@@ -44,7 +47,7 @@ public class TokenValidator {
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException,
             InvalidKeyException, SignatureException {
 
-        LogManager.log().debug()
+        logger.debugEntry()
                 .message("Starting signature verification")
                 .field("SignedMessage", message)
                 .field("SignatureBase64", digitalSignature)
@@ -66,7 +69,7 @@ public class TokenValidator {
 
         boolean valid = signature.verify(signatureBytes);
 
-        LogManager.log().debug()
+        logger.debugEntry()
                 .message("Signature verification completed")
                 .field("Valid", valid)
                 .log();

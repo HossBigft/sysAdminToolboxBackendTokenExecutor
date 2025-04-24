@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.example.Constants.EnvironmentConstants;
 import org.example.Exceptions.CommandFailedException;
-import org.example.Utils.Logging.LogManager;
+import org.example.Utils.Logging.facade.LogManager;
 import org.example.Utils.Utils;
 
 import java.io.File;

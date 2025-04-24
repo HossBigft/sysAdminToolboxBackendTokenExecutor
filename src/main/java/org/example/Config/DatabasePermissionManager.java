@@ -1,7 +1,7 @@
 package org.example.Config;
 
 import org.example.Exceptions.CommandFailedException;
-import org.example.Utils.Logging.LogManager;
+import org.example.Utils.Logging.facade.LogManager;
 import org.example.Utils.ShellUtils;
 
 import java.util.List;

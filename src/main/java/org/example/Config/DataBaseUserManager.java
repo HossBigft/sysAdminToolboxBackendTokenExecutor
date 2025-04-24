@@ -1,7 +1,8 @@
 package org.example.Config;
 
 import org.example.Exceptions.CommandFailedException;
-import org.example.Utils.Logging.LogManager;
+import org.example.Utils.Logging.facade.LogManager;
+import org.example.Utils.Logging.implementations.DefaultCliLogger;
 import org.example.Utils.ShellUtils;
 import org.example.Utils.Utils;
 
@@ -12,6 +13,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class DataBaseUserManager {
+    private static final DefaultCliLogger logger = LogManager.getExtendedLogger();
     private final String databaseUser = ConfigManager.getDatabaseUser();
     private String databasePassword = ConfigManager.getDatabasePassword();
 
@@ -50,14 +52,14 @@ public class DataBaseUserManager {
             boolean exists = output.getFirst().trim().equals("1");
 
             if (exists) {
-                LogManager.log().debug("Database user " + databaseUser + " is present.");
+                logger.debug("Database user " + databaseUser + " is present.");
             } else {
-                LogManager.log().info("Database user " + databaseUser + " does not exist.");
+                logger.info("Database user " + databaseUser + " does not exist.");
             }
 
             return exists;
         } catch (CommandFailedException e) {
-            LogManager.log().command(command).error(e);
+            logger.errorEntry().command(command).exception(e).log();
             throw e;
         }
     }
@@ -76,9 +78,9 @@ public class DataBaseUserManager {
 
         try {
             ShellUtils.runCommand(command);
-            LogManager.log().info("Created database user " + databaseUser);
+            logger.info("Created database user " + databaseUser);
         } catch (CommandFailedException e) {
-            LogManager.log().command(command).error(e);
+            logger.errorEntry().command(command).exception(e).log();
             throw e;
         }
     }
@@ -99,12 +101,12 @@ public class DataBaseUserManager {
         databasePassword = Utils.generatePassword(ConfigManager.DB_USER_PASSWORD_LENGTH);
         ConfigManager.values.put("DATABASE_PASSWORD", databasePassword
         );
-        LogManager.log().info("Regenerate password for database user " + databaseUser);
+        logger.info("Regenerate password for database user " + databaseUser);
     }
 
     void setDbUserPassword() throws CommandFailedException {
         if (databaseUser.equalsIgnoreCase(DatabaseProvisioner.ADMIN_USER)) {
-            LogManager.log()
+            logger
                     .warn("WARNING: Refusing to modify the root database user password. Please configure a different database user");
             return;
         }
@@ -122,9 +124,9 @@ public class DataBaseUserManager {
 
         try {
             ShellUtils.runCommand(command);
-            LogManager.log().info("Set database user password " + databaseUser);
+            logger.info("Set database user password " + databaseUser);
         } catch (CommandFailedException e) {
-            LogManager.log().command(command).error(e);
+            logger.errorEntry().command(command).exception(e).log();
             throw e;
         }
     }

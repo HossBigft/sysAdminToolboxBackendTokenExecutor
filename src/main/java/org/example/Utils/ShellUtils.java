@@ -2,7 +2,8 @@ package org.example.Utils;
 
 import org.example.Config.SudoersManager;
 import org.example.Exceptions.CommandFailedException;
-import org.example.Utils.Logging.LogManager;
+import org.example.Utils.Logging.facade.LogManager;
+import org.example.Utils.Logging.implementations.DefaultCliLogger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public class ShellUtils {
-
+    private static final DefaultCliLogger logger = LogManager.getExtendedLogger();
     private ShellUtils() {
     }
 
@@ -41,7 +42,7 @@ public class ShellUtils {
 
     public static List<String> runCommand(String... args) throws CommandFailedException {
         try {
-            LogManager.log().command(args).debug();
+            logger.debugEntry().command(args).log();
             Process process = new ProcessBuilder(args).start();
 
 
