@@ -1,46 +1,61 @@
 package org.example.Logging.config;
 
+import org.example.Constants.EnvironmentConstants;
 import org.example.Logging.core.LogLevel;
 
 public class LogConfig {
+    private String logDirectory;
+    private String logFile;
     private LogLevel globalLogLevel = LogLevel.INFO;
     private boolean verbose = false;
-    private String logDirectory;
-    private String logFileName;
 
-    public LogConfig(String logDirectory, String logFileName) {
+    public LogConfig(String logDirectory,
+                     String logFile) {
         this.logDirectory = logDirectory;
-        this.logFileName = logFileName;
+        this.logFile = logFile;
     }
 
-    public LogLevel getGlobalLogLevel() {
-        return globalLogLevel;
-    }
-
-    public LogConfig setGlobalLogLevel(LogLevel level) {
-        this.globalLogLevel = level;
-        return this;
-    }
-
-    public boolean isVerbose() {
-        return verbose;
-    }
-
-    public LogConfig setVerbose(boolean verbose) {
-        this.verbose = verbose;
-        return this;
+    public static LogConfig getDefaultConfig() {
+        return new LogConfig(
+                "/var/log/" + EnvironmentConstants.APP_USER + "/",
+                "audit.log"
+        );
     }
 
     public String getLogDirectory() {
         return logDirectory;
     }
 
-    public String getLogFileName() {
-        return logFileName;
+    public void setLogDirectory(String logDirectory) {
+        this.logDirectory = logDirectory;
+    }
+
+    public String getLogFile() {
+        return logFile;
+    }
+
+    public void setLogFile(String logFile) {
+        this.logFile = logFile;
+    }
+
+    public LogLevel getGlobalLogLevel() {
+        return globalLogLevel;
+    }
+
+    public void setGlobalLogLevel(LogLevel globalLogLevel) {
+        this.globalLogLevel = globalLogLevel;
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
     }
 
     public String getFullLogPath() {
-        return logDirectory + "/" + logFileName;
+        return logDirectory + "\"" + logFile;
     }
 
     public boolean isLoggable(LogLevel level) {

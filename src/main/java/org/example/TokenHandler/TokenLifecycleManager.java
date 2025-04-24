@@ -1,6 +1,7 @@
 package org.example.TokenHandler;
 
 import org.example.Constants.EnvironmentConstants;
+import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
 import org.example.Logging.implementations.DefaultCliLogger;
 import org.example.ValueTypes.Token;
@@ -21,7 +22,7 @@ public class TokenLifecycleManager {
     private static final DateTimeFormatter TIMESTAMP_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    private static final DefaultCliLogger logger = LogManager.getLogger();
+    private static final CliLogger logger = LogManager.getInstance().getLogger();
 
     static {
         File directory = new File(String.valueOf(STORAGE_DIR));

@@ -11,7 +11,7 @@ import java.util.List;
 public class DatabasePermissionManager {
 
     private static final String databaseUser = ConfigManager.getDatabaseUser();
-    private static final DefaultCliLogger logger = LogManager.getLogger();
+    private static final CliLogger logger = LogManager.getInstance().getLogger();
 
     void ensureUserIsReadOnly() {
         logger.debug("Checking if user " + databaseUser + " is read-only.");

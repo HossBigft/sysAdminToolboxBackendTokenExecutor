@@ -1,6 +1,7 @@
 package org.example.Config;
 
 import org.example.Exceptions.CommandFailedException;
+import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
 import org.example.Logging.implementations.DefaultCliLogger;
 import org.example.Utils.ShellUtils;
@@ -18,7 +19,7 @@ public class SudoersManager {
     private final String TEMP_DIR = "/tmp/";
     private final String SUDOERS_PERMISSIONS = "r--r-----";
 
-    private static final DefaultCliLogger logger = LogManager.getLogger();
+    private static final CliLogger logger = LogManager.getInstance().getLogger();
     
     public void ensureSudoersRuleIsPresent() throws CommandFailedException, IOException, URISyntaxException {
         Path sudoersFile = Paths.get(SUDOERS_DIR + ConfigManager.getDatabaseUser());

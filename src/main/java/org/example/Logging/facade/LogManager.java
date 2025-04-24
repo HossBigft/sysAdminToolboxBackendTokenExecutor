@@ -11,35 +11,41 @@ import org.example.Logging.implementations.LogWriter;
 import org.example.Utils.ShellUtils;
 
 public class LogManager {
-    private static final String LOG_DIRECTORY = "/var/log/" + EnvironmentConstants.APP_USER + "/";
-    private static final String LOG_FILE = "audit.log";
+    private static volatile LogManager instance;
+    private final CliLogger logger;
 
-    private static LoggerFactory loggerFactory;
-    private static CliLogger cliLogger;
-
-    static {
-        LogConfig config = new LogConfig(LOG_DIRECTORY, LOG_FILE);
+    private LogManager(LogConfig config) {
         LogWriter writer = new LogWriter(config, ShellUtils.resolveShellUser());
-        loggerFactory = new DefaultLoggerFactory(config, writer);
-        cliLogger = loggerFactory.getLogger();
+        LoggerFactory loggerFactory = new DefaultLoggerFactory(config, writer);
+        this.logger = loggerFactory.getLogger();
     }
 
-
-    public static DefaultCliLogger getLogger() {
-        return (DefaultCliLogger) cliLogger;
+    public static LogManager getInstance() {
+        if (instance == null) {
+            synchronized (LogManager.class) {
+                if (instance == null) {
+                    instance = new Builder().build();
+                }
+            }
+        }
+        return instance;
     }
 
+    public static void initialize(LogConfig config) {
+        synchronized (LogManager.class) {
+            instance = new LogManager(config);
+        }
+    }
+
+    public CliLogger getLogger() {
+        return logger;
+    }
 
     public static class Builder {
         private final LogConfig config;
 
-        private Builder(LogConfig config) {
-            this.config = config;
-        }
-
-        public static Builder config() {
-            LogConfig config = new LogConfig(LOG_DIRECTORY, LOG_FILE);
-            return new Builder(config);
+        public Builder() {
+            this.config = LogConfig.getDefaultConfig();
         }
 
         public Builder globalLogLevel(LogLevel level) {
@@ -52,11 +58,18 @@ public class LogManager {
             return this;
         }
 
+        public Builder logDirectory(String directory) {
+            config.setLogDirectory(directory);
+            return this;
+        }
+
+        public Builder logFile(String filename) {
+            config.setLogFile(filename);
+            return this;
+        }
+
         public LogManager build() {
-            LogWriter writer = new LogWriter(config, ShellUtils.resolveShellUser());
-            loggerFactory = new DefaultLoggerFactory(config, writer);
-            cliLogger = loggerFactory.getLogger();
-            return null; 
+            return new LogManager(config);
         }
     }
 }

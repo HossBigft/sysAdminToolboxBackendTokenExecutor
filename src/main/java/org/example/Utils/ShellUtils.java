@@ -2,6 +2,7 @@ package org.example.Utils;
 
 import org.example.Config.SudoersManager;
 import org.example.Exceptions.CommandFailedException;
+import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
 import org.example.Logging.implementations.DefaultCliLogger;
 
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public class ShellUtils {
-    private static final DefaultCliLogger logger = LogManager.getLogger();
+    private static final CliLogger logger = LogManager.getInstance().getLogger();
 
     private ShellUtils() {
     }

@@ -1,6 +1,7 @@
 package org.example.Config;
 
 import org.example.Constants.EnvironmentConstants;
+import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
 import org.example.Logging.implementations.DefaultCliLogger;
 
@@ -22,7 +23,7 @@ public class PermissionManager {
             new FileAccessPolicy(DOTENV_PERMISSIONS, DOTENV_OWNER, DOTENV_GROUP);
     private static final File dotEnvFile = new File(EnvironmentConstants.ENV_PATH);
 
-    private static final DefaultCliLogger logger = LogManager.getLogger();
+    private static final CliLogger logger = LogManager.getInstance().getLogger();
 
     public void ensureDotEnvPermissions() throws IOException {
         if (isFilePermissionsSecureNot(dotEnvFile, dotenvFilePolicy)) {

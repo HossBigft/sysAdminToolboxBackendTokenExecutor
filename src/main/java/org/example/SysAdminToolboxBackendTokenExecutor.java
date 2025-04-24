@@ -42,10 +42,10 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         commandLine.parseArgs(args);
 
         if (app.debug) {
-            LogManager.Builder.config().globalLogLevel(LogLevel.DEBUG).build();
+            new LogManager.Builder().globalLogLevel(LogLevel.DEBUG).build();
         }
         if (app.verbose) {
-            LogManager.Builder.config().setVerbose().build();
+            new LogManager.Builder().setVerbose().build();
         }
 
         int exitCode = commandLine.execute(args);

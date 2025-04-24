@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.mysql.cj.log.Log;
 import org.example.Constants.EnvironmentConstants;
 import org.example.Exceptions.CommandFailedException;
+import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
 import org.example.Logging.implementations.DefaultCliLogger;
 import org.example.Utils.Utils;
@@ -22,7 +23,7 @@ public class ConfigManager {
     private static final String ENV_DB_PASS_FIELD = "DATABASE_PASSWORD";
     public static Map<String, String> values = new HashMap<>();
     
-    private static final DefaultCliLogger logger = LogManager.getLogger();
+    private static final CliLogger logger = LogManager.getInstance().getLogger();
 
     static {
         try {

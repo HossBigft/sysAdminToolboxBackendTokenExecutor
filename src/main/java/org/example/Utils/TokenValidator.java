@@ -1,5 +1,6 @@
 package org.example.Utils;
 
+import org.example.Logging.core.CliLogger;
 import org.example.TokenHandler.KeyManager;
 import org.example.Logging.facade.LogManager;
 import org.example.Logging.implementations.DefaultCliLogger;
@@ -12,7 +13,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 
 public class TokenValidator {
-    private static final DefaultCliLogger logger = LogManager.getLogger();
+    private static final CliLogger logger = LogManager.getInstance().getLogger();
 
     public static boolean isValid(Token token) {
 

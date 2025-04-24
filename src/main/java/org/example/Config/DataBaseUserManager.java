@@ -1,6 +1,7 @@
 package org.example.Config;
 
 import org.example.Exceptions.CommandFailedException;
+import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
 import org.example.Logging.implementations.DefaultCliLogger;
 import org.example.Utils.ShellUtils;
@@ -13,7 +14,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class DataBaseUserManager {
-    private static final DefaultCliLogger logger = LogManager.getLogger();
+    private static final CliLogger logger = LogManager.getInstance().getLogger();
     private final String databaseUser = ConfigManager.getDatabaseUser();
     private String databasePassword = ConfigManager.getDatabasePassword();
 

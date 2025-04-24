@@ -1,5 +1,6 @@
 package org.example.Utils;
 
+import org.example.Logging.core.CliLogger;
 import org.example.TokenHandler.TokenLifecycleManager;
 import org.example.Logging.facade.LogManager;
 import org.example.Logging.implementations.DefaultCliLogger;
@@ -11,7 +12,7 @@ import java.util.Optional;
 
 public class TokenProcessor {
 
-    private static final DefaultCliLogger logger = LogManager.getLogger();
+    private static final CliLogger logger = LogManager.getInstance().getLogger();
 
     public Optional<String> processToken(Token token) {
         logger.infoEntry().message("Processing command token").field("Token", token.value()).log();
