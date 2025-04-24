@@ -12,7 +12,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 
 public class TokenValidator {
-    private static final DefaultCliLogger logger = LogManager.getExtendedLogger();
+    private static final DefaultCliLogger logger = LogManager.getLogger();
     public static boolean isValid(Token token) {
 
         try {

@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public class TokenProcessor {
 
-    private static final DefaultCliLogger logger = LogManager.getExtendedLogger();
+    private static final DefaultCliLogger logger = LogManager.getLogger();
 
     public Optional<String> processToken(Token token) {
         logger.infoEntry().message("Processing command token").field("Token", token.value()).log();

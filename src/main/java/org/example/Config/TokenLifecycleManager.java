@@ -17,7 +17,7 @@ public class TokenLifecycleManager {
     private static final String STORAGE_FILENAME = "used_tokens.txt";
     private static final Path FULLPATH = STORAGE_DIR.resolve(STORAGE_FILENAME);
 
-    private static final DefaultCliLogger logger = LogManager.getExtendedLogger();
+    private static final DefaultCliLogger logger = LogManager.getLogger();
 
     static {
         File directory = new File(String.valueOf(STORAGE_DIR));

@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public class ShellUtils {
-    private static final DefaultCliLogger logger = LogManager.getExtendedLogger();
+    private static final DefaultCliLogger logger = LogManager.getLogger();
     private ShellUtils() {
     }
 

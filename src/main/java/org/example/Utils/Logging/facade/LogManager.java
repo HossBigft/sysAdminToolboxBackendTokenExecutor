@@ -2,9 +2,9 @@ package org.example.Utils.Logging.facade;
 
 import org.example.Constants.EnvironmentConstants;
 import org.example.Utils.Logging.config.LogConfig;
+import org.example.Utils.Logging.core.CliLogger;
 import org.example.Utils.Logging.core.DefaultLoggerFactory;
 import org.example.Utils.Logging.core.LogLevel;
-import org.example.Utils.Logging.core.CliLogger;
 import org.example.Utils.Logging.core.LoggerFactory;
 import org.example.Utils.Logging.implementations.DefaultCliLogger;
 import org.example.Utils.Logging.implementations.LogWriter;
@@ -24,35 +24,11 @@ public class LogManager {
         cliLogger = loggerFactory.getLogger();
     }
 
-    public static void debug(String message) {
-        cliLogger.debug(message);
-    }
 
-    public static void info(String message) {
-        cliLogger.info(message);
-    }
-
-    public static void warn(String message) {
-        cliLogger.warn(message);
-    }
-
-    public static void error(String message) {
-        cliLogger.error(message);
-    }
-
-    public static void error(String message, Throwable t) {
-        cliLogger.error(message, t);
-    }
-
-    public static DefaultCliLogger getExtendedLogger() {
+    public static DefaultCliLogger getLogger() {
         return (DefaultCliLogger) cliLogger;
     }
 
-    // For unit testing
-    static void setLoggerFactory(LoggerFactory factory) {
-        loggerFactory = factory;
-        cliLogger = factory.getLogger();
-    }
 
     public static class Builder {
         private final LogConfig config;
@@ -80,7 +56,7 @@ public class LogManager {
             LogWriter writer = new LogWriter(config, ShellUtils.resolveShellUser());
             loggerFactory = new DefaultLoggerFactory(config, writer);
             cliLogger = loggerFactory.getLogger();
-            return null; // We're only using this for configuration
+            return null; 
         }
     }
 }

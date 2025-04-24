@@ -22,7 +22,7 @@ public class PermissionManager {
             new FileAccessPolicy(DOTENV_PERMISSIONS, DOTENV_OWNER, DOTENV_GROUP);
     private static final File dotEnvFile = new File(EnvironmentConstants.ENV_PATH);
 
-    private static final DefaultCliLogger logger = LogManager.getExtendedLogger();
+    private static final DefaultCliLogger logger = LogManager.getLogger();
 
     public void ensureDotEnvPermissions() throws IOException {
         if (isFilePermissionsSecureNot(dotEnvFile, dotenvFilePolicy)) {

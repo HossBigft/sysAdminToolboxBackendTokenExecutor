@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class DataBaseUserManager {
-    private static final DefaultCliLogger logger = LogManager.getExtendedLogger();
+    private static final DefaultCliLogger logger = LogManager.getLogger();
     private final String databaseUser = ConfigManager.getDatabaseUser();
     private String databasePassword = ConfigManager.getDatabasePassword();
 
