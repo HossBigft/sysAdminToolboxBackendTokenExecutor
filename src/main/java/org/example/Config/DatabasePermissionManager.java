@@ -1,7 +1,9 @@
 package org.example.Config;
 
 import org.example.Exceptions.CommandFailedException;
+import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
+import org.example.Logging.implementations.DefaultCliLogger;
 import org.example.Utils.ShellUtils;
 
 import java.util.List;
@@ -9,13 +11,14 @@ import java.util.List;
 public class DatabasePermissionManager {
 
     private static final String databaseUser = ConfigManager.getDatabaseUser();
+    private static final DefaultCliLogger logger = LogManager.getLogger();
 
     void ensureUserIsReadOnly() {
-        LogManager.debug("Checking if user " + databaseUser + " is read-only.");
+        logger.debug("Checking if user " + databaseUser + " is read-only.");
         if (!isDbUserReadOnly()) {
             setReadOnly();
         } else {
-            LogManager.debug("User " + databaseUser + " is already read-only.");
+            logger.debug("User " + databaseUser + " is already read-only.");
         }
     }
 
@@ -48,14 +51,14 @@ public class DatabasePermissionManager {
 
             return hasOnlySelectPrivileges;
         } catch (CommandFailedException e) {
-            LogManager.error("Error checking user permissions for " + databaseUser, e);
+            logger.error("Error checking user permissions for " + databaseUser, e);
             return false;
         }
     }
 
     private void setReadOnly() {
         if (databaseUser.equalsIgnoreCase(DatabaseProvisioner.ADMIN_USER)) {
-            LogManager.warn("Refusing to modify the root user. Please configure a different database user.");
+            logger.warn("Refusing to modify the root user. Please configure a different database user.");
             return;
         }
         try {
@@ -66,9 +69,9 @@ public class DatabasePermissionManager {
                             "FLUSH PRIVILEGES;", databaseUser, databaseUser);
 
             ShellUtils.runCommand(ShellUtils.getSqlCliName(), "-u", DatabaseProvisioner.ADMIN_USER, "-e", commands);
-            LogManager.info(String.format("Set user %s as read-only successfully.", databaseUser));
+            logger.info(String.format("Set user %s as read-only successfully.", databaseUser));
         } catch (CommandFailedException e) {
-            LogManager.error("Error setting database user " + databaseUser + " as read-only.", e);
+            logger.error("Error setting database user " + databaseUser + " as read-only.", e);
         }
     }
 }

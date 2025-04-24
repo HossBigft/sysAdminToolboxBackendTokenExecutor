@@ -17,6 +17,7 @@ public class DataBaseUserManager {
     private final String databaseUser = ConfigManager.getDatabaseUser();
     private String databasePassword = ConfigManager.getDatabasePassword();
 
+
     public void ensureDatabaseUser() throws IOException {
         try {
             if (!isDbUserExists()) {
@@ -29,7 +30,7 @@ public class DataBaseUserManager {
                 }
             }
         } catch (CommandFailedException e) {
-            LogManager.error("Failed to ensure database user" + databaseUser, e);
+            logger.error("Failed to ensure database user" + databaseUser, e);
         }
     }
 
@@ -89,10 +90,10 @@ public class DataBaseUserManager {
     private boolean isDbUserAbleToConnect() {
         try (Connection conn = DriverManager.getConnection(DatabaseProvisioner.DB_URL, databaseUser,
                 databasePassword)) {
-            LogManager.debug(databaseUser + " can connec to to database.");
+            logger.debug(databaseUser + " can connec to to database.");
             return true;
         } catch (SQLException e) {
-            LogManager.error(databaseUser + " can't connect to to database.", e);
+            logger.error(databaseUser + " can't connect to to database.", e);
             return false;
         }
     }

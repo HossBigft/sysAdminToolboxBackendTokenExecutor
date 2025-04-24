@@ -3,9 +3,11 @@ package org.example.Config;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.mysql.cj.log.Log;
 import org.example.Constants.EnvironmentConstants;
 import org.example.Exceptions.CommandFailedException;
 import org.example.Logging.facade.LogManager;
+import org.example.Logging.implementations.DefaultCliLogger;
 import org.example.Utils.Utils;
 
 import java.io.File;
@@ -19,15 +21,17 @@ public class ConfigManager {
     static final int DB_USER_PASSWORD_LENGTH = 15;
     private static final String ENV_DB_PASS_FIELD = "DATABASE_PASSWORD";
     public static Map<String, String> values = new HashMap<>();
+    
+    private static final DefaultCliLogger logger = LogManager.getLogger();
 
     static {
         try {
             loadConfig();
-            LogManager.debug("Config file " + EnvironmentConstants.ENV_PATH + " is loaded.");
+            logger.debug("Config file " + EnvironmentConstants.ENV_PATH + " is loaded.");
         } catch (IOException e) {
             throw new RuntimeException("Failed to load config", e);
         } catch (CommandFailedException | URISyntaxException e) {
-            LogManager.error("Failed to initialize", e);
+            logger.error("Failed to initialize", e);
             throw new RuntimeException(e);
         }
     }
@@ -42,10 +46,10 @@ public class ConfigManager {
         try {
             values = mapper.readValue(envFile, new TypeReference<>() {
             });
-            LogManager.debug("Loaded dotenv " + EnvironmentConstants.ENV_PATH);
+            logger.debug("Loaded dotenv " + EnvironmentConstants.ENV_PATH);
         } catch (IOException e) {
             values = new HashMap<>();
-            LogManager.info("Dotenv file not found or invalid.");
+            logger.info("Dotenv file not found or invalid.");
         }
 
         boolean updated = computeIfAbsentOrBlank(values, ENV_DB_PASS_FIELD,
@@ -72,7 +76,7 @@ public class ConfigManager {
     }
 
     static void updateDotEnv() throws IOException {
-        LogManager.info("Creating dotenv" + EnvironmentConstants.ENV_PATH);
+        logger.info("Creating dotenv" + EnvironmentConstants.ENV_PATH);
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
@@ -81,7 +85,7 @@ public class ConfigManager {
 
         mapper.writeValue(envFile, Map.of(ENV_DB_PASS_FIELD, getDatabasePassword()));
 
-        LogManager.info("New data written to" + EnvironmentConstants.ENV_PATH);
+        logger.info("New data written to" + EnvironmentConstants.ENV_PATH);
     }
 
     public static String getDatabasePassword() {

@@ -10,12 +10,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.stream.Stream;
 
 public class TokenLifecycleManager {
     private static final Path STORAGE_DIR = Path.of("/tmp/" + EnvironmentConstants.APP_USER + "/");
     private static final String STORAGE_FILENAME = "used_tokens.txt";
     private static final Path FULLPATH = STORAGE_DIR.resolve(STORAGE_FILENAME);
+    private static final DateTimeFormatter TIMESTAMP_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private static final DefaultCliLogger logger = LogManager.getLogger();
 
@@ -53,7 +57,7 @@ public class TokenLifecycleManager {
 
             Files.write(
                     FULLPATH,
-                    (token + "\n").getBytes(),
+                    ("[" + LocalDateTime.now().format(TIMESTAMP_FORMAT) + "] " + token + "\n").getBytes(),
                     StandardOpenOption.CREATE,
                     StandardOpenOption.APPEND
             );
@@ -63,11 +67,6 @@ public class TokenLifecycleManager {
                     .message("Token was marked as used")
                     .field("Token", token.value())
                     .log();
-
-            logger.infoEntry()
-                    .message("Token file created")
-                    .field("Path", FULLPATH.toString()).log();
-
 
         } catch (IOException e) {
             logger.errorEntry()

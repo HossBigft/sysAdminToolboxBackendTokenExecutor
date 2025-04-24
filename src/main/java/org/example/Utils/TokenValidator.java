@@ -13,6 +13,7 @@ import java.util.Base64;
 
 public class TokenValidator {
     private static final DefaultCliLogger logger = LogManager.getLogger();
+
     public static boolean isValid(Token token) {
 
         try {
@@ -57,7 +58,7 @@ public class TokenValidator {
         byte[] signatureBytes = Base64.getDecoder().decode(digitalSignature);
 
         if (signatureBytes.length != 64) {
-            LogManager.warn("Invalid signature length: " + signatureBytes.length);
+            logger.warn("Invalid signature length: " + signatureBytes.length);
             throw new IllegalArgumentException("Invalid signature length: " + signatureBytes.length);
         }
 

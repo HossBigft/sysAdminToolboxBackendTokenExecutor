@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 
 public class ShellUtils {
     private static final DefaultCliLogger logger = LogManager.getLogger();
+
     private ShellUtils() {
     }
 
@@ -77,7 +78,7 @@ public class ShellUtils {
                 if (exitCode != 0) {
                     String errorMessage = String.format("Command '%s' failed with exit code %d: %s",
                             String.join(" ", args), exitCode, String.join("\n", outputLines));
-                    LogManager.error(errorMessage);
+                    logger.error(errorMessage);
                     throw new CommandFailedException(errorMessage);
                 }
 
@@ -86,13 +87,13 @@ public class ShellUtils {
         } catch (IOException e) {
             String errorMessage = String.format("Failed to execute command '%s': %s",
                     String.join(" ", args), e.getMessage());
-            LogManager.error(errorMessage);
+            logger.error(errorMessage);
             throw new CommandFailedException(errorMessage);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             String errorMessage = String.format("Failed to execute command '%s': %s",
                     String.join(" ", args), e.getMessage());
-            LogManager.error(errorMessage);
+            logger.error(errorMessage);
             throw new CommandFailedException(errorMessage);
         }
     }
