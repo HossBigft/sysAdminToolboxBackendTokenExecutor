@@ -1,4 +1,4 @@
-package org.example.Utils.Logging.model;
+package org.example.Logging.model;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

@@ -1,9 +1,9 @@
-package org.example.Utils.Logging.implementations;
+package org.example.Logging.implementations;
 
 import org.example.Config.PermissionManager;
-import org.example.Utils.Logging.config.LogConfig;
-import org.example.Utils.Logging.core.LogLevel;
-import org.example.Utils.Logging.model.LogEntry;
+import org.example.Logging.config.LogConfig;
+import org.example.Logging.core.LogLevel;
+import org.example.Logging.model.LogEntry;
 
 import java.io.FileWriter;
 import java.io.IOException;

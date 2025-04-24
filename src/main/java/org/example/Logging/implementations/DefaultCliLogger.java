@@ -1,10 +1,10 @@
-package org.example.Utils.Logging.implementations;
+package org.example.Logging.implementations;
 
 
-import org.example.Utils.Logging.config.LogConfig;
-import org.example.Utils.Logging.core.LogLevel;
-import org.example.Utils.Logging.core.CliLogger;
-import org.example.Utils.Logging.model.LogEntry;
+import org.example.Logging.config.LogConfig;
+import org.example.Logging.core.LogLevel;
+import org.example.Logging.core.CliLogger;
+import org.example.Logging.model.LogEntry;
 
 public class DefaultCliLogger implements CliLogger {
     private final LogWriter writer;

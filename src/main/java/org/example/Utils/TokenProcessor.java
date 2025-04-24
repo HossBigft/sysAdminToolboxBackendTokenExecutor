@@ -1,8 +1,8 @@
 package org.example.Utils;
 
 import org.example.Config.TokenLifecycleManager;
-import org.example.Utils.Logging.facade.LogManager;
-import org.example.Utils.Logging.implementations.DefaultCliLogger;
+import org.example.Logging.facade.LogManager;
+import org.example.Logging.implementations.DefaultCliLogger;
 import org.example.ValueTypes.Token;
 
 import java.io.IOException;

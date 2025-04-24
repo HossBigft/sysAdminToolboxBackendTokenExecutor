@@ -1,6 +1,6 @@
-package org.example.Utils.Logging.config;
+package org.example.Logging.config;
 
-import org.example.Utils.Logging.core.LogLevel;
+import org.example.Logging.core.LogLevel;
 
 public class LogConfig {
     private LogLevel globalLogLevel = LogLevel.INFO;

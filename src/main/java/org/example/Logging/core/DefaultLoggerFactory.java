@@ -1,9 +1,9 @@
-package org.example.Utils.Logging.core;
+package org.example.Logging.core;
 
 
-import org.example.Utils.Logging.implementations.DefaultCliLogger;
-import org.example.Utils.Logging.implementations.LogWriter;
-import org.example.Utils.Logging.config.LogConfig;
+import org.example.Logging.implementations.DefaultCliLogger;
+import org.example.Logging.implementations.LogWriter;
+import org.example.Logging.config.LogConfig;
 
 public class DefaultLoggerFactory implements LoggerFactory {
     private final LogConfig config;

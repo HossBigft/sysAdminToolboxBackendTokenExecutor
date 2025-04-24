@@ -2,8 +2,8 @@ package org.example.Utils;
 
 import org.example.Config.SudoersManager;
 import org.example.Exceptions.CommandFailedException;
-import org.example.Utils.Logging.facade.LogManager;
-import org.example.Utils.Logging.implementations.DefaultCliLogger;
+import org.example.Logging.facade.LogManager;
+import org.example.Logging.implementations.DefaultCliLogger;
 
 import java.io.BufferedReader;
 import java.io.File;

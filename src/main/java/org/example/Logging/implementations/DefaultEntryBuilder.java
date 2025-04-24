@@ -1,9 +1,9 @@
-package org.example.Utils.Logging.implementations;
+package org.example.Logging.implementations;
 
 
-import org.example.Utils.Logging.core.LogLevel;
-import org.example.Utils.Logging.core.CliLogger;
-import org.example.Utils.Logging.model.LogEntry;
+import org.example.Logging.core.LogLevel;
+import org.example.Logging.core.CliLogger;
+import org.example.Logging.model.LogEntry;
 
 class DefaultEntryBuilder implements CliLogger.EntryBuilder {
     private final LogEntry entry = new LogEntry();

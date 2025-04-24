@@ -1,4 +1,4 @@
-package org.example.Utils.Logging.core;
+package org.example.Logging.core;
 
 public interface LoggerFactory {
     CliLogger getLogger();

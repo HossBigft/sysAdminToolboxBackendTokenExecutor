@@ -1,13 +1,13 @@
-package org.example.Utils.Logging.facade;
+package org.example.Logging.facade;
 
 import org.example.Constants.EnvironmentConstants;
-import org.example.Utils.Logging.config.LogConfig;
-import org.example.Utils.Logging.core.CliLogger;
-import org.example.Utils.Logging.core.DefaultLoggerFactory;
-import org.example.Utils.Logging.core.LogLevel;
-import org.example.Utils.Logging.core.LoggerFactory;
-import org.example.Utils.Logging.implementations.DefaultCliLogger;
-import org.example.Utils.Logging.implementations.LogWriter;
+import org.example.Logging.config.LogConfig;
+import org.example.Logging.core.CliLogger;
+import org.example.Logging.core.DefaultLoggerFactory;
+import org.example.Logging.core.LogLevel;
+import org.example.Logging.core.LoggerFactory;
+import org.example.Logging.implementations.DefaultCliLogger;
+import org.example.Logging.implementations.LogWriter;
 import org.example.Utils.ShellUtils;
 
 public class LogManager {

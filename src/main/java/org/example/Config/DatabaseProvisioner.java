@@ -1,6 +1,6 @@
 package org.example.Config;
 
-import org.example.Utils.Logging.facade.LogManager;
+import org.example.Logging.facade.LogManager;
 
 import java.io.IOException;
 

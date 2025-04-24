@@ -1,8 +1,8 @@
 package org.example.Config;
 
 import org.example.Exceptions.CommandFailedException;
-import org.example.Utils.Logging.facade.LogManager;
-import org.example.Utils.Logging.implementations.DefaultCliLogger;
+import org.example.Logging.facade.LogManager;
+import org.example.Logging.implementations.DefaultCliLogger;
 import org.example.Utils.ShellUtils;
 import org.example.Utils.Utils;
 
