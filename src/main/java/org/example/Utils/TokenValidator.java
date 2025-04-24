@@ -1,6 +1,6 @@
 package org.example.Utils;
 
-import org.example.Config.KeyManager;
+import org.example.TokenHandler.KeyManager;
 import org.example.Logging.facade.LogManager;
 import org.example.Logging.implementations.DefaultCliLogger;
 import org.example.ValueTypes.Token;

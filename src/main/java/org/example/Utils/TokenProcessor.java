@@ -1,6 +1,6 @@
 package org.example.Utils;
 
-import org.example.Config.TokenLifecycleManager;
+import org.example.TokenHandler.TokenLifecycleManager;
 import org.example.Logging.facade.LogManager;
 import org.example.Logging.implementations.DefaultCliLogger;
 import org.example.ValueTypes.Token;

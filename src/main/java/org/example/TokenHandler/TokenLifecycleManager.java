@@ -1,4 +1,4 @@
-package org.example.Config;
+package org.example.TokenHandler;
 
 import org.example.Constants.EnvironmentConstants;
 import org.example.Logging.facade.LogManager;
@@ -23,7 +23,7 @@ public class TokenLifecycleManager {
         File directory = new File(String.valueOf(STORAGE_DIR));
         if (!directory.exists()) {
             directory.mkdirs();
-            LogManager.info("Created token storage directory: " + STORAGE_DIR);
+            logger.info("Created token storage directory: " + STORAGE_DIR);
         }
     }
 
