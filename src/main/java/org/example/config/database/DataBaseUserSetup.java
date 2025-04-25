@@ -15,7 +15,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
-public class DataBaseUserManager {
+public class DataBaseUserSetup {
     private static final CliLogger logger = LogManager.getInstance().getLogger();
     private final String databaseUser = ConfigManager.getDatabaseUser();
     private String databasePassword = ConfigManager.getDatabasePassword();
