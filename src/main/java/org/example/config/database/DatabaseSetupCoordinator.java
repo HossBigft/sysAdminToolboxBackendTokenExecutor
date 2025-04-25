@@ -6,7 +6,7 @@ import org.example.Logging.facade.LogManager;
 
 import java.io.IOException;
 
-public class DatabaseProvisioner {
+public class DatabaseSetupCoordinator {
     static final String DB_URL = "jdbc:mysql://localhost:3306";
     private static final CliLogger logger = LogManager.getInstance().getLogger();
 
