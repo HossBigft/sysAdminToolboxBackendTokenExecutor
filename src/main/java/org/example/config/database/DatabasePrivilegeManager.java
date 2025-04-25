@@ -9,7 +9,7 @@ import org.example.Utils.ShellUtils;
 
 import java.util.List;
 
-public class DatabasePermissionManager {
+public class DatabasePrivilegeManager {
 
     private static final String databaseUser = ConfigManager.getDatabaseUser();
     private static final CliLogger logger = LogManager.getInstance().getLogger();

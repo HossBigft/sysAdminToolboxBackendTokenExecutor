@@ -13,7 +13,7 @@ public class DatabaseProvisioner {
     static public void ensureDatabaseSetup() {
         try {
             new DataBaseUserSetup().ensureDatabaseUser();
-            new DatabasePermissionManager().ensureUserIsReadOnly();
+            new DatabasePrivilegeManager().ensureUserIsReadOnly();
         } catch (IOException e) {
             logger.error("Database setup failed: ", e);
         }
