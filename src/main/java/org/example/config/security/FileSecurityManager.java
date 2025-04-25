@@ -34,7 +34,7 @@ public class FileSecurityManager {
 
     private boolean isFilePermissionsSecureNot(File file, FileAccessPolicy policy) throws IOException {
         Path path = file.toPath();
-        boolean permsOk = hasPermissions(path, policy.permissions());
+        boolean permsOk = hasCorrectPermissions(path, policy.permissions());
         boolean ownerOk = hasOwner(path, policy.owner());
         boolean groupOk = hasOwnerGroup(path, policy.group());
 
@@ -69,7 +69,7 @@ public class FileSecurityManager {
         logger.debug("Permissions " + DOTENV_PERMISSIONS + " applied to " + dotEnvFile.getName());
     }
 
-    public static boolean hasPermissions(Path path, String expectedPerms) throws IOException {
+    public static boolean hasCorrectPermissions(Path path, String expectedPerms) throws IOException {
         Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(path);
         String currentPerms = PosixFilePermissions.toString(permissions);
         return expectedPerms.equals(currentPerms);

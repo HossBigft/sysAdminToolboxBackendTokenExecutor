@@ -14,7 +14,7 @@ public class DatabasePrivilegeManager {
     private static final String databaseUser = ConfigManager.getDatabaseUser();
     private static final CliLogger logger = LogManager.getInstance().getLogger();
 
-    public void ensureUserIsReadOnly() {
+    public void enforceReadOnlyAccess() {
         logger.debug("Checking if user " + databaseUser + " is read-only.");
         if (!isDbUserReadOnly()) {
             setReadOnly();

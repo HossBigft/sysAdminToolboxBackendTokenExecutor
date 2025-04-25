@@ -21,9 +21,9 @@ public class DataBaseUserSetup {
     private String databasePassword = ConfigManager.getDatabasePassword();
 
 
-    public void ensureDatabaseUser() throws IOException {
+    public void setupDatabaseUser() throws IOException {
         try {
-            if (!isDbUserExists()) {
+            if (!doesUserExist()) {
                 createUser();
             } else {
                 if (!isDbUserAbleToConnect()) {
@@ -38,7 +38,7 @@ public class DataBaseUserSetup {
     }
 
 
-    boolean isDbUserExists() throws CommandFailedException {
+    boolean doesUserExist() throws CommandFailedException {
         String mysqlCliName = ShellUtils.getSqlCliName();
         String query = String.format(
                 "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '%s') AS user_exists;",

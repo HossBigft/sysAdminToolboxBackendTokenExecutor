@@ -20,10 +20,10 @@ public class SudoPrivilegeManager {
     private final String TEMP_DIR = "/tmp/";
     private final String SUDOERS_PERMISSIONS = "r--r-----";
 
-    public void ensureSudoersRuleIsPresent() throws CommandFailedException, IOException, URISyntaxException {
+    public void setupSudoPrivileges() throws CommandFailedException, IOException, URISyntaxException {
         Path sudoersFile = Paths.get(SUDOERS_DIR + ConfigManager.getDatabaseUser());
 
-        if (Files.exists(sudoersFile) && isPermissionsInsecure(sudoersFile)) {
+        if (Files.exists(sudoersFile) && isFileInsecure(sudoersFile)) {
             System.out.println("Warning: Existing sudoers file with incorrect permissions detected!");
             securePermissions(sudoersFile);
         }
@@ -39,8 +39,8 @@ public class SudoPrivilegeManager {
         }
     }
 
-    private boolean isPermissionsInsecure(Path file) throws IOException {
-        boolean isSecure = FileSecurityManager.hasPermissions(file, SUDOERS_PERMISSIONS)
+    private boolean isFileInsecure(Path file) throws IOException {
+        boolean isSecure = FileSecurityManager.hasCorrectPermissions(file, SUDOERS_PERMISSIONS)
                 || !FileSecurityManager.hasOwner(file, "root")
                 || !FileSecurityManager.hasOwnerGroup(file, "root");
         if (!isSecure) {
