@@ -1,6 +1,6 @@
 package org.example.Logging.implementations;
 
-import org.example.config.PermissionManager;
+import org.example.config.FileSecurityManager;
 import org.example.Logging.config.LogConfig;
 import org.example.Logging.core.LogLevel;
 import org.example.Logging.model.LogEntry;
@@ -39,8 +39,8 @@ public class LogWriter {
             Files.createDirectories(logDir);
             try {
                 Files.setPosixFilePermissions(logDir, PosixFilePermissions.fromString("rwxr-x---"));
-                PermissionManager.setOwner(logDir, "root");
-                PermissionManager.setGroup(logDir, "root");
+                FileSecurityManager.setOwner(logDir, "root");
+                FileSecurityManager.setGroup(logDir, "root");
             } catch (Exception e) {
                 System.err.println("Warning: Could not set permissions on log directory: " + e.getMessage());
             }
@@ -51,8 +51,8 @@ public class LogWriter {
             Files.createFile(logFilePath);
             try {
                 Files.setPosixFilePermissions(logFilePath, PosixFilePermissions.fromString("rw-r-----"));
-                PermissionManager.setOwner(logFilePath, "root");
-                PermissionManager.setGroup(logFilePath, "root");
+                FileSecurityManager.setOwner(logFilePath, "root");
+                FileSecurityManager.setGroup(logFilePath, "root");
             } catch (Exception e) {
                 System.err.println("Warning: Could not set permissions on log file: " + e.getMessage());
             }

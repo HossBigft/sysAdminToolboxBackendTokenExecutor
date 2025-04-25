@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.*;
 import java.util.Set;
 
-public class PermissionManager {
+public class FileSecurityManager {
     private static final String DOTENV_PERMISSIONS = "rw-------";
     private static final String DOTENV_OWNER = "root";
     private static final String DOTENV_GROUP = "root";

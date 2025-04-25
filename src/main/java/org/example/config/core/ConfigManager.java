@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.example.config.database.DatabaseProvisioner;
-import org.example.config.PermissionManager;
+import org.example.config.FileSecurityManager;
 import org.example.config.SudoersManager;
 import org.example.Constants.EnvironmentConstants;
 import org.example.Exceptions.CommandFailedException;
@@ -59,7 +59,7 @@ public class ConfigManager {
             updateDotEnv();
         }
 
-        new PermissionManager().ensureDotEnvPermissions();
+        new FileSecurityManager().ensureDotEnvPermissions();
         DatabaseProvisioner.ensureDatabaseSetup();
         new SudoersManager().ensureSudoersRuleIsPresent();
 

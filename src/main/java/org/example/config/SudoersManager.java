@@ -40,9 +40,9 @@ public class SudoersManager {
     }
 
     private boolean isPermissionsInsecure(Path file) throws IOException {
-        boolean isSecure = PermissionManager.hasPermissions(file, SUDOERS_PERMISSIONS)
-                || !PermissionManager.hasOwner(file, "root")
-                || !PermissionManager.hasOwnerGroup(file, "root");
+        boolean isSecure = FileSecurityManager.hasPermissions(file, SUDOERS_PERMISSIONS)
+                || !FileSecurityManager.hasOwner(file, "root")
+                || !FileSecurityManager.hasOwnerGroup(file, "root");
         if (!isSecure) {
             logger.warn("Existing sudoers file have incorrect permissions: " + file.toString());
             return false;
@@ -53,9 +53,9 @@ public class SudoersManager {
 
     private void securePermissions(Path file) throws IOException {
 
-        PermissionManager.setPermissions(file, SUDOERS_PERMISSIONS);
-        PermissionManager.setOwner(file, "root");
-        PermissionManager.setGroup(file, "root");
+        FileSecurityManager.setPermissions(file, SUDOERS_PERMISSIONS);
+        FileSecurityManager.setOwner(file, "root");
+        FileSecurityManager.setGroup(file, "root");
     }
 
     private boolean isSudoRuleNotPresentInFile() {
