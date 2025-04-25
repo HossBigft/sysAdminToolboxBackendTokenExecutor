@@ -1,6 +1,6 @@
 package org.example.Utils;
 
-import org.example.config.SudoersManager;
+import org.example.config.SudoPrivilegesManager;
 import org.example.Exceptions.CommandFailedException;
 import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
@@ -140,7 +140,7 @@ public class ShellUtils {
     }
 
     public static Path getExecutablePath() throws URISyntaxException {
-        return Paths.get(SudoersManager.class.getProtectionDomain()
+        return Paths.get(SudoPrivilegesManager.class.getProtectionDomain()
                 .getCodeSource().getLocation().toURI());
     }
 }
