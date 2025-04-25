@@ -1,7 +1,7 @@
 package org.example.Commands;
 
 import org.example.SysAdminToolboxBackendTokenExecutor;
-import org.example.Utils.TokenProcessor;
+import org.example.token_handler.TokenProcessor;
 import org.example.ValueTypes.Token;
 import picocli.CommandLine;
 

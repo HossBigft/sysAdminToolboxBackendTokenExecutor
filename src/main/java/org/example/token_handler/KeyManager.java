@@ -1,4 +1,4 @@
-package org.example.TokenHandler;
+package org.example.token_handler;
 
 import java.io.IOException;
 import java.nio.file.Files;

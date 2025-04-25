@@ -1,8 +1,7 @@
-package org.example.Utils;
+package org.example.token_handler;
 
 import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
-import org.example.TokenHandler.TokenLifecycleManager;
 import org.example.ValueTypes.Token;
 
 import java.io.IOException;
@@ -17,7 +16,7 @@ public class TokenProcessor {
         logger.infoEntry().message("Processing command token").field("Token", token.value()).log();
         Optional<String> command = Optional.empty();
 
-        if (!TokenValidator.isValid(token)) {
+        if (!TokenManager.TokenValidator.isValid(token)) {
             logger.warnEntry().message("Token validation failed").field("Token", token.value()).log();
             return command;
         }
