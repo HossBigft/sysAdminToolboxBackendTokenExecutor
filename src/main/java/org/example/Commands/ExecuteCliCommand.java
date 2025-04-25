@@ -1,8 +1,8 @@
 package org.example.Commands;
 
 import org.example.SysAdminToolboxBackendTokenExecutor;
-import org.example.token_handler.TokenProcessor;
 import org.example.ValueTypes.Token;
+import org.example.token_handler.TokenProcessor;
 import picocli.CommandLine;
 
 import javax.naming.CommunicationException;

@@ -1,6 +1,7 @@
 package org.example.Logging.core;
 
 import com.google.errorprone.annotations.CheckReturnValue;
+
 public interface CliLogger {
 
     void debug(String message);

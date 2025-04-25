@@ -12,7 +12,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public class KeyManager {
-    private static final Path PUBLIC_KEY= Paths.get("pub.key");
+    private static final Path PUBLIC_KEY = Paths.get("pub.key");
 
     public PublicKey getPublicKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
 
@@ -21,7 +21,7 @@ public class KeyManager {
 
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(derBytes);
         KeyFactory kf = KeyFactory.getInstance("Ed25519");
-        return  kf.generatePublic(keySpec);
+        return kf.generatePublic(keySpec);
     }
 
 

@@ -1,10 +1,10 @@
 package org.example.config.security;
 
-import org.example.config.core.ConfigManager;
 import org.example.Exceptions.CommandFailedException;
 import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
 import org.example.Utils.ShellUtils;
+import org.example.config.core.ConfigManager;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

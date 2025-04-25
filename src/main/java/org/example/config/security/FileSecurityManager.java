@@ -4,7 +4,6 @@ import org.example.Constants.EnvironmentConstants;
 import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -88,7 +87,7 @@ public class FileSecurityManager {
     public static void setPermissions(Path path, String permissions) throws IOException {
         Set<PosixFilePermission> perms = PosixFilePermissions.fromString(permissions);
         Files.setPosixFilePermissions(path, perms);
-        logger.info("Set permissions" + "[" + permissions + "] to" + path.toString());
+        logger.info("Set permissions" + "[" + permissions + "] to" + path);
     }
 
     public static void setOwner(Path path, String owner) throws IOException {

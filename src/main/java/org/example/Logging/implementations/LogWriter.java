@@ -1,9 +1,9 @@
 package org.example.Logging.implementations;
 
-import org.example.config.security.FileSecurityManager;
 import org.example.Logging.config.LogConfig;
 import org.example.Logging.core.LogLevel;
 import org.example.Logging.model.LogEntry;
+import org.example.config.security.FileSecurityManager;
 
 import java.io.FileWriter;
 import java.io.IOException;

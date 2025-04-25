@@ -1,5 +1,5 @@
 package org.example.Interfaces;
 
-public interface Command <T>{
-    public T  execute() throws Exception;
+public interface Command<T> {
+    T execute() throws Exception;
 }

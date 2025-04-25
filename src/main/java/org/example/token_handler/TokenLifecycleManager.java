@@ -3,7 +3,6 @@ package org.example.token_handler;
 import org.example.Constants.EnvironmentConstants;
 import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
-
 import org.example.ValueTypes.Token;
 
 import java.io.File;
