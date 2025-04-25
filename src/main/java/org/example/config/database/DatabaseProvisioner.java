@@ -1,4 +1,4 @@
-package org.example.Config;
+package org.example.config.database;
 
 import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
@@ -8,7 +8,6 @@ import java.io.IOException;
 
 public class DatabaseProvisioner {
     static final String DB_URL = "jdbc:mysql://localhost:3306";
-    static final String ADMIN_USER = "root";
     private static final CliLogger logger = LogManager.getInstance().getLogger();
 
     static public void ensureDatabaseSetup() {

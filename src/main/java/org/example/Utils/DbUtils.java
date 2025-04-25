@@ -1,6 +1,6 @@
 package org.example.Utils;
 
-import org.example.Config.ConfigManager;
+import org.example.config.core.ConfigManager;
 
 import java.sql.*;
 import java.util.ArrayList;

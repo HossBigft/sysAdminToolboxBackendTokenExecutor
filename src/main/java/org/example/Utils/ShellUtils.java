@@ -1,6 +1,6 @@
 package org.example.Utils;
 
-import org.example.Config.SudoersManager;
+import org.example.config.SudoersManager;
 import org.example.Exceptions.CommandFailedException;
 import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;

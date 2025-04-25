@@ -1,8 +1,11 @@
-package org.example.Config;
+package org.example.config.core;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.example.config.database.DatabaseProvisioner;
+import org.example.config.PermissionManager;
+import org.example.config.SudoersManager;
 import org.example.Constants.EnvironmentConstants;
 import org.example.Exceptions.CommandFailedException;
 import org.example.Logging.core.CliLogger;
@@ -17,7 +20,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class ConfigManager {
-    static final int DB_USER_PASSWORD_LENGTH = 15;
+    public static final int DB_USER_PASSWORD_LENGTH = 15;
     private static final String ENV_DB_PASS_FIELD = "DATABASE_PASSWORD";
     private static final CliLogger logger = LogManager.getInstance().getLogger();
     public static Map<String, String> values = new HashMap<>();
@@ -73,7 +76,7 @@ public class ConfigManager {
         return false;
     }
 
-    static void updateDotEnv() throws IOException {
+    public static void updateDotEnv() throws IOException {
         logger.info("Creating dotenv" + EnvironmentConstants.ENV_PATH);
 
         ObjectMapper mapper = new ObjectMapper();

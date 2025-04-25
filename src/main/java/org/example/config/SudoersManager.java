@@ -1,5 +1,6 @@
-package org.example.Config;
+package org.example.config;
 
+import org.example.config.core.ConfigManager;
 import org.example.Exceptions.CommandFailedException;
 import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
