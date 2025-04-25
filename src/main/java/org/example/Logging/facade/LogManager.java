@@ -11,7 +11,7 @@ import org.example.Logging.implementations.LogWriter;
 import org.example.Utils.ShellUtils;
 
 public class LogManager {
-    private static volatile LogManager instance;
+    private static LogManager instance;
     private final CliLogger logger;
 
     private LogManager(LogConfig config) {
@@ -22,11 +22,7 @@ public class LogManager {
 
     public static LogManager getInstance() {
         if (instance == null) {
-            synchronized (LogManager.class) {
-                if (instance == null) {
-                    instance = new Builder().build();
-                }
-            }
+            instance = new Builder().build();
         }
         return instance;
     }
