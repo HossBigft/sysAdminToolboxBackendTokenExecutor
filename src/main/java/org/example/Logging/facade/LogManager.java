@@ -58,6 +58,10 @@ public class LogManager {
         public LogManager build() {
             return new LogManager(config);
         }
+
+        public void apply() {
+            instance = new LogManager(config);
+        }
     }
 
 

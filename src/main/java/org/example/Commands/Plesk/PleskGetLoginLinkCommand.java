@@ -11,16 +11,17 @@ import java.util.Optional;
 
 import static org.example.Constants.PleskConstants.PLESK_CLI_EXECUTABLE;
 
-public class PleskLoginLinkCommand implements Command<Optional<String>> {
+public class PleskGetLoginLinkCommand implements Command<Optional<String>> {
     final int subscriptionId;
     final LinuxUsername username;
 
 
-    public PleskLoginLinkCommand(int subscriptionId,
-                                 LinuxUsername username) {
+    public PleskGetLoginLinkCommand(int subscriptionId,
+                                    LinuxUsername username) {
         this.subscriptionId = subscriptionId;
         this.username = username;
     }
+
 
     public Optional<String> execute() throws
             CommandFailedException, SQLException {
