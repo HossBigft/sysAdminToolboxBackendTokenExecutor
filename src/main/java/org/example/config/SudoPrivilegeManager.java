@@ -13,7 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
 
-public class SudoPrivilegesManager {
+public class SudoPrivilegeManager {
     static final String shellUser = ShellUtils.resolveToolBoxUser();
     private static final CliLogger logger = LogManager.getInstance().getLogger();
     private final String SUDOERS_DIR = "/etc/sudoers.d/";

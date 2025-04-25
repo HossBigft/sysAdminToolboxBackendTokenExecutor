@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.example.config.database.DatabaseProvisioner;
 import org.example.config.FileSecurityManager;
-import org.example.config.SudoPrivilegesManager;
+import org.example.config.SudoPrivilegeManager;
 import org.example.Constants.EnvironmentConstants;
 import org.example.Exceptions.CommandFailedException;
 import org.example.Logging.core.CliLogger;
@@ -61,7 +61,7 @@ public class ConfigManager {
 
         new FileSecurityManager().ensureDotEnvPermissions();
         DatabaseProvisioner.ensureDatabaseSetup();
-        new SudoPrivilegesManager().ensureSudoersRuleIsPresent();
+        new SudoPrivilegeManager().ensureSudoersRuleIsPresent();
 
     }
 
