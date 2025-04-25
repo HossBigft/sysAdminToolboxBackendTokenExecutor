@@ -1,9 +1,8 @@
 package org.example.Utils;
 
 import org.example.Logging.core.CliLogger;
-import org.example.TokenHandler.KeyManager;
 import org.example.Logging.facade.LogManager;
-import org.example.Logging.implementations.DefaultCliLogger;
+import org.example.TokenHandler.KeyManager;
 import org.example.ValueTypes.Token;
 
 import java.io.IOException;
@@ -45,7 +44,8 @@ public class TokenValidator {
         return verifyDigitalSignature(token.getMessage(), token.signature());
     }
 
-    private static boolean verifyDigitalSignature(String message, String digitalSignature)
+    private static boolean verifyDigitalSignature(String message,
+                                                  String digitalSignature)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException,
             InvalidKeyException, SignatureException {
 

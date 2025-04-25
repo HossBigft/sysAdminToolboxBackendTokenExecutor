@@ -1,13 +1,10 @@
 package org.example.Logging.facade;
 
-import org.example.Constants.EnvironmentConstants;
 import org.example.Logging.config.LogConfig;
 import org.example.Logging.core.CliLogger;
-import org.example.Logging.core.DefaultLoggerFactory;
 import org.example.Logging.core.LogLevel;
-import org.example.Logging.core.LoggerFactory;
-import org.example.Logging.implementations.DefaultCliLogger;
 import org.example.Logging.implementations.LogWriter;
+import org.example.Logging.implementations.StandardLogger;
 import org.example.Utils.ShellUtils;
 
 public class LogManager {
@@ -16,8 +13,7 @@ public class LogManager {
 
     private LogManager(LogConfig config) {
         LogWriter writer = new LogWriter(config, ShellUtils.resolveShellUser());
-        LoggerFactory loggerFactory = new DefaultLoggerFactory(config, writer);
-        this.logger = loggerFactory.getLogger();
+        this.logger = new StandardLogger(config, writer);
     }
 
     public static LogManager getInstance() {
@@ -27,11 +23,6 @@ public class LogManager {
         return instance;
     }
 
-    public static void initialize(LogConfig config) {
-        synchronized (LogManager.class) {
-            instance = new LogManager(config);
-        }
-    }
 
     public CliLogger getLogger() {
         return logger;
@@ -68,4 +59,6 @@ public class LogManager {
             return new LogManager(config);
         }
     }
+
+
 }

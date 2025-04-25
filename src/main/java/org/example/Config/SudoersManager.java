@@ -3,7 +3,6 @@ package org.example.Config;
 import org.example.Exceptions.CommandFailedException;
 import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
-import org.example.Logging.implementations.DefaultCliLogger;
 import org.example.Utils.ShellUtils;
 
 import java.io.IOException;
@@ -15,12 +14,11 @@ import java.nio.file.attribute.PosixFilePermissions;
 
 public class SudoersManager {
     static final String shellUser = ShellUtils.resolveToolBoxUser();
+    private static final CliLogger logger = LogManager.getInstance().getLogger();
     private final String SUDOERS_DIR = "/etc/sudoers.d/";
     private final String TEMP_DIR = "/tmp/";
     private final String SUDOERS_PERMISSIONS = "r--r-----";
 
-    private static final CliLogger logger = LogManager.getInstance().getLogger();
-    
     public void ensureSudoersRuleIsPresent() throws CommandFailedException, IOException, URISyntaxException {
         Path sudoersFile = Paths.get(SUDOERS_DIR + ConfigManager.getDatabaseUser());
 
