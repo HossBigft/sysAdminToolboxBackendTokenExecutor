@@ -1,4 +1,4 @@
-package org.example.config;
+package org.example.config.security;
 
 import org.example.Constants.EnvironmentConstants;
 import org.example.Logging.core.CliLogger;

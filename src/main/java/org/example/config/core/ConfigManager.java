@@ -3,9 +3,9 @@ package org.example.config.core;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import org.example.config.database.DatabaseProvisioner;
-import org.example.config.FileSecurityManager;
-import org.example.config.SudoPrivilegeManager;
+import org.example.config.database.DatabaseSetupCoordinator;
+import org.example.config.security.FileSecurityManager;
+import org.example.config.security.SudoPrivilegeManager;
 import org.example.Constants.EnvironmentConstants;
 import org.example.Exceptions.CommandFailedException;
 import org.example.Logging.core.CliLogger;
@@ -60,7 +60,7 @@ public class ConfigManager {
         }
 
         new FileSecurityManager().ensureDotEnvPermissions();
-        DatabaseProvisioner.ensureDatabaseSetup();
+        DatabaseSetupCoordinator.ensureDatabaseSetup();
         new SudoPrivilegeManager().ensureSudoersRuleIsPresent();
 
     }

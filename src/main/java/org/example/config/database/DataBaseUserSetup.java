@@ -91,7 +91,7 @@ public class DataBaseUserSetup {
 
 
     private boolean isDbUserAbleToConnect() {
-        try (Connection conn = DriverManager.getConnection(DatabaseProvisioner.DB_URL, databaseUser,
+        try (Connection conn = DriverManager.getConnection(DatabaseSetupCoordinator.DB_URL, databaseUser,
                 databasePassword)) {
             logger.debug(databaseUser + " can connec to to database.");
             return true;

@@ -1,4 +1,4 @@
-package org.example.config;
+package org.example.config.security;
 
 public record FileAccessPolicy(String permissions, String owner, String group) {
     public FileAccessPolicy {

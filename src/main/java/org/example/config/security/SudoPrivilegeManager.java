@@ -1,4 +1,4 @@
-package org.example.config;
+package org.example.config.security;
 
 import org.example.config.core.ConfigManager;
 import org.example.Exceptions.CommandFailedException;
