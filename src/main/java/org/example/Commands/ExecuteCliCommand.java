@@ -1,11 +1,13 @@
 package org.example.Commands;
 
+import org.example.PleskCommandFactory;
 import org.example.SysAdminToolboxBackendTokenExecutor;
 import org.example.ValueTypes.Token;
 import org.example.token_handler.TokenProcessor;
 import picocli.CommandLine;
 
 import javax.naming.CommunicationException;
+import java.lang.classfile.instruction.ReturnInstruction;
 
 @CommandLine.Command(
         name = "execute",
@@ -27,7 +29,7 @@ public class ExecuteCliCommand extends AbstractCliCommand {
                     .processToken(token)
                     .orElseThrow(CommunicationException::new);
             System.out.println("Extracted command " + command);
-
+            System.out.println(new PleskCommandFactory().build(command).execute());
             return 0;
         } catch (Exception e) {
             System.out.println("Failed to parse token" + rawToken + " ");
