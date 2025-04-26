@@ -1,10 +1,13 @@
 package org.example.token_handler;
 
+import org.example.CommandInput;
 import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
+import org.example.ServiceCommand;
 import org.example.ValueTypes.Token;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Optional;
 
 
@@ -12,9 +15,9 @@ public class TokenProcessor {
 
     private static final CliLogger logger = LogManager.getInstance().getLogger();
 
-    public Optional<String> processToken(Token token) {
+    public Optional<CommandInput> processToken(Token token) {
         logger.infoEntry().message("Processing command token").field("Token", token.value()).log();
-        Optional<String> command = Optional.empty();
+        Optional<CommandInput> command = Optional.empty();
 
         if (!TokenManager.TokenValidator.isValid(token)) {
             logger.warnEntry().message("Token validation failed").field("Token", token.value()).log();
@@ -44,6 +47,20 @@ public class TokenProcessor {
 
         logger.debugEntry().message("Token processed successfully").field("Command", token.command()).log();
 
-        return Optional.of(token.command());
+        return Optional.of(parseCommand(token.command()));
+    }
+
+    public static CommandInput parseCommand(String commandLine) {
+        if (commandLine.isBlank()) {
+            throw new IllegalArgumentException("No command provided");
+        }
+        String[] args = commandLine.split(" ");
+        if (args.length == 0) {
+            throw new IllegalArgumentException("Invalid command input");
+        }
+
+        ServiceCommand commandName = ServiceCommand.valueOf(args[0]);
+        String[] commandArgs = Arrays.copyOfRange(args, 1, args.length);
+        return new CommandInput(commandName, commandArgs);
     }
 }

@@ -76,10 +76,14 @@ public class ShellUtils {
 
                 int exitCode = process.exitValue();
                 if (exitCode != 0) {
-                    String errorMessage = String.format("Command '%s' failed with exit code %d: %s",
-                            String.join(" ", args), exitCode, String.join("\n", outputLines));
-                    logger.error(errorMessage);
-                    throw new CommandFailedException(errorMessage);
+
+                    logger.errorEntry()
+                            .message("Command failed")
+                            .field("command", String.join(" ", args))
+                            .field("exitCode", exitCode)
+                            .field("stdout", String.join("\n", outputLines))
+                            .field("stderr", errorBuilder.toString()).log();
+                    throw new CommandFailedException("whatever");
                 }
 
                 return Collections.unmodifiableList(outputLines);

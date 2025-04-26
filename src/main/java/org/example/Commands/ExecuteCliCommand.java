@@ -1,5 +1,6 @@
 package org.example.Commands;
 
+import org.example.CommandInput;
 import org.example.PleskCommandFactory;
 import org.example.SysAdminToolboxBackendTokenExecutor;
 import org.example.ValueTypes.Token;
@@ -7,7 +8,6 @@ import org.example.token_handler.TokenProcessor;
 import picocli.CommandLine;
 
 import javax.naming.CommunicationException;
-import java.lang.classfile.instruction.ReturnInstruction;
 
 @CommandLine.Command(
         name = "execute",
@@ -25,7 +25,7 @@ public class ExecuteCliCommand extends AbstractCliCommand {
     public Integer call() {
         try {
             Token token = Token.fromJson(rawToken);
-            String command = new TokenProcessor()
+            CommandInput command = new TokenProcessor()
                     .processToken(token)
                     .orElseThrow(CommunicationException::new);
             System.out.println("Extracted command " + command);

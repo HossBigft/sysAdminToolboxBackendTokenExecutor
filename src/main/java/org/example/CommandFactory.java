@@ -5,6 +5,6 @@ import org.example.Interfaces.Command;
 
 public interface CommandFactory {
 
-    Command<?> build(String... args);
+    Command<?> build(CommandInput command);
 
 }
