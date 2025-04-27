@@ -1,7 +1,7 @@
 package org.example.config.database;
 
-import org.example.Logging.core.CliLogger;
-import org.example.Logging.facade.LogManager;
+import org.example.logging.core.CliLogger;
+import org.example.logging.facade.LogManager;
 
 import java.io.IOException;
 

@@ -1,9 +1,9 @@
 package org.example.config.security;
 
-import org.example.Exceptions.CommandFailedException;
-import org.example.Logging.core.CliLogger;
-import org.example.Logging.facade.LogManager;
-import org.example.Utils.ShellUtils;
+import org.example.exceptions.CommandFailedException;
+import org.example.logging.core.CliLogger;
+import org.example.logging.facade.LogManager;
+import org.example.utils.ShellUtils;
 import org.example.config.core.ConfigManager;
 
 import java.io.IOException;

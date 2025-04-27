@@ -1,10 +1,10 @@
 package org.example.token_handler;
 
-import org.example.CommandRequest;
-import org.example.Logging.core.CliLogger;
-import org.example.Logging.facade.LogManager;
-import org.example.AvailableCommand;
-import org.example.ValueTypes.Token;
+import org.example.commands.CommandRequest;
+import org.example.logging.core.CliLogger;
+import org.example.logging.facade.LogManager;
+import org.example.core.AvailableCommand;
+import org.example.value_types.Token;
 
 import java.io.IOException;
 import java.util.Arrays;

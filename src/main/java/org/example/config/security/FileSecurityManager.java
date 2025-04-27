@@ -1,8 +1,8 @@
 package org.example.config.security;
 
-import org.example.Constants.EnvironmentConstants;
-import org.example.Logging.core.CliLogger;
-import org.example.Logging.facade.LogManager;
+import org.example.constants.EnvironmentConstants;
+import org.example.logging.core.CliLogger;
+import org.example.logging.facade.LogManager;
 
 import java.io.File;
 import java.io.IOException;

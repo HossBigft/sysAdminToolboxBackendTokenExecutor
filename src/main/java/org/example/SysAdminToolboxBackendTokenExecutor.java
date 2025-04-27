@@ -1,11 +1,11 @@
 package org.example;
 
-import org.example.Commands.ExecuteCliCommand;
-import org.example.Commands.GetLoginLinkCliCommand;
-import org.example.Commands.GetSubscriptionInfoCliCommand;
-import org.example.Commands.GetTestMailboxCliCommand;
-import org.example.Logging.core.LogLevel;
-import org.example.Logging.facade.LogManager;
+import org.example.commands.picocli.ExecuteCliCommand;
+import org.example.commands.picocli.GetLoginLinkCliCommand;
+import org.example.commands.picocli.GetSubscriptionInfoCliCommand;
+import org.example.commands.picocli.GetTestMailboxCliCommand;
+import org.example.logging.core.LogLevel;
+import org.example.logging.facade.LogManager;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
