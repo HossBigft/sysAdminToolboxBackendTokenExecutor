@@ -4,6 +4,8 @@ import org.example.constants.EnvironmentConstants;
 import org.example.logging.core.LogLevel;
 
 public class LogConfig {
+    public static final String DEFAULT_LOG_DIRECTORY = "/var/log/" + EnvironmentConstants.APP_USER + "/";
+    public static final String DEFAULT_LOG_FILE = "audit.log";
     private String logDirectory;
     private String logFile;
     private LogLevel globalLogLevel = LogLevel.INFO;
@@ -17,8 +19,8 @@ public class LogConfig {
 
     public static LogConfig getDefaultConfig() {
         return new LogConfig(
-                "/var/log/" + EnvironmentConstants.APP_USER + "/",
-                "audit.log"
+                DEFAULT_LOG_DIRECTORY,
+                DEFAULT_LOG_FILE
         );
     }
 
