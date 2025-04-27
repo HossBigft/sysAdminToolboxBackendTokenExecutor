@@ -56,10 +56,7 @@ public class SudoPrivilegeManager {
     }
 
     private void securePermissions(File file) throws IOException {
-        Path filePath = file.toPath();
-        FileSecurityManager.setPermissions(filePath, SUDOERS_PERMISSIONS);
-        FileSecurityManager.setOwner(filePath, "root");
-        FileSecurityManager.setGroup(filePath, "root");
+        new FileSecurityManager().enforceFileAccessPolicy(file, sudoersFilePolicy);
     }
 
     private boolean isSudoRuleNotPresentInFile() {

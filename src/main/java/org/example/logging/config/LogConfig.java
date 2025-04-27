@@ -55,7 +55,7 @@ public class LogConfig {
     }
 
     public String getFullLogPath() {
-        return logDirectory + "\"" + logFile;
+        return logDirectory + logFile;
     }
 
     public boolean isLoggable(LogLevel level) {

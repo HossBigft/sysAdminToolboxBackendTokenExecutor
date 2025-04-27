@@ -1,9 +1,11 @@
 package org.example.logging.implementations;
 
+import org.example.config.security.FileAccessPolicy;
+import org.example.config.security.FileSecurityManager;
+import org.example.constants.EnvironmentConstants;
 import org.example.logging.config.LogConfig;
 import org.example.logging.core.LogLevel;
 import org.example.logging.model.LogEntry;
-import org.example.config.security.FileSecurityManager;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,13 +13,18 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class LogWriter {
     private static final DateTimeFormatter TIMESTAMP_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final String DIR_PERMISSIONS = "rwxr-x---";
+    private static final FileAccessPolicy logDirAccessPolicy = new FileAccessPolicy(DIR_PERMISSIONS,
+            EnvironmentConstants.SUPERADMIN_USER, EnvironmentConstants.SUPERADMIN_USER);
+    private static final String FILE_PERMISSIONS = "rw-r-----";
+    private static final FileAccessPolicy logFileAccessPolicy = new FileAccessPolicy(FILE_PERMISSIONS,
+            EnvironmentConstants.SUPERADMIN_USER, EnvironmentConstants.SUPERADMIN_USER);
 
     private final LogConfig config;
     private final String userName;
@@ -39,9 +46,7 @@ public class LogWriter {
         if (!Files.exists(logDir)) {
             Files.createDirectories(logDir);
             try {
-                Files.setPosixFilePermissions(logDir, PosixFilePermissions.fromString("rwxr-x---"));
-                FileSecurityManager.setOwner(logDir, "root");
-                FileSecurityManager.setGroup(logDir, "root");
+                new FileSecurityManager().enforceFileAccessPolicy(logDir.toFile(), logDirAccessPolicy);
             } catch (Exception e) {
                 System.err.println("Warning: Could not set permissions on log directory: " + e.getMessage());
             }
@@ -51,9 +56,8 @@ public class LogWriter {
         if (!Files.exists(logFilePath)) {
             Files.createFile(logFilePath);
             try {
-                Files.setPosixFilePermissions(logFilePath, PosixFilePermissions.fromString("rw-r-----"));
-                FileSecurityManager.setOwner(logFilePath, "root");
-                FileSecurityManager.setGroup(logFilePath, "root");
+                new FileSecurityManager().enforceFileAccessPolicy(logFilePath.toFile(), logFileAccessPolicy);
+
             } catch (Exception e) {
                 System.err.println("Warning: Could not set permissions on log file: " + e.getMessage());
             }
