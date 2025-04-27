@@ -23,13 +23,13 @@ public class FileSecurityManager {
     private static final File dotEnvFile = new File(EnvironmentConstants.ENV_PATH);
 
     public void ensureDotEnvPermissions() throws IOException {
-        if (isFilePermissionsSecureNot(dotEnvFile, dotenvFilePolicy)) {
+        if (!isFilePermissionsSecure(dotEnvFile, dotenvFilePolicy)) {
             secureDotEnvPermissionsOwnerGroup(dotEnvFile);
         }
     }
 
-    public boolean isFilePermissionsSecureNot(File file,
-                                               FileAccessPolicy policy) throws IOException {
+    public boolean isFilePermissionsSecure(File file,
+                                           FileAccessPolicy policy) throws IOException {
         Path path = file.toPath();
         boolean permsOk = hasCorrectPermissions(path, policy.permissions());
         boolean ownerOk = hasOwner(path, policy.owner());
@@ -56,7 +56,7 @@ public class FileSecurityManager {
                     warn("[" + filename + "] File group is incorrect: expected " + policy.group() + " for path " + path);
         }
 
-        return !permsOk || !ownerOk || !groupOk;
+        return permsOk && ownerOk && groupOk;
     }
 
     private void secureDotEnvPermissionsOwnerGroup(File envFile) throws IOException {

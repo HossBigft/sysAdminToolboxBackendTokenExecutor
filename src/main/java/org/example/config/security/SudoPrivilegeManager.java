@@ -48,7 +48,7 @@ public class SudoPrivilegeManager {
 
     private boolean isFileInsecure(File file) throws IOException {
 
-        if (!new FileSecurityManager().isFilePermissionsSecureNot(file, sudoersFilePolicy)) {
+        if (new FileSecurityManager().isFilePermissionsSecure(file, sudoersFilePolicy)) {
             return false;
         }
         return true;
