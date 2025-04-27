@@ -28,7 +28,7 @@ public class FileSecurityManager {
         }
     }
 
-    private boolean isFilePermissionsSecureNot(File file,
+    public boolean isFilePermissionsSecureNot(File file,
                                                FileAccessPolicy policy) throws IOException {
         Path path = file.toPath();
         boolean permsOk = hasCorrectPermissions(path, policy.permissions());

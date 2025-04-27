@@ -1,11 +1,13 @@
 package org.example.config.security;
 
+import org.example.config.core.ConfigManager;
+import org.example.constants.EnvironmentConstants;
 import org.example.exceptions.CommandFailedException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.utils.ShellUtils;
-import org.example.config.core.ConfigManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -19,16 +21,17 @@ public class SudoPrivilegeManager {
 
     private final String TEMP_DIR = "/tmp/";
     private final String SUDOERS_PERMISSIONS = "r--r-----";
+    private final FileAccessPolicy sudoersFilePolicy = new FileAccessPolicy(SUDOERS_PERMISSIONS,
+            EnvironmentConstants.SUPERADMIN_USER, EnvironmentConstants.SUPERADMIN_USER);
 
     private static CliLogger getLogger() {
         return LogManager.getInstance().getLogger();
     }
 
     public void setupSudoPrivileges() throws CommandFailedException, IOException, URISyntaxException {
-        Path sudoersFile = Paths.get(SUDOERS_DIR + ConfigManager.getDatabaseUser());
+        File sudoersFile = Paths.get(SUDOERS_DIR + ConfigManager.getDatabaseUser()).toFile();
 
-        if (Files.exists(sudoersFile) && isFileInsecure(sudoersFile)) {
-            System.out.println("Warning: Existing sudoers file with incorrect permissions detected!");
+        if (sudoersFile.isFile() && isFileInsecure(sudoersFile)) {
             securePermissions(sudoersFile);
         }
 
@@ -43,24 +46,20 @@ public class SudoPrivilegeManager {
         }
     }
 
-    private boolean isFileInsecure(Path file) throws IOException {
-        boolean isSecure = FileSecurityManager.hasCorrectPermissions(file, SUDOERS_PERMISSIONS)
-                || !FileSecurityManager.hasOwner(file, "root")
-                || !FileSecurityManager.hasOwnerGroup(file, "root");
-        if (!isSecure) {
-            getLogger().
-                    warn("Existing sudoers file have incorrect permissions: " + file.toString());
+    private boolean isFileInsecure(File file) throws IOException {
+
+        if (!new FileSecurityManager().isFilePermissionsSecureNot(file, sudoersFilePolicy)) {
             return false;
         }
         return true;
 
     }
 
-    private void securePermissions(Path file) throws IOException {
-
-        FileSecurityManager.setPermissions(file, SUDOERS_PERMISSIONS);
-        FileSecurityManager.setOwner(file, "root");
-        FileSecurityManager.setGroup(file, "root");
+    private void securePermissions(File file) throws IOException {
+        Path filePath = file.toPath();
+        FileSecurityManager.setPermissions(filePath, SUDOERS_PERMISSIONS);
+        FileSecurityManager.setOwner(filePath, "root");
+        FileSecurityManager.setGroup(filePath, "root");
     }
 
     private boolean isSudoRuleNotPresentInFile() {
