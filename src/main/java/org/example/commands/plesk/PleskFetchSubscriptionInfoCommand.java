@@ -8,6 +8,7 @@ import org.example.utils.DbUtils;
 import org.example.value_types.DomainName;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,38 +24,32 @@ public class PleskFetchSubscriptionInfoCommand implements Command<Optional<Array
         ObjectMapper objectMapper = new ObjectMapper();
         ArrayNode resultArray = objectMapper.createArrayNode();
 
-        if (subscriptionInfoList.isPresent()) {
-            for (String info : subscriptionInfoList.get()) {
-                if (info != null && !info.trim().isEmpty()) {
+        subscriptionInfoList.ifPresentOrElse(
+                infoList -> infoList.stream().filter(info -> info != null && !info.trim().isEmpty()).forEach(info -> {
                     try {
                         SubscriptionDetails details = SubscriptionDetails.parse(info);
                         resultArray.add(details.toJsonNode(objectMapper));
                     } catch (Exception e) {
                         System.err.println("Error processing subscription info: " + e.getMessage());
                     }
-                }
-            }
-        } else {
-            System.out.println("No subscription information found for domain: " + domain.name());
-        }
-
-        try {
-            String jsonString = objectMapper.writeValueAsString(resultArray);
-        } catch (Exception e) {
-            System.err.println("Error serializing to JSON: " + e.getMessage());
-        }
+                }), () -> System.out.println("No subscription information found for domain: " + domain.name()));
 
         return Optional.of(resultArray);
     }
 
 
-    private record SubscriptionDetails(String host, String id, String name, String username, String userlogin,
-                                       List<String> domains, boolean isSpaceOverused, int subscriptionSizeMb,
-                                       String subscriptionStatus) {
+    public record SubscriptionDetails(String id, String name, String username, String userlogin,
+                                      List<DomainState> domainStates, boolean isSpaceOverused, int subscriptionSizeMb,
+                                      String subscriptionStatus) {
         public static SubscriptionDetails parse(String subscriptionInfo) {
             String[] resultLines = subscriptionInfo.split("\t");
 
-            List<String> domains = List.of(resultLines[4].split(","));
+            String id = resultLines[0];
+            String name = resultLines[1];
+            String username = resultLines[2];
+            String userlogin = resultLines[3];
+
+            List<DomainState> domainStates = parseDomainStates(resultLines[4]);
             boolean isSpaceOverused = resultLines[5].equalsIgnoreCase("true");
             int subscriptionSizeMb = Integer.parseInt(resultLines[6]);
 
@@ -62,26 +57,49 @@ public class PleskFetchSubscriptionInfoCommand implements Command<Optional<Array
             String subscriptionStatus = DomainStatus.getStatusString(statusCode);
 
 
-            return new SubscriptionDetails(resultLines[0],  // host
-                    resultLines[1],  // id
-                    resultLines[2],  // name
-                    resultLines[3],  // username
-                    resultLines[4],  // userlogin
-                    domains, isSpaceOverused, subscriptionSizeMb, subscriptionStatus);
+            return new SubscriptionDetails(id, name, username, userlogin, domainStates, isSpaceOverused,
+                    subscriptionSizeMb, subscriptionStatus);
         }
 
+        private static List<DomainState> parseDomainStates(String domainStatesStr) {
+            List<DomainState> domainStates = new ArrayList<>();
+            if (domainStatesStr == null || domainStatesStr.trim().isEmpty()) {
+                return domainStates;
+            }
+
+            for (String domainStatus : domainStatesStr.split(",")) {
+                try {
+                    String[] parts = domainStatus.split(":");
+                    if (parts.length == 2) {
+                        String domain = parts[0];
+                        int statusCode = Integer.parseInt(parts[1]);
+                        String status = DomainStatus.getStatusString(statusCode);
+                        domainStates.add(new DomainState(domain, status));
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error parsing domain state: " + domainStatus + " - " + e.getMessage());
+                }
+            }
+
+            return domainStates;
+        }
+
+        /**
+         * Convert this record to a JSON node
+         */
         public ObjectNode toJsonNode(ObjectMapper mapper) {
             ObjectNode node = mapper.createObjectNode();
-            node.put("host", this.host);
             node.put("id", this.id);
             node.put("name", this.name);
             node.put("username", this.username);
             node.put("userlogin", this.userlogin);
 
-            // Add domains as array
-            ArrayNode domainsArray = node.putArray("domains");
-            for (String domain : this.domains) {
-                domainsArray.add(domain);
+            ArrayNode domainStatesArray = node.putArray("domain_states");
+            for (DomainState domainState : this.domainStates) {
+                ObjectNode stateNode = mapper.createObjectNode();
+                stateNode.put("domain", domainState.domain());
+                stateNode.put("status", domainState.status());
+                domainStatesArray.add(stateNode);
             }
 
             node.put("is_space_overused", this.isSpaceOverused);
@@ -121,5 +139,8 @@ public class PleskFetchSubscriptionInfoCommand implements Command<Optional<Array
                 return status;
             }
         }
+    }
+
+    public static record DomainState(String domain, String status) {
     }
 }
