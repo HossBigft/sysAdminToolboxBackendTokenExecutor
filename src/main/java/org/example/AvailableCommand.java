@@ -1,8 +1,8 @@
 package org.example;
 
-public sealed interface ServiceCommand permits ServiceCommand.Ns, ServiceCommand.Plesk {
+public sealed interface AvailableCommand permits AvailableCommand.Ns, AvailableCommand.Plesk {
 
-    static ServiceCommand valueOf(String qualifiedName) {
+    static AvailableCommand valueOf(String qualifiedName) {
         String[] parts = qualifiedName.split("\\.", 2);
 
         if (parts.length != 2) {
@@ -16,11 +16,11 @@ public sealed interface ServiceCommand permits ServiceCommand.Ns, ServiceCommand
         };
     }
 
-    enum Ns implements ServiceCommand {
+    enum Ns implements AvailableCommand {
         REMOVE_DNS_ZONE
     }
 
-    enum Plesk implements ServiceCommand {
+    enum Plesk implements AvailableCommand {
         GET_LOGIN_LINK,
         FETCH_SUBSCRIPTION_INFO,
         GET_TESTMAIL_CREDENTIALS

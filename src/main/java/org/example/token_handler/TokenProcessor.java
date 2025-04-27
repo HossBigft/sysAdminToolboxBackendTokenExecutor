@@ -1,9 +1,9 @@
 package org.example.token_handler;
 
-import org.example.CommandInput;
+import org.example.CommandRequest;
 import org.example.Logging.core.CliLogger;
 import org.example.Logging.facade.LogManager;
-import org.example.ServiceCommand;
+import org.example.AvailableCommand;
 import org.example.ValueTypes.Token;
 
 import java.io.IOException;
@@ -13,10 +13,10 @@ import java.util.Optional;
 
 public class TokenProcessor {
 
-    public Optional<CommandInput> processToken(Token token) {
+    public Optional<CommandRequest> processToken(Token token) {
         getLogger().
                 infoEntry().message("Processing command token").field("Token", token.value()).log();
-        Optional<CommandInput> command = Optional.empty();
+        Optional<CommandRequest> command = Optional.empty();
 
         if (!TokenManager.TokenValidator.isValid(token)) {
             getLogger().
@@ -59,7 +59,7 @@ public class TokenProcessor {
         return LogManager.getInstance().getLogger();
     }
 
-    public static CommandInput parseCommand(String commandLine) {
+    public static CommandRequest parseCommand(String commandLine) {
         if (commandLine.isBlank()) {
             throw new IllegalArgumentException("No command provided");
         }
@@ -68,8 +68,8 @@ public class TokenProcessor {
             throw new IllegalArgumentException("Invalid command input");
         }
 
-        ServiceCommand commandName = ServiceCommand.valueOf(args[0]);
+        AvailableCommand commandName = AvailableCommand.valueOf(args[0]);
         String[] commandArgs = Arrays.copyOfRange(args, 1, args.length);
-        return new CommandInput(commandName, commandArgs);
+        return new CommandRequest(commandName, commandArgs);
     }
 }

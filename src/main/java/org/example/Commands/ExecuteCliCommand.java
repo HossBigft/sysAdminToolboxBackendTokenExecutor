@@ -1,7 +1,7 @@
 package org.example.Commands;
 
-import org.example.CommandInput;
-import org.example.PleskCommandFactory;
+import org.example.CommandRequest;
+import org.example.PleskCommandExecutorFactory;
 import org.example.SysAdminToolboxBackendTokenExecutor;
 import org.example.ValueTypes.Token;
 import org.example.token_handler.TokenProcessor;
@@ -25,11 +25,11 @@ public class ExecuteCliCommand extends AbstractCliCommand {
     public Integer call() {
         try {
             Token token = Token.fromJson(rawToken);
-            CommandInput command = new TokenProcessor()
+            CommandRequest command = new TokenProcessor()
                     .processToken(token)
                     .orElseThrow(CommunicationException::new);
             System.out.println("Extracted command " + command);
-            System.out.println(new PleskCommandFactory().build(command).execute());
+            System.out.println(new PleskCommandExecutorFactory().build(command).execute());
             return 0;
         } catch (Exception e) {
             System.out.println("Failed to parse token" + rawToken + " ");
