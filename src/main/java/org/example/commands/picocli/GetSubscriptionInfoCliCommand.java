@@ -1,5 +1,6 @@
 package org.example.commands.picocli;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.example.SysAdminToolboxBackendTokenExecutor;
 import org.example.value_types.DomainName;
 import picocli.CommandLine.Command;
@@ -25,11 +26,10 @@ public class GetSubscriptionInfoCliCommand extends AbstractCliCommand {
     @Override
     public Integer call() {
         try {
-            Optional<List<String>> info = getPleskService().fetchSubscriptionInfo(new DomainName(domain));
+            Optional<ArrayNode> info = getPleskService().fetchSubscriptionInfo(new DomainName(domain));
 
-            if (info.isPresent()) {
-                String result = String.join("\n", info.get());
-                return success(result);
+            if (info.isPresent()) {;
+                return success(String.valueOf(info));
             } else {
                 return error("No subscription information found for domain: " + domain);
             }

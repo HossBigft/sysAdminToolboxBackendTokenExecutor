@@ -1,5 +1,6 @@
 package org.example;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.example.commands.plesk.PleskFetchSubscriptionInfoCommand;
 import org.example.commands.plesk.PleskGetLoginLinkCommand;
@@ -32,7 +33,7 @@ public class PleskService {
         return ShellUtils.runCommand(PLESK_CLI_EXECUTABLE, "login", username).getFirst();
     }
 
-    public Optional<List<String>> fetchSubscriptionInfo(DomainName domain) throws
+    public Optional<ArrayNode> fetchSubscriptionInfo(DomainName domain) throws
             SQLException {
         return new PleskFetchSubscriptionInfoCommand(domain).execute();
     }
