@@ -1,6 +1,6 @@
 package org.example.core;
 
-public sealed interface AvailableCommand permits AvailableCommand.Ns, AvailableCommand.Plesk {
+public sealed interface AvailableCommand permits AvailableCommand.BIND, AvailableCommand.Plesk {
 
     static AvailableCommand valueOf(String qualifiedName) {
         String[] parts = qualifiedName.split("\\.", 2);
@@ -10,14 +10,15 @@ public sealed interface AvailableCommand permits AvailableCommand.Ns, AvailableC
         }
 
         return switch (parts[0].toUpperCase()) {
-            case "NS" -> Ns.valueOf(parts[1].toUpperCase());
+            case "NS" -> BIND.valueOf(parts[1].toUpperCase());
             case "PLESK" -> Plesk.valueOf(parts[1].toUpperCase());
             default -> throw new IllegalArgumentException("Unknown enum type: " + parts[0]);
         };
     }
 
-    enum Ns implements AvailableCommand {
-        REMOVE_DNS_ZONE
+    enum BIND implements AvailableCommand {
+        REMOVE_DNS_ZONE,
+        GET_ZONE_MASTER
     }
 
     enum Plesk implements AvailableCommand {

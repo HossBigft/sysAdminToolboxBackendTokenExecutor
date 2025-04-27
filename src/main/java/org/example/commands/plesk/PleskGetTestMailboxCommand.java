@@ -14,8 +14,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
-import static org.example.constants.PleskConstants.PLESK_CLI_EXECUTABLE;
-import static org.example.constants.PleskConstants.PLESK_CLI_GET_MAIL_USERS_CREDENTIALS;
+import static org.example.constants.Executables.PLESK_CLI_EXECUTABLE;
+import static org.example.constants.Executables.PLESK_CLI_GET_MAIL_USERS_CREDENTIALS;
 
 
 public class PleskGetTestMailboxCommand implements Command<Optional<ObjectNode>> {

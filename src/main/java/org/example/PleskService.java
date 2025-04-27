@@ -24,7 +24,7 @@ public class PleskService {
             CommandFailedException, SQLException {
         return new PleskGetLoginLinkCommand(subscriptionId, username).execute();
     }
-    
+
 
     public Optional<ArrayNode> fetchSubscriptionInfo(DomainName domain) throws
             SQLException {

@@ -9,7 +9,7 @@ import org.example.value_types.LinuxUsername;
 import java.sql.SQLException;
 import java.util.Optional;
 
-import static org.example.constants.PleskConstants.PLESK_CLI_EXECUTABLE;
+import static org.example.constants.Executables.PLESK_CLI_EXECUTABLE;
 
 public class PleskGetLoginLinkCommand implements Command<Optional<String>> {
     final int subscriptionId;
