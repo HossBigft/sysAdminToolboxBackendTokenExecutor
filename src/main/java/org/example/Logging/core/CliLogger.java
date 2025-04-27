@@ -12,7 +12,8 @@ public interface CliLogger {
 
     void error(String message);
 
-    void error(String message, Throwable t);
+    void error(String message,
+               Throwable t);
 
     @CheckReturnValue
     EntryBuilder debugEntry();
@@ -31,7 +32,8 @@ public interface CliLogger {
         EntryBuilder message(String message);
 
         @CheckReturnValue
-        EntryBuilder field(String key, Object value);
+        EntryBuilder field(String key,
+                           Object value);
 
         @CheckReturnValue
         EntryBuilder exception(Throwable t);

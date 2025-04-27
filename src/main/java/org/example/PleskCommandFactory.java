@@ -18,7 +18,8 @@ public class PleskCommandFactory implements CommandFactory {
             ServiceCommand.Plesk.GET_TESTMAIL_CREDENTIALS, args -> new PleskGetTestMailboxCommand(
                     new DomainName(args[0])
             ),
-            ServiceCommand.Plesk.FETCH_SUBSCRIPTION_INFO, args -> new PleskFetchSubscriptionInfoCommand(new DomainName(args[0]))
+            ServiceCommand.Plesk.FETCH_SUBSCRIPTION_INFO,
+            args -> new PleskFetchSubscriptionInfoCommand(new DomainName(args[0]))
     );
 
     @Override

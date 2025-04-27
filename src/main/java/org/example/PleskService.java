@@ -2,8 +2,8 @@ package org.example;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.example.Commands.Plesk.PleskFetchSubscriptionInfoCommand;
-import org.example.Commands.Plesk.PleskGetTestMailboxCommand;
 import org.example.Commands.Plesk.PleskGetLoginLinkCommand;
+import org.example.Commands.Plesk.PleskGetTestMailboxCommand;
 import org.example.Exceptions.CommandFailedException;
 import org.example.Utils.ShellUtils;
 import org.example.ValueTypes.DomainName;

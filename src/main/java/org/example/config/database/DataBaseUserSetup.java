@@ -15,10 +15,9 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class DataBaseUserSetup {
-    private static final CliLogger logger = LogManager.getInstance().getLogger();
     private final String databaseUser = ConfigManager.getDatabaseUser();
-    private String databasePassword = ConfigManager.getDatabasePassword();
 
+    private String databasePassword = ConfigManager.getDatabasePassword();
 
     public void setupDatabaseUser() throws IOException {
         try {
@@ -32,10 +31,10 @@ public class DataBaseUserSetup {
                 }
             }
         } catch (CommandFailedException e) {
-            logger.error("Failed to ensure database user" + databaseUser, e);
+            getLogger().
+                    error("Failed to ensure database user" + databaseUser, e);
         }
     }
-
 
     boolean doesUserExist() throws CommandFailedException {
         String mysqlCliName = ShellUtils.getSqlCliName();
@@ -55,14 +54,17 @@ public class DataBaseUserSetup {
             boolean exists = output.getFirst().trim().equals("1");
 
             if (exists) {
-                logger.debug("Database user " + databaseUser + " is present.");
+                getLogger().
+                        debug("Database user " + databaseUser + " is present.");
             } else {
-                logger.info("Database user " + databaseUser + " does not exist.");
+                getLogger().
+                        info("Database user " + databaseUser + " does not exist.");
             }
 
             return exists;
         } catch (CommandFailedException e) {
-            logger.errorEntry().command(command).exception(e).log();
+            getLogger().
+                    errorEntry().command(command).exception(e).log();
             throw e;
         }
     }
@@ -81,21 +83,24 @@ public class DataBaseUserSetup {
 
         try {
             ShellUtils.runCommand(command);
-            logger.info("Created database user " + databaseUser);
+            getLogger().
+                    info("Created database user " + databaseUser);
         } catch (CommandFailedException e) {
-            logger.errorEntry().command(command).exception(e).log();
+            getLogger().
+                    errorEntry().command(command).exception(e).log();
             throw e;
         }
     }
 
-
     private boolean isDbUserAbleToConnect() {
         try (Connection conn = DriverManager.getConnection(DatabaseSetupCoordinator.DB_URL, databaseUser,
                 databasePassword)) {
-            logger.debug(databaseUser + " can connec to to database.");
+            getLogger().
+                    debug(databaseUser + " can connec to to database.");
             return true;
         } catch (SQLException e) {
-            logger.error(databaseUser + " can't connect to to database.", e);
+            getLogger().
+                    error(databaseUser + " can't connect to to database.", e);
             return false;
         }
     }
@@ -104,13 +109,14 @@ public class DataBaseUserSetup {
         databasePassword = Utils.generatePassword(ConfigManager.DB_USER_PASSWORD_LENGTH);
         ConfigManager.values.put("DATABASE_PASSWORD", databasePassword
         );
-        logger.info("Regenerate password for database user " + databaseUser);
+        getLogger().
+                info("Regenerate password for database user " + databaseUser);
     }
 
     void setDbUserPassword() throws CommandFailedException {
         if (databaseUser.equalsIgnoreCase(EnvironmentConstants.SUPERADMIN_USER)) {
-            logger
-                    .warn("WARNING: Refusing to modify the root database user password. Please configure a different database user");
+            getLogger().warn(
+                    "WARNING: Refusing to modify the root database user password. Please configure a different database user");
             return;
         }
 
@@ -127,10 +133,16 @@ public class DataBaseUserSetup {
 
         try {
             ShellUtils.runCommand(command);
-            logger.info("Set database user password " + databaseUser);
+            getLogger().
+                    info("Set database user password " + databaseUser);
         } catch (CommandFailedException e) {
-            logger.errorEntry().command(command).exception(e).log();
+            getLogger().
+                    errorEntry().command(command).exception(e).log();
             throw e;
         }
+    }
+
+    private static CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
     }
 }

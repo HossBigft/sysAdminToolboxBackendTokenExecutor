@@ -34,12 +34,14 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         SysAdminToolboxBackendTokenExecutor app = new SysAdminToolboxBackendTokenExecutor();
         CommandLine commandLine = new CommandLine(app);
 
-
         commandLine.addSubcommand(new GetTestMailboxCliCommand(app));
         commandLine.addSubcommand(new GetLoginLinkCliCommand(app));
         commandLine.addSubcommand(new GetSubscriptionInfoCliCommand(app));
         commandLine.addSubcommand(new ExecuteCliCommand(app));
+
+
         commandLine.parseArgs(args);
+
 
         if (app.debug) {
             new LogManager.Builder().globalLogLevel(LogLevel.DEBUG).apply();
@@ -47,6 +49,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         if (app.verbose) {
             new LogManager.Builder().setVerbose().apply();
         }
+
 
         int exitCode = commandLine.execute(args);
 

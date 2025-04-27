@@ -2,16 +2,6 @@ package org.example;
 
 public sealed interface ServiceCommand permits ServiceCommand.Ns, ServiceCommand.Plesk {
 
-    public enum Ns implements ServiceCommand {
-        REMOVE_DNS_ZONE;
-    }
-
-    public enum Plesk implements ServiceCommand {
-        GET_LOGIN_LINK,
-        FETCH_SUBSCRIPTION_INFO,
-        GET_TESTMAIL_CREDENTIALS;
-    }
-
     static ServiceCommand valueOf(String qualifiedName) {
         String[] parts = qualifiedName.split("\\.", 2);
 
@@ -24,5 +14,15 @@ public sealed interface ServiceCommand permits ServiceCommand.Ns, ServiceCommand
             case "PLESK" -> Plesk.valueOf(parts[1].toUpperCase());
             default -> throw new IllegalArgumentException("Unknown enum type: " + parts[0]);
         };
+    }
+
+    enum Ns implements ServiceCommand {
+        REMOVE_DNS_ZONE
+    }
+
+    enum Plesk implements ServiceCommand {
+        GET_LOGIN_LINK,
+        FETCH_SUBSCRIPTION_INFO,
+        GET_TESTMAIL_CREDENTIALS
     }
 }

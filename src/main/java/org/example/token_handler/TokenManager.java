@@ -12,13 +12,12 @@ import java.util.Base64;
 
 public class TokenManager {
     public static class TokenValidator {
-        private static final CliLogger logger = LogManager.getInstance().getLogger();
-
         public static boolean isValid(Token token) {
 
             try {
                 if (token.isExpired()) {
-                    logger.debugEntry()
+                    getLogger().
+                            debugEntry()
                             .message("Token is expired")
                             .field("Token", token.toString())
                             .log();
@@ -26,7 +25,8 @@ public class TokenManager {
                 }
 
                 boolean signatureValid = isSignatureValid(token);
-                logger.debugEntry()
+                getLogger().
+                        debugEntry()
                         .message("Token signature verification result")
                         .field("Token", token.toString())
                         .field("SignatureValid", signatureValid)
@@ -35,9 +35,14 @@ public class TokenManager {
                 return signatureValid;
 
             } catch (Exception e) {
-                logger.error("Token validation failed", e);
+                getLogger().
+                        error("Token validation failed", e);
                 return false;
             }
+        }
+
+        private static CliLogger getLogger() {
+            return LogManager.getInstance().getLogger();
         }
 
         private static boolean isSignatureValid(Token token) throws Exception {
@@ -49,7 +54,8 @@ public class TokenManager {
                 throws IOException, NoSuchAlgorithmException, InvalidKeySpecException,
                 InvalidKeyException, SignatureException {
 
-            logger.debugEntry()
+            getLogger().
+                    debugEntry()
                     .message("Starting signature verification")
                     .field("SignedMessage", message)
                     .field("SignatureBase64", digitalSignature)
@@ -59,7 +65,8 @@ public class TokenManager {
             byte[] signatureBytes = Base64.getDecoder().decode(digitalSignature);
 
             if (signatureBytes.length != 64) {
-                logger.warn("Invalid signature length: " + signatureBytes.length);
+                getLogger().
+                        warn("Invalid signature length: " + signatureBytes.length);
                 throw new IllegalArgumentException("Invalid signature length: " + signatureBytes.length);
             }
 
@@ -71,7 +78,8 @@ public class TokenManager {
 
             boolean valid = signature.verify(signatureBytes);
 
-            logger.debugEntry()
+            getLogger().
+                    debugEntry()
                     .message("Signature verification completed")
                     .field("Valid", valid)
                     .log();

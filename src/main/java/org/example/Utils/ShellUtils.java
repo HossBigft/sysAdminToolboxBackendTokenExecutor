@@ -21,8 +21,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public class ShellUtils {
-    private static final CliLogger logger = LogManager.getInstance().getLogger();
-
     private ShellUtils() {
     }
 
@@ -43,7 +41,7 @@ public class ShellUtils {
 
     public static List<String> runCommand(String... args) throws CommandFailedException {
         try {
-            logger.debugEntry().command(args).log();
+            getLogger().debugEntry().command(args).log();
             Process process = new ProcessBuilder(args).start();
 
 
@@ -77,13 +75,16 @@ public class ShellUtils {
                 int exitCode = process.exitValue();
                 if (exitCode != 0) {
 
-                    logger.errorEntry()
+                    String errorMessage = String.format("Command '%s' failed with exit code %d: %s",
+                            String.join(" ", args), exitCode, String.join("\n", outputLines));
+                    getLogger().errorEntry()
                             .message("Command failed")
                             .field("command", String.join(" ", args))
                             .field("exitCode", exitCode)
                             .field("stdout", String.join("\n", outputLines))
                             .field("stderr", errorBuilder.toString()).log();
-                    throw new CommandFailedException("whatever");
+
+                    throw new CommandFailedException(errorMessage);
                 }
 
                 return Collections.unmodifiableList(outputLines);
@@ -91,15 +92,19 @@ public class ShellUtils {
         } catch (IOException e) {
             String errorMessage = String.format("Failed to execute command '%s': %s",
                     String.join(" ", args), e.getMessage());
-            logger.error(errorMessage);
+            getLogger().error(errorMessage);
             throw new CommandFailedException(errorMessage);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             String errorMessage = String.format("Failed to execute command '%s': %s",
                     String.join(" ", args), e.getMessage());
-            logger.error(errorMessage);
+            getLogger().error(errorMessage);
             throw new CommandFailedException(errorMessage);
         }
+    }
+
+    private static CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
     }
 
     public static String resolveToolBoxUser() {
