@@ -28,10 +28,8 @@ public class ConfigManager {
     public static Map<String, String> values = new HashMap<>();
 
     static {
-        if (!checkPrerequisites()){
-            System.err.println("Neither Plesk or bind are installed. Ceasing execution.");
-            System.exit(1);
-        }
+        checkPrerequisites();
+
         try {
             loadConfig();
             getLogger().
@@ -113,9 +111,18 @@ public class ConfigManager {
         return EnvironmentConstants.APP_USER;
     }
 
-    public static boolean checkPrerequisites() {
-        return !Files.isExecutable(Paths.get(Executables.PLESK_CLI_EXECUTABLE)) && !Files.isExecutable(
-                Paths.get(Executables.BIND_REMOVE_ZONE_EXECUTABLE));
+    public static void checkPrerequisites() {
+        boolean pleskExists = Files.isExecutable(Paths.get(Executables.PLESK_CLI_EXECUTABLE));
+        boolean bindExists = Files.isExecutable(Paths.get(Executables.BIND_REMOVE_ZONE_EXECUTABLE));
+
+        System.out.println("Plesk executable exists: " + pleskExists);
+        System.out.println("Bind executable exists: " + bindExists);
+
+        if (!pleskExists && !bindExists) {
+            System.err.println("CRITICAL ERROR: Neither Plesk nor Bind are installed. Exiting immediately!");
+            System.exit(1);
+        }
+
     }
 
 }
