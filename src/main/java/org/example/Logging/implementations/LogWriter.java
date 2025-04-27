@@ -22,7 +22,8 @@ public class LogWriter {
     private final LogConfig config;
     private final String userName;
 
-    public LogWriter(LogConfig config, String userName) {
+    public LogWriter(LogConfig config,
+                     String userName) {
         this.config = config;
         this.userName = userName;
 
@@ -59,7 +60,8 @@ public class LogWriter {
         }
     }
 
-    public synchronized void write(LogLevel level, LogEntry entry) {
+    public synchronized void write(LogLevel level,
+                                   LogEntry entry) {
         if (!config.isLoggable(level)) {
             return;
         }
@@ -72,8 +74,7 @@ public class LogWriter {
         for (var field : entry.getFields().entrySet()) {
             logEntry.append(" | ").append(field.getKey()).append("=").append(field.getValue());
         }
-
-        if (level == LogLevel.DEBUG || config.isVerbose()) {
+        if (config.getGlobalLogLevel() == LogLevel.DEBUG || config.isVerbose()) {
             System.out.println(logEntry);
         }
 
