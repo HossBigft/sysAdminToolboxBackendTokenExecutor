@@ -1,8 +1,5 @@
 package org.example;
 
-import java.util.Arrays;
-import java.util.stream.Stream;
-
 public sealed interface ServiceCommand permits ServiceCommand.Ns, ServiceCommand.Plesk {
 
     public enum Ns implements ServiceCommand {
@@ -15,13 +12,17 @@ public sealed interface ServiceCommand permits ServiceCommand.Ns, ServiceCommand
         GET_TESTMAIL_CREDENTIALS;
     }
 
-    static ServiceCommand valueOf(String name) {
-        String upperName = name.toUpperCase();
+    static ServiceCommand valueOf(String qualifiedName) {
+        String[] parts = qualifiedName.split("\\.", 2);
 
-        return Stream.of(Ns.values(), Plesk.values())
-                .flatMap(Arrays::stream)
-                .filter(cmd -> cmd.name().equals(upperName))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No enum constant matching: " + name));
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Expected format: TYPE.VALUE, got: " + qualifiedName);
+        }
+
+        return switch (parts[0].toUpperCase()) {
+            case "NS" -> Ns.valueOf(parts[1].toUpperCase());
+            case "PLESK" -> Plesk.valueOf(parts[1].toUpperCase());
+            default -> throw new IllegalArgumentException("Unknown enum type: " + parts[0]);
+        };
     }
 }
