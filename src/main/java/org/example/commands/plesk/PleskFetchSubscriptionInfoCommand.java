@@ -23,30 +23,12 @@ public class PleskFetchSubscriptionInfoCommand implements Command<Optional<Array
         ObjectMapper objectMapper = new ObjectMapper();
         ArrayNode resultArray = objectMapper.createArrayNode();
 
-        if (subscriptionInfoList.isPresent() && !subscriptionInfoList.get().isEmpty()) {
+        if (subscriptionInfoList.isPresent()) {
             for (String info : subscriptionInfoList.get()) {
                 if (info != null && !info.trim().isEmpty()) {
                     try {
                         SubscriptionDetails details = SubscriptionDetails.parse(info);
-
-                        ObjectNode subscriptionNode = objectMapper.createObjectNode();
-                        subscriptionNode.put("host", details.host());
-                        subscriptionNode.put("id", details.id());
-                        subscriptionNode.put("name", details.name());
-                        subscriptionNode.put("username", details.username());
-                        subscriptionNode.put("userlogin", details.userlogin());
-
-
-                        ArrayNode domainsArray = subscriptionNode.putArray("domains");
-                        for (String domain : details.domains()) {
-                            domainsArray.add(domain);
-                        }
-
-                        subscriptionNode.put("is_space_overused", details.isSpaceOverused());
-                        subscriptionNode.put("subscription_size_mb", details.subscriptionSizeMb());
-                        subscriptionNode.put("subscription_status", details.subscriptionStatus());
-
-                        resultArray.add(subscriptionNode);
+                        resultArray.add(details.toJsonNode(objectMapper));
                     } catch (Exception e) {
                         System.err.println("Error processing subscription info: " + e.getMessage());
                     }
@@ -66,17 +48,9 @@ public class PleskFetchSubscriptionInfoCommand implements Command<Optional<Array
     }
 
 
-    private record SubscriptionDetails(
-            String host,
-            String id,
-            String name,
-            String username,
-            String userlogin,
-            List<String> domains,
-            boolean isSpaceOverused,
-            int subscriptionSizeMb,
-            String subscriptionStatus
-    ) {
+    private record SubscriptionDetails(String host, String id, String name, String username, String userlogin,
+                                       List<String> domains, boolean isSpaceOverused, int subscriptionSizeMb,
+                                       String subscriptionStatus) {
         public static SubscriptionDetails parse(String subscriptionInfo) {
             String[] resultLines = subscriptionInfo.split("\t");
 
@@ -88,24 +62,38 @@ public class PleskFetchSubscriptionInfoCommand implements Command<Optional<Array
             String subscriptionStatus = DomainStatus.getStatusString(statusCode);
 
 
-            return new SubscriptionDetails(
-                    resultLines[0],  // host
+            return new SubscriptionDetails(resultLines[0],  // host
                     resultLines[1],  // id
                     resultLines[2],  // name
                     resultLines[3],  // username
                     resultLines[4],  // userlogin
-                    domains,
-                    isSpaceOverused,
-                    subscriptionSizeMb,
-                    subscriptionStatus
-            );
+                    domains, isSpaceOverused, subscriptionSizeMb, subscriptionStatus);
+        }
+
+        public ObjectNode toJsonNode(ObjectMapper mapper) {
+            ObjectNode node = mapper.createObjectNode();
+            node.put("host", this.host);
+            node.put("id", this.id);
+            node.put("name", this.name);
+            node.put("username", this.username);
+            node.put("userlogin", this.userlogin);
+
+            // Add domains as array
+            ArrayNode domainsArray = node.putArray("domains");
+            for (String domain : this.domains) {
+                domainsArray.add(domain);
+            }
+
+            node.put("is_space_overused", this.isSpaceOverused);
+            node.put("subscription_size_mb", this.subscriptionSizeMb);
+            node.put("subscription_status", this.subscriptionStatus);
+
+            return node;
         }
 
         private enum DomainStatus {
-            ONLINE(0, "online"),
-            SUBSCRIPTION_DISABLED(2, "subscription_is_disabled"),
-            DISABLED_BY_ADMIN(16, "domain_disabled_by_admin"),
-            DISABLED_BY_CLIENT(64, "domain_disabled_by_client");
+            ONLINE(0, "online"), SUBSCRIPTION_DISABLED(2, "subscription_is_disabled"), DISABLED_BY_ADMIN(16,
+                    "domain_disabled_by_admin"), DISABLED_BY_CLIENT(64, "domain_disabled_by_client");
 
             private final int code;
             private final String status;
