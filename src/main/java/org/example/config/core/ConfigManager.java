@@ -3,18 +3,21 @@ package org.example.config.core;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.example.config.database.DatabaseSetupCoordinator;
+import org.example.config.security.FileSecurityManager;
+import org.example.config.security.SudoPrivilegeManager;
 import org.example.constants.EnvironmentConstants;
+import org.example.constants.Executables;
 import org.example.exceptions.CommandFailedException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.utils.Utils;
-import org.example.config.database.DatabaseSetupCoordinator;
-import org.example.config.security.FileSecurityManager;
-import org.example.config.security.SudoPrivilegeManager;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -25,6 +28,10 @@ public class ConfigManager {
     public static Map<String, String> values = new HashMap<>();
 
     static {
+        if (!checkPrerequisites()){
+            System.err.println("Neither Plesk or bind are installed. Ceasing execution.");
+            System.exit(1);
+        }
         try {
             loadConfig();
             getLogger().
@@ -106,5 +113,9 @@ public class ConfigManager {
         return EnvironmentConstants.APP_USER;
     }
 
+    public static boolean checkPrerequisites() {
+        return !Files.isExecutable(Paths.get(Executables.PLESK_CLI_EXECUTABLE)) && !Files.isExecutable(
+                Paths.get(Executables.BIND_REMOVE_ZONE_EXECUTABLE));
+    }
 
 }
