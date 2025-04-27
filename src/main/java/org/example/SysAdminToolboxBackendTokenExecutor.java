@@ -1,9 +1,6 @@
 package org.example;
 
-import org.example.commands.picocli.ExecuteCliCommand;
-import org.example.commands.picocli.GetLoginLinkCliCommand;
-import org.example.commands.picocli.GetSubscriptionInfoCliCommand;
-import org.example.commands.picocli.GetTestMailboxCliCommand;
+import org.example.commands.picocli.*;
 import org.example.logging.core.LogLevel;
 import org.example.logging.facade.LogManager;
 import picocli.CommandLine;
@@ -38,6 +35,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         commandLine.addSubcommand(new GetLoginLinkCliCommand(app));
         commandLine.addSubcommand(new GetSubscriptionInfoCliCommand(app));
         commandLine.addSubcommand(new ExecuteCliCommand(app));
+        commandLine.addSubcommand(new InitCliCommand(app));
 
 
         commandLine.parseArgs(args);

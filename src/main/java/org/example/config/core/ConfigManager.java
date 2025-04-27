@@ -41,7 +41,7 @@ public class ConfigManager {
     private ConfigManager() {
     }
 
-    private static void loadConfig() throws IOException, CommandFailedException, URISyntaxException {
+    public static void loadConfig() throws IOException, CommandFailedException, URISyntaxException {
         File envFile = new File(EnvironmentConstants.ENV_PATH);
         ObjectMapper mapper = new ObjectMapper();
 
