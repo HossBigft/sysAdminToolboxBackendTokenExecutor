@@ -12,7 +12,8 @@ public class LogEntry {
         return field("Message", message);
     }
 
-    public LogEntry field(String key, Object value) {
+    public LogEntry field(String key,
+                          Object value) {
         if (value != null) {
             fields.put(key, value);
         }
@@ -54,7 +55,8 @@ public class LogEntry {
         return masked;
     }
 
-    public LogEntry action(String action, String target) {
+    public LogEntry action(String action,
+                           String target) {
         return field("Action", action).field("Target", target);
     }
 
@@ -64,5 +66,10 @@ public class LogEntry {
 
     public Map<String, Object> getFields() {
         return fields;
+    }
+
+    @Override
+    public String toString() {
+        return fields.toString();
     }
 }
