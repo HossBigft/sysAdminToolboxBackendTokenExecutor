@@ -24,6 +24,7 @@ public sealed interface AvailableCommand permits AvailableCommand.BIND, Availabl
     enum Plesk implements AvailableCommand {
         GET_LOGIN_LINK,
         FETCH_SUBSCRIPTION_INFO,
-        GET_TESTMAIL_CREDENTIALS
+        GET_TESTMAIL_CREDENTIALS,
+        RESTART_DNS_SERVICE
     }
 }
