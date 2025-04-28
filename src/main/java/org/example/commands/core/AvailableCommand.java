@@ -1,4 +1,4 @@
-package org.example.core;
+package org.example.commands.core;
 
 public sealed interface AvailableCommand permits AvailableCommand.BIND, AvailableCommand.Plesk {
 

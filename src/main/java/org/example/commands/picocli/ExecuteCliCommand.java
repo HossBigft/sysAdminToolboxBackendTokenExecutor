@@ -1,7 +1,7 @@
 package org.example.commands.picocli;
 
 import org.example.commands.CommandRequest;
-import org.example.core.PleskCommandExecutorFactory;
+import org.example.commands.core.PleskCommandExecutorFactory;
 import org.example.SysAdminToolboxBackendTokenExecutor;
 import org.example.value_types.Token;
 import org.example.token_handler.TokenProcessor;
