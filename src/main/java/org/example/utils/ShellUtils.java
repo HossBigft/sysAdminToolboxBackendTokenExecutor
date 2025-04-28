@@ -117,7 +117,7 @@ public class ShellUtils {
                 .flatMap(Optional::stream)
                 .filter(ShellUtils::isValidUser)
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Could not determine valid user for toolbox."));
+                .orElseThrow(() -> new IllegalStateException("Could not determine valid system user for app."));
     }
 
     public static Optional<String> getSudoUser() {
