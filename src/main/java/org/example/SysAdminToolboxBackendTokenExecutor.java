@@ -10,7 +10,7 @@ import picocli.CommandLine.Option;
 
 import java.util.concurrent.Callable;
 
-@Command(name = "sysadmintoolbox", description = "Safe root wrapper for executing system administration commands", mixinStandardHelpOptions = true)
+@Command(name = "sysadmintoolbox", description = "Safe root wrapper for executing system administration commands", version = "0.1", mixinStandardHelpOptions = true)
 public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
     @Option(names = {"--debug"}, description = "Enable debug output", scope = CommandLine.ScopeType.INHERIT)
