@@ -1,7 +1,7 @@
 # Description
 
 A secure wrapper for executing privileged commands related to Plesk and BIND server administration. Commands to execute
-passed via signed tokens. [Example of generator](https://github.com/HossBigft/signedTokenGenerator)
+passed via signed tokens encoded with Base64. [Example of generator](https://github.com/HossBigft/signedTokenGenerator)
 
 # Building the Binary
 

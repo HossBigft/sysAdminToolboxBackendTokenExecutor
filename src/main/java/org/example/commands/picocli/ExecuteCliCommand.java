@@ -1,13 +1,14 @@
 package org.example.commands.picocli;
 
+import org.example.SysAdminToolboxBackendTokenExecutor;
 import org.example.commands.CommandRequest;
 import org.example.commands.core.PleskCommandExecutorFactory;
-import org.example.SysAdminToolboxBackendTokenExecutor;
-import org.example.value_types.Token;
 import org.example.token_handler.TokenProcessor;
+import org.example.value_types.Token;
 import picocli.CommandLine;
 
 import javax.naming.CommunicationException;
+import java.util.Base64;
 
 @CommandLine.Command(
         name = "execute",
@@ -15,7 +16,7 @@ import javax.naming.CommunicationException;
 )
 public class ExecuteCliCommand extends AbstractCliCommand {
     @CommandLine.Parameters(index = "0", description = "The signed token")
-    private String rawToken;
+    private String encodedJson;
 
     public ExecuteCliCommand(SysAdminToolboxBackendTokenExecutor parent) {
         super(parent);
@@ -24,7 +25,8 @@ public class ExecuteCliCommand extends AbstractCliCommand {
     @Override
     public Integer call() {
         try {
-            Token token = Token.fromJson(rawToken);
+            String rawJson = new String(Base64.getDecoder().decode(encodedJson));
+            Token token = Token.fromJson(rawJson);
             CommandRequest command = new TokenProcessor()
                     .processToken(token)
                     .orElseThrow(CommunicationException::new);
@@ -32,7 +34,7 @@ public class ExecuteCliCommand extends AbstractCliCommand {
             System.out.println(new PleskCommandExecutorFactory().build(command).execute());
             return 0;
         } catch (Exception e) {
-            System.out.println("Failed to parse token" + rawToken + " ");
+            System.out.println("Failed to parse token" + encodedJson + " ");
             e.printStackTrace();
             return 1;
         }
