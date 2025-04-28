@@ -2,6 +2,8 @@ package org.example.commands.picocli;
 
 import org.example.SysAdminToolboxBackendTokenExecutor;
 import org.example.commands.CommandRequest;
+import org.example.commands.core.AvailableCommand;
+import org.example.commands.core.NsExecutorFactory;
 import org.example.commands.core.PleskCommandExecutorFactory;
 import org.example.token_handler.TokenProcessor;
 import org.example.value_types.Token;
@@ -31,7 +33,13 @@ public class ExecuteCliCommand extends AbstractCliCommand {
                     .processToken(token)
                     .orElseThrow(CommunicationException::new);
             System.out.println("Extracted command " + command);
-            System.out.println(new PleskCommandExecutorFactory().build(command).execute());
+            switch (command.commandName()) {
+                case AvailableCommand.Plesk pleskCommand ->
+                        System.out.println(new PleskCommandExecutorFactory().build(command).execute());
+                case AvailableCommand.NS nsCommand ->
+                        System.out.println(new NsExecutorFactory().build(command).execute());
+            }
+
             return 0;
         } catch (Exception e) {
             System.out.println("Failed to parse token" + encodedJson + " ");
