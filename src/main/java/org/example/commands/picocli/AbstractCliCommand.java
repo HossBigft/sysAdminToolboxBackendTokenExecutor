@@ -11,15 +11,7 @@ public abstract class AbstractCliCommand implements Callable<Integer> {
     public AbstractCliCommand(SysAdminToolboxBackendTokenExecutor parent) {
         this.parent = parent;
     }
-
-    /**
-     * Get the PleskService instance from the parent application.
-     *
-     * @return The shared PleskService instance.
-     */
-    protected PleskService getPleskService() {
-        return parent.getPleskService();
-    }
+    
 
     /**
      * Print error message to standard error and return failure code.

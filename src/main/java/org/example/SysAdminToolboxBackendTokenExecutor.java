@@ -1,6 +1,7 @@
 package org.example;
 
-import org.example.commands.picocli.*;
+import org.example.commands.picocli.ExecuteCliCommand;
+import org.example.commands.picocli.InitCliCommand;
 import org.example.logging.core.LogLevel;
 import org.example.logging.facade.LogManager;
 import picocli.CommandLine;
@@ -9,35 +10,22 @@ import picocli.CommandLine.Option;
 
 import java.util.concurrent.Callable;
 
-@Command(
-        name = "sysadmintoolbox",
-        description = "Safe root wrapper for executing system administration commands",
-        mixinStandardHelpOptions = true
-)
+@Command(name = "sysadmintoolbox", description = "Safe root wrapper for executing system administration commands", mixinStandardHelpOptions = true)
 public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
-    private final PleskService pleskService;
 
     @Option(names = {"--debug"}, description = "Enable debug output", scope = CommandLine.ScopeType.INHERIT)
     boolean debug;
     @Option(names = {"--verbose"}, description = "Enable debug output", scope = CommandLine.ScopeType.INHERIT)
     boolean verbose;
 
-    public SysAdminToolboxBackendTokenExecutor() {
-        this.pleskService = new PleskService();
-    }
 
     public static void main(String[] args) {
 
         SysAdminToolboxBackendTokenExecutor app = new SysAdminToolboxBackendTokenExecutor();
         CommandLine commandLine = new CommandLine(app);
 
-        commandLine.addSubcommand(new GetTestMailboxCliCommand(app));
-        commandLine.addSubcommand(new GetLoginLinkCliCommand(app));
-        commandLine.addSubcommand(new GetSubscriptionInfoCliCommand(app));
         commandLine.addSubcommand(new ExecuteCliCommand(app));
         commandLine.addSubcommand(new InitCliCommand(app));
-
-
         commandLine.parseArgs(args);
 
 
@@ -48,15 +36,10 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             new LogManager.Builder().setVerbose().apply();
         }
 
-
         int exitCode = commandLine.execute(args);
-
         System.exit(exitCode);
     }
 
-    public PleskService getPleskService() {
-        return pleskService;
-    }
 
     @Override
     public Integer call() {
