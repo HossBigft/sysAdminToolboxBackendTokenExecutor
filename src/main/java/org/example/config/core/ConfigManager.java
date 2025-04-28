@@ -120,7 +120,7 @@ public class ConfigManager {
     }
 
     private static File getConfigDir() {
-        final String appUser = ShellUtils.resolveToolBoxUser();
+        final String appUser = ShellUtils.resolveAppUser();
         return Paths.get("/home/" + appUser + "/." + EnvironmentConstants.APP_NAME).toFile();
     }
 

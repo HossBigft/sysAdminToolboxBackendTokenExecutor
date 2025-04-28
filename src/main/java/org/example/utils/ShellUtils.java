@@ -3,21 +3,19 @@ package org.example.utils;
 import org.example.exceptions.CommandFailedException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
-import org.example.config.security.SudoPrivilegeManager;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class ShellUtils {
@@ -30,8 +28,7 @@ public class ShellUtils {
         } else if (isCommandAvailable("mysql")) {
             return "mysql";
         } else {
-            throw new CommandFailedException(
-                    "Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
+            throw new CommandFailedException("Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
         }
     }
 
@@ -48,41 +45,42 @@ public class ShellUtils {
             List<String> outputLines = new ArrayList<>();
             StringBuilder errorBuilder = new StringBuilder();
 
-            try (
-                    BufferedReader stdOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                    BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()))
-            ) {
-                CompletableFuture<Void> outputFuture = CompletableFuture.runAsync(() ->
-                        stdOutput.lines().forEach(outputLines::add));
+            try (BufferedReader stdOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                 BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                CompletableFuture<Void>
+                        outputFuture =
+                        CompletableFuture.runAsync(() -> stdOutput.lines().forEach(outputLines::add));
 
-                CompletableFuture<Void> errorFuture = CompletableFuture.runAsync(() ->
-                        stdError.lines().forEach(line -> errorBuilder.append(line).append("\n")));
+                CompletableFuture<Void>
+                        errorFuture =
+                        CompletableFuture.runAsync(() -> stdError.lines()
+                                .forEach(line -> errorBuilder.append(line).append("\n")));
 
-                boolean
-                        completed =
-                        process.waitFor(30,
-                                TimeUnit.SECONDS);
+                boolean completed = process.waitFor(30, TimeUnit.SECONDS);
                 if (!completed) {
                     process.destroyForcibly();
-                    throw new CommandFailedException("Command execution timed out: " + String.join(" ",
-                            args));
+                    throw new CommandFailedException("Command execution timed out: " + String.join(" ", args));
                 }
 
 
-                CompletableFuture.allOf(outputFuture,
-                        errorFuture).join();
+                CompletableFuture.allOf(outputFuture, errorFuture).join();
 
                 int exitCode = process.exitValue();
                 if (exitCode != 0) {
 
-                    String errorMessage = String.format("Command '%s' failed with exit code %d: %s",
-                            String.join(" ", args), exitCode, String.join("\n", outputLines));
+                    String
+                            errorMessage =
+                            String.format("Command '%s' failed with exit code %d: %s",
+                                    String.join(" ", args),
+                                    exitCode,
+                                    String.join("\n", outputLines));
                     getLogger().errorEntry()
                             .message("Command failed")
                             .field("command", String.join(" ", args))
                             .field("exitCode", exitCode)
                             .field("stdout", String.join("\n", outputLines))
-                            .field("stderr", errorBuilder.toString()).log();
+                            .field("stderr", errorBuilder.toString())
+                            .log();
 
                     throw new CommandFailedException(errorMessage);
                 }
@@ -90,14 +88,16 @@ public class ShellUtils {
                 return Collections.unmodifiableList(outputLines);
             }
         } catch (IOException e) {
-            String errorMessage = String.format("Failed to execute command '%s': %s",
-                    String.join(" ", args), e.getMessage());
+            String
+                    errorMessage =
+                    String.format("Failed to execute command '%s': %s", String.join(" ", args), e.getMessage());
             getLogger().error(errorMessage);
             throw new CommandFailedException(errorMessage);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            String errorMessage = String.format("Failed to execute command '%s': %s",
-                    String.join(" ", args), e.getMessage());
+            String
+                    errorMessage =
+                    String.format("Failed to execute command '%s': %s", String.join(" ", args), e.getMessage());
             getLogger().error(errorMessage);
             throw new CommandFailedException(errorMessage);
         }
@@ -107,10 +107,17 @@ public class ShellUtils {
         return LogManager.getInstance().getLogger();
     }
 
-    public static String resolveToolBoxUser() {
-        return Stream.of(getSudoUser(), getSystemUser(), getUserFromPath()).flatMap(Optional::stream)
-                .filter(ShellUtils::isValidUser).findFirst().orElseThrow(
-                        () -> new IllegalStateException("Could not determine valid user for toolbox."));
+    public static String resolveAppUser() {
+
+        Optional<String> sudoUser = getSudoUser();
+        Optional<String> systemUser = getSystemUser();
+        Optional<String> pathUser = getUserFromPath();
+
+        return Stream.of(sudoUser, systemUser, pathUser)
+                .flatMap(Optional::stream)
+                .filter(ShellUtils::isValidUser)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Could not determine valid user for toolbox."));
     }
 
     public static Optional<String> getSudoUser() {
@@ -123,33 +130,32 @@ public class ShellUtils {
     }
 
     public static Optional<String> getUserFromPath() {
-        String cwd = System.getProperty("user.dir");
-        if (cwd == null) return Optional.empty();
-
-        Path path = Paths.get(cwd).toAbsolutePath();
-        for (int i = 0; i < path.getNameCount() - 1; i++) {
-            if ("home".equals(path.getName(i).toString())) {
-                String username = path.getName(i + 1).toString();
-                return Optional.of(username);
+        try {
+            String path = ProcessHandle.current().info().command().orElse("");
+            Pattern pattern = Pattern.compile("/home/([^/]+)/");
+            Matcher matcher = pattern.matcher(path);
+            if (matcher.find()) {
+                return Optional.of(matcher.group(1));
             }
+            return Optional.empty();
+        } catch (Exception e) {
+            return Optional.empty();
         }
-        return Optional.empty();
     }
 
     public static boolean isValidUser(String user) {
         return !"root".equals(user);
     }
 
+    public static String getExecutablePath() {
+        return ProcessHandle.current().info().command().orElse("");
+    }
+
     public static String resolveShellUser() {
         return Stream.of(getSudoUser(), getSystemUser())
                 .flatMap(Optional::stream)
                 .findFirst()
-                .orElseThrow(
-                        () -> new IllegalStateException("Could not determine valid user for running executable."));
+                .orElseThrow(() -> new IllegalStateException("Could not determine valid user for running executable."));
     }
 
-    public static Path getExecutablePath() throws URISyntaxException {
-        return Paths.get(SudoPrivilegeManager.class.getProtectionDomain()
-                .getCodeSource().getLocation().toURI());
-    }
 }
