@@ -1,6 +1,6 @@
 package org.example.config.security;
 
-import org.example.constants.EnvironmentConstants;
+import org.example.config.core.ConfigManager;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 
@@ -20,7 +20,7 @@ public class FileSecurityManager {
     private static final FileAccessPolicy
             dotenvFilePolicy =
             new FileAccessPolicy(DOTENV_PERMISSIONS, DOTENV_OWNER, DOTENV_GROUP);
-    private static final File dotEnvFile = new File(EnvironmentConstants.ENV_FILENAME);
+    private static final File dotEnvFile = new File(ConfigManager.getEnVFilePath());
 
     public void ensureDotEnvPermissions() throws IOException {
         if (!isFilePermissionsSecure(dotEnvFile, dotenvFilePolicy)) {
@@ -49,11 +49,21 @@ public class FileSecurityManager {
         }
         if (!ownerOk) {
             getLogger().
-                    warn("[" + filename + "] File owner is incorrect: expected " + policy.owner() + " for path " + path);
+                    warn("[" +
+                            filename +
+                            "] File owner is incorrect: expected " +
+                            policy.owner() +
+                            " for path " +
+                            path);
         }
         if (!groupOk) {
             getLogger().
-                    warn("[" + filename + "] File group is incorrect: expected " + policy.group() + " for path " + path);
+                    warn("[" +
+                            filename +
+                            "] File group is incorrect: expected " +
+                            policy.group() +
+                            " for path " +
+                            path);
         }
 
         return permsOk && ownerOk && groupOk;

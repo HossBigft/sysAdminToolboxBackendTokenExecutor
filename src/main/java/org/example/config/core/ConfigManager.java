@@ -26,6 +26,7 @@ import java.util.function.Supplier;
 public class ConfigManager {
     public static final int DB_USER_PASSWORD_LENGTH = 15;
     private static final String ENV_DB_PASS_FIELD = "DATABASE_PASSWORD";
+    private static final String ENV_FILE_PATH = getConfigDir() + "/" + EnvironmentConstants.ENV_FILENAME;
     public static Map<String, String> values = new HashMap<>();
 
     static {
@@ -33,7 +34,7 @@ public class ConfigManager {
 
         try {
             loadConfig();
-            getLogger().debug("Config file " + EnvironmentConstants.ENV_FILENAME + " is loaded.");
+            getLogger().debug("Config file " + ENV_FILE_PATH + " is loaded.");
         } catch (IOException e) {
             throw new RuntimeException("Failed to load config", e);
         } catch (CommandFailedException | URISyntaxException e) {
@@ -45,14 +46,18 @@ public class ConfigManager {
     private ConfigManager() {
     }
 
+    public static String getEnVFilePath() {
+        return ENV_FILE_PATH;
+    }
+
     public static void loadConfig() throws IOException, CommandFailedException, URISyntaxException {
-        File envFile = new File(EnvironmentConstants.ENV_FILENAME);
+        File envFile = new File(ENV_FILE_PATH);
         ObjectMapper mapper = new ObjectMapper();
 
         try {
             values = mapper.readValue(envFile, new TypeReference<>() {
             });
-            getLogger().debug("Loaded dotenv " + EnvironmentConstants.ENV_FILENAME);
+            getLogger().debug("Loaded dotenv " + ENV_FILE_PATH);
         } catch (IOException e) {
             values = new HashMap<>();
             getLogger().info("Dotenv file not found or invalid.");
@@ -87,20 +92,17 @@ public class ConfigManager {
     }
 
     public static void updateDotEnv() throws IOException {
-        getLogger().info("Creating dotenv" + EnvironmentConstants.ENV_FILENAME);
+
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        File configDir = getConfigDir();
-        File envFile = new File(EnvironmentConstants.ENV_FILENAME, String.valueOf(configDir.toPath()));
+        initConfigDir();
 
+        File envFile = new File(ENV_FILE_PATH);
+        getLogger().info("Creating dotenv " + envFile);
         mapper.writeValue(envFile, Map.of(ENV_DB_PASS_FIELD, getDatabasePassword()));
 
-        getLogger().info("New data written to" + EnvironmentConstants.ENV_FILENAME);
-    }
-
-    public static String getDatabasePassword() {
-        return values.get(ENV_DB_PASS_FIELD);
+        getLogger().info("New data written to " + ENV_FILE_PATH);
     }
 
     private static void initConfigDir() throws IOException {
@@ -111,6 +113,10 @@ public class ConfigManager {
             Files.createDirectories(configDir.toPath());
             getLogger().infoEntry().message("Created config directory").field("File", configDir.toPath()).log();
         }
+    }
+
+    public static String getDatabasePassword() {
+        return values.get(ENV_DB_PASS_FIELD);
     }
 
     private static File getConfigDir() {
@@ -125,9 +131,6 @@ public class ConfigManager {
     public static void checkPrerequisites() {
         boolean pleskExists = Files.isExecutable(Paths.get(Executables.PLESK_CLI_EXECUTABLE));
         boolean bindExists = Files.isExecutable(Paths.get(Executables.BIND_REMOVE_ZONE_EXECUTABLE));
-
-        System.out.println("Plesk executable exists: " + pleskExists);
-        System.out.println("Bind executable exists: " + bindExists);
 
         if (!pleskExists && !bindExists) {
             System.err.println("CRITICAL ERROR: Neither Plesk nor Bind are installed. Exiting immediately!");
