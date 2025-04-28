@@ -15,7 +15,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
     @Option(names = {"--debug"}, description = "Enable debug output", scope = CommandLine.ScopeType.INHERIT)
     boolean debug;
-    @Option(names = {"--verbose"}, description = "Enable debug output", scope = CommandLine.ScopeType.INHERIT)
+    @Option(names = {"--verbose"}, description = "Print log information", scope = CommandLine.ScopeType.INHERIT)
     boolean verbose;
 
 

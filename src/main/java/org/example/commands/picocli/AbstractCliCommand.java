@@ -11,7 +11,7 @@ public abstract class AbstractCliCommand implements Callable<Integer> {
     public AbstractCliCommand(SysAdminToolboxBackendTokenExecutor parent) {
         this.parent = parent;
     }
-    
+
 
     /**
      * Print error message to standard error and return failure code.
