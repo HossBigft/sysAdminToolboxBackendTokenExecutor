@@ -119,7 +119,7 @@ public class ConfigManager {
         return values.get(ENV_DB_PASS_FIELD);
     }
 
-    private static File getConfigDir() {
+    public static File getConfigDir() {
         final String appUser = ShellUtils.resolveAppUser();
         return Paths.get("/home/" + appUser + "/." + EnvironmentConstants.APP_NAME).toFile();
     }

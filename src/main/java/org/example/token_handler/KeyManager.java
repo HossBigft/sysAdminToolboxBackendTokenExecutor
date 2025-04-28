@@ -1,5 +1,7 @@
 package org.example.token_handler;
 
+import org.example.config.core.ConfigManager;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,12 +13,14 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
+
+
 public class KeyManager {
-    private static final Path PUBLIC_KEY = Paths.get("pub.key");
+    private static final Path PUBLIC_KEY_FILENAME = Paths.get("pub.key");
 
     public PublicKey getPublicKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-
-        String base64Key = Files.readString(PUBLIC_KEY).trim();
+        Path keyPath = Paths.get(ConfigManager.getConfigDir().toString() +"/" +PUBLIC_KEY_FILENAME);
+        String base64Key = Files.readString(keyPath).trim();
         byte[] derBytes = Base64.getDecoder().decode(base64Key);
 
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(derBytes);
