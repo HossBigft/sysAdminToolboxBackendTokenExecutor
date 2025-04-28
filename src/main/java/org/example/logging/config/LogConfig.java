@@ -4,7 +4,7 @@ import org.example.constants.EnvironmentConstants;
 import org.example.logging.core.LogLevel;
 
 public class LogConfig {
-    public static final String DEFAULT_LOG_DIRECTORY = "/var/log/" + EnvironmentConstants.APP_USER + "/";
+    public static final String DEFAULT_LOG_DIRECTORY = "/var/log/" + EnvironmentConstants.APP_NAME + "/";
     public static final String DEFAULT_LOG_FILE = "audit.log";
     private String logDirectory;
     private String logFile;

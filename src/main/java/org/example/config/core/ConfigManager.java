@@ -115,11 +115,11 @@ public class ConfigManager {
 
     private static File getConfigDir() {
         final String appUser = ShellUtils.resolveToolBoxUser();
-        return Paths.get("/home/" + appUser + "/." + EnvironmentConstants.APP_USER).toFile();
+        return Paths.get("/home/" + appUser + "/." + EnvironmentConstants.APP_NAME).toFile();
     }
 
     public static String getDatabaseUser() {
-        return EnvironmentConstants.APP_USER;
+        return EnvironmentConstants.APP_NAME;
     }
 
     public static void checkPrerequisites() {

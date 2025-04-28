@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.stream.Stream;
 
 public class TokenLifecycleManager {
-    private static final Path STORAGE_DIR = Path.of("/tmp/" + EnvironmentConstants.APP_USER + "/");
+    private static final Path STORAGE_DIR = Path.of("/tmp/" + EnvironmentConstants.APP_NAME + "/");
     private static final String STORAGE_FILENAME = "used_tokens.txt";
     private static final Path FULLPATH = STORAGE_DIR.resolve(STORAGE_FILENAME);
     private static final DateTimeFormatter TIMESTAMP_FORMAT =
