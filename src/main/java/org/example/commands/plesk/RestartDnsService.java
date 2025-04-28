@@ -9,14 +9,14 @@ import org.example.value_types.DomainName;
 public class RestartDnsService implements Command<Void> {
     private final DomainName domain;
 
-    public RestartDnsService(DomainName domain){
-        this.domain=domain;
+    public RestartDnsService(DomainName domain) {
+        this.domain = domain;
     }
 
     @Override
     public Void execute() throws CommandFailedException {
-        ShellUtils.runCommand(Executables.PLESK_CLI_EXECUTABLE, "dns", "--off", domain.name());
-        ShellUtils.runCommand(Executables.PLESK_CLI_EXECUTABLE, "dns", "--on", domain.name());
+        ShellUtils.runCommand(Executables.PLESK_CLI_EXECUTABLE, "bin", "dns", "--off", domain.name());
+        ShellUtils.runCommand(Executables.PLESK_CLI_EXECUTABLE, "bin", "dns", "--on", domain.name());
         return null;
     }
 }
