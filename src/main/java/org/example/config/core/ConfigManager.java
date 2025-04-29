@@ -11,7 +11,6 @@ import org.example.constants.Executables;
 import org.example.exceptions.CommandFailedException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
-import org.example.utils.ShellUtils;
 import org.example.utils.Utils;
 
 import java.io.File;
@@ -122,8 +121,11 @@ public class ConfigManager {
     }
 
     public static File getConfigDir() {
-        final String appUser = ShellUtils.resolveAppUser();
-        return Paths.get("/home/" + appUser + "/." + EnvironmentConstants.APP_NAME).toFile();
+        return cprovider.getConfigDir();
+    }
+
+    public static String getValue(String key) {
+        return values.get(key);
     }
 
     public static int getDatabasePasswordLength() {
@@ -143,10 +145,6 @@ public class ConfigManager {
             System.exit(1);
         }
 
-    }
-
-    public static String getValue(String key) {
-        return values.get(key);
     }
 
     public static void putValue(String key, String value) {
