@@ -24,17 +24,15 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class ConfigManager {
-    public static final int DB_USER_PASSWORD_LENGTH = 15;
-    private static final String ENV_DB_PASS_FIELD = "DATABASE_PASSWORD";
-    private static final String ENV_FILE_PATH = getConfigDir() + "/" + EnvironmentConstants.ENV_FILENAME;
     public static Map<String, String> values = new HashMap<>();
+    private static final ConfigProvider cprovider = new ConfigProvider();
 
     static {
         checkPrerequisites();
 
         try {
             loadConfig();
-            getLogger().debug("Config file " + ENV_FILE_PATH + " is loaded.");
+            getLogger().debug("Config file " + getEnvFilePath() + " is loaded.");
         } catch (IOException e) {
             throw new RuntimeException("Failed to load config", e);
         } catch (CommandFailedException | URISyntaxException e) {
@@ -47,17 +45,17 @@ public class ConfigManager {
     }
 
     public static String getEnVFilePath() {
-        return ENV_FILE_PATH;
+        return getEnvFilePath();
     }
 
     public static void loadConfig() throws IOException, CommandFailedException, URISyntaxException {
-        File envFile = new File(ENV_FILE_PATH);
+        File envFile = new File(getEnvFilePath());
         ObjectMapper mapper = new ObjectMapper();
 
         try {
             values = mapper.readValue(envFile, new TypeReference<>() {
             });
-            getLogger().debug("Loaded dotenv " + ENV_FILE_PATH);
+            getLogger().debug("Loaded dotenv " + getEnvFilePath());
         } catch (IOException e) {
             values = new HashMap<>();
             getLogger().info("Dotenv file not found or invalid.");
@@ -66,8 +64,8 @@ public class ConfigManager {
         boolean
                 updated =
                 computeIfAbsentOrBlank(values,
-                        ENV_DB_PASS_FIELD,
-                        () -> Utils.generatePassword(DB_USER_PASSWORD_LENGTH));
+                        cprovider.getEnvDbPassFieldName(),
+                        () -> Utils.generatePassword(cprovider.getDbUserPasswordLength()));
         if (updated) {
             updateDotEnv();
         }
@@ -98,11 +96,11 @@ public class ConfigManager {
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         initConfigDir();
 
-        File envFile = new File(ENV_FILE_PATH);
+        File envFile = new File(getEnvFilePath());
         getLogger().info("Creating dotenv " + envFile);
-        mapper.writeValue(envFile, Map.of(ENV_DB_PASS_FIELD, getDatabasePassword()));
+        mapper.writeValue(envFile, Map.of(cprovider.getEnvDbPassFieldName(), getDatabasePassword()));
 
-        getLogger().info("New data written to " + ENV_FILE_PATH);
+        getLogger().info("New data written to " + getEnvFilePath());
     }
 
     private static void initConfigDir() throws IOException {
@@ -116,7 +114,10 @@ public class ConfigManager {
     }
 
     public static String getDatabasePassword() {
-        return values.get(ENV_DB_PASS_FIELD);
+        return values.get(cprovider.getEnvDbPassFieldName());
+    }
+    public static int getDatabasePasswordLength() {
+        return cprovider.getDbUserPasswordLength();
     }
 
     public static File getConfigDir() {
@@ -139,4 +140,7 @@ public class ConfigManager {
 
     }
 
+    public static String getEnvFilePath() {
+        return cprovider.getEnvFile().getPath();
+    }
 }
