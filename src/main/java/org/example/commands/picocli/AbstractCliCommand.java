@@ -1,6 +1,5 @@
 package org.example.commands.picocli;
 
-import org.example.PleskService;
 import org.example.SysAdminToolboxBackendTokenExecutor;
 
 import java.util.concurrent.Callable;
