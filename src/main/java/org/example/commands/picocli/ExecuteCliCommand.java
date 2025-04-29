@@ -1,6 +1,7 @@
 package org.example.commands.picocli;
 
 import org.example.SysAdminToolboxBackendTokenExecutor;
+import org.example.commands.Command;
 import org.example.commands.CommandRequest;
 import org.example.commands.core.AvailableCommand;
 import org.example.commands.core.NsExecutorFactory;
@@ -11,6 +12,7 @@ import picocli.CommandLine;
 
 import javax.naming.CommunicationException;
 import java.util.Base64;
+import java.util.Optional;
 
 @CommandLine.Command(
         name = "execute",
@@ -27,29 +29,34 @@ public class ExecuteCliCommand extends AbstractCliCommand {
     @Override
     public Integer call() {
         try {
-            String rawJson = new String(Base64.getDecoder().decode(encodedJson));
-            Token token = Token.fromJson(rawJson);
-            CommandRequest command = new TokenProcessor()
-                    .processToken(token)
-                    .orElseThrow(CommunicationException::new);
-            System.out.println("Extracted command " + command);
-            switch (command.commandName()) {
-                case AvailableCommand.Plesk pleskCommand ->
-                        System.out.println(new PleskCommandExecutorFactory().build(command)
-                                .execute()
-                                .map(Object::toString)
-                                .orElse(""));
-                case AvailableCommand.NS nsCommand -> System.out.println(new NsExecutorFactory().build(command)
-                        .execute()
-                        .map(Object::toString)
-                        .orElse(""));
-            }
-
+            CommandRequest commandRequest = decodeAndProcessToken(encodedJson);
+            Optional<?> result = executeCommand(commandRequest);
+            result.ifPresent(System.out::println);
             return 0;
         } catch (Exception e) {
-            System.out.println("Failed to parse token" + encodedJson + " ");
+            System.err.println("Failed to execute token: " + encodedJson);
             e.printStackTrace();
             return 1;
         }
+    }
+
+    private CommandRequest decodeAndProcessToken(String encodedToken) throws Exception {
+        String rawJson = new String(Base64.getDecoder().decode(encodedToken));
+        Token token = Token.fromJson(rawJson);
+        return new TokenProcessor()
+                .processToken(token)
+                .orElseThrow(CommunicationException::new);
+    }
+
+    private Optional<?> executeCommand(CommandRequest commandRequest) throws Exception {
+        Command<?> executor = getExecutorForCommand(commandRequest);
+        return executor.execute();
+    }
+
+    private Command<?> getExecutorForCommand(CommandRequest commandRequest) {
+        return switch (commandRequest.commandName()) {
+            case AvailableCommand.Plesk pleskCommand -> new PleskCommandExecutorFactory().build(commandRequest);
+            case AvailableCommand.NS nsCommand -> new NsExecutorFactory().build(commandRequest);
+        };
     }
 }
