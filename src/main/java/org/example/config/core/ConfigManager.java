@@ -24,8 +24,8 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class ConfigManager {
-    public static Map<String, String> values = new HashMap<>();
     private static final ConfigProvider cprovider = new ConfigProvider();
+    private static Map<String, String> values = new HashMap<>();
 
     static {
         checkPrerequisites();
@@ -46,6 +46,10 @@ public class ConfigManager {
 
     public static String getEnVFilePath() {
         return getEnvFilePath();
+    }
+
+    public static String getEnvFilePath() {
+        return cprovider.getEnvFile().getPath();
     }
 
     public static void loadConfig() throws IOException, CommandFailedException, URISyntaxException {
@@ -114,15 +118,16 @@ public class ConfigManager {
     }
 
     public static String getDatabasePassword() {
-        return values.get(cprovider.getEnvDbPassFieldName());
-    }
-    public static int getDatabasePasswordLength() {
-        return cprovider.getDbUserPasswordLength();
+        return getValue(cprovider.getEnvDbPassFieldName());
     }
 
     public static File getConfigDir() {
         final String appUser = ShellUtils.resolveAppUser();
         return Paths.get("/home/" + appUser + "/." + EnvironmentConstants.APP_NAME).toFile();
+    }
+
+    public static int getDatabasePasswordLength() {
+        return cprovider.getDbUserPasswordLength();
     }
 
     public static String getDatabaseUser() {
@@ -140,7 +145,11 @@ public class ConfigManager {
 
     }
 
-    public static String getEnvFilePath() {
-        return cprovider.getEnvFile().getPath();
+    public static String getValue(String key) {
+        return values.get(key);
+    }
+
+    public static void putValue(String key, String value) {
+        values.put(key, value);
     }
 }

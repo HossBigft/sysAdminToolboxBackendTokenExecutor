@@ -107,7 +107,7 @@ public class DataBaseUserSetup {
 
     private void regenerateDbUserPassword() {
         databasePassword = Utils.generatePassword(ConfigManager.getDatabasePasswordLength());
-        ConfigManager.values.put("DATABASE_PASSWORD", databasePassword
+        ConfigManager.putValue("DATABASE_PASSWORD", databasePassword
         );
         getLogger().
                 info("Regenerate password for database user " + databaseUser);
