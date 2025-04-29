@@ -35,9 +35,9 @@ public class ExecuteCliCommand extends AbstractCliCommand {
             System.out.println("Extracted command " + command);
             switch (command.commandName()) {
                 case AvailableCommand.Plesk pleskCommand ->
-                        System.out.println(new PleskCommandExecutorFactory().build(command).execute());
+                        System.out.println(new PleskCommandExecutorFactory().build(command).execute().get());
                 case AvailableCommand.NS nsCommand ->
-                        System.out.println(new NsExecutorFactory().build(command).execute());
+                        System.out.println(new NsExecutorFactory().build(command).execute().get());
             }
 
             return 0;

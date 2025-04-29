@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class PleskFetchSubscriptionInfoCommand implements Command<Optional<ArrayNode>> {
+public class PleskFetchSubscriptionInfoCommand implements Command<ArrayNode> {
     final DomainName domain;
 
     public PleskFetchSubscriptionInfoCommand(DomainName domain) {

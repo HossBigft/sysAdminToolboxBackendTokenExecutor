@@ -1,5 +1,7 @@
 package org.example.commands;
 
-public interface Command<T> {
-    T execute() throws Exception;
+import java.util.Optional;
+
+public interface Command <T> {
+     Optional<T> execute() throws Exception;
 }

@@ -11,7 +11,7 @@ import java.util.Optional;
 
 import static org.example.constants.Executables.PLESK_CLI_EXECUTABLE;
 
-public class PleskGetLoginLinkCommand implements Command<Optional<String>> {
+public class PleskGetLoginLinkCommand implements Command<String> {
     final int subscriptionId;
     final LinuxUsername username;
 

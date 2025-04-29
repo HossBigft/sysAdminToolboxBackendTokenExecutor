@@ -18,7 +18,7 @@ import static org.example.constants.Executables.PLESK_CLI_EXECUTABLE;
 import static org.example.constants.Executables.PLESK_CLI_GET_MAIL_USERS_CREDENTIALS;
 
 
-public class PleskGetTestMailboxCommand implements Command<Optional<ObjectNode>> {
+public class PleskGetTestMailboxCommand implements Command<ObjectNode> {
 
     static final String TEST_MAIL_LOGIN = "testsupportmail";
     static final String

@@ -6,6 +6,8 @@ import org.example.exceptions.CommandFailedException;
 import org.example.utils.ShellUtils;
 import org.example.value_types.DomainName;
 
+import java.util.Optional;
+
 public class RestartDnsService implements Command<Void> {
     private final DomainName domain;
 
@@ -14,9 +16,9 @@ public class RestartDnsService implements Command<Void> {
     }
 
     @Override
-    public Void execute() throws CommandFailedException {
+    public Optional<Void> execute() throws CommandFailedException {
         ShellUtils.runCommand(Executables.PLESK_CLI_EXECUTABLE, "bin", "dns", "--off", domain.name());
         ShellUtils.runCommand(Executables.PLESK_CLI_EXECUTABLE, "bin", "dns", "--on", domain.name());
-        return null;
+        return Optional.empty();
     }
 }
