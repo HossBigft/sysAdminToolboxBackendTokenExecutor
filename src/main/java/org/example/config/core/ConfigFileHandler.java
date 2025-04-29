@@ -18,9 +18,9 @@ public class ConfigFileHandler {
     public void ensureConfigDirExists() throws IOException {
         File configDir = ConfigManager.getConfigDir();
         if (!configDir.isDirectory()) {
-            logger.warnEntry().message("Config directory is not present").field("File", configDir.toPath()).log();
+            logger.warnEntry().message("Config directory is not present").field("Directory", configDir.toPath()).log();
             Files.createDirectories(configDir.toPath());
-            logger.infoEntry().message("Created config directory").field("File", configDir.toPath()).log();
+            logger.infoEntry().message("Created config directory").field("Directory", configDir.toPath()).log();
         }
     }
 

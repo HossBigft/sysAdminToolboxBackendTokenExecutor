@@ -20,7 +20,7 @@ public class FileSecurityManager {
     private static final FileAccessPolicy
             dotenvFilePolicy =
             new FileAccessPolicy(DOTENV_PERMISSIONS, DOTENV_OWNER, DOTENV_GROUP);
-    private static final File dotEnvFile = new File(ConfigManager.getEnVFilePath());
+    private static final File dotEnvFile = new File(ConfigManager.getEnvFilePath());
 
     public void ensureDotEnvPermissions() throws IOException {
         if (!isFilePermissionsSecure(dotEnvFile, dotenvFilePolicy)) {

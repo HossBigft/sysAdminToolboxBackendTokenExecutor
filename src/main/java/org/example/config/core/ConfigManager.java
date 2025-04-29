@@ -25,7 +25,7 @@ import java.util.function.Supplier;
 public class ConfigManager {
     private static final ConfigProvider cprovider = new ConfigProvider();
     private static Map<String, String> values = new HashMap<>();
-
+    private static final ConfigFileHandler chandler = new ConfigFileHandler();
     static {
         checkPrerequisites();
 
@@ -43,10 +43,9 @@ public class ConfigManager {
     private ConfigManager() {
     }
 
-    public static String getEnVFilePath() {
-        return getEnvFilePath();
+    public static File getEnvFile() {
+        return cprovider.getEnvFile();
     }
-
     public static String getEnvFilePath() {
         return cprovider.getEnvFile().getPath();
     }
@@ -92,28 +91,8 @@ public class ConfigManager {
         return false;
     }
 
-    public static void updateDotEnv() throws IOException {
-
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        initConfigDir();
-
-        File envFile = new File(getEnvFilePath());
-        getLogger().info("Creating dotenv " + envFile);
-        mapper.writeValue(envFile, Map.of(cprovider.getEnvDbPassFieldName(), getDatabasePassword()));
-
-        getLogger().info("New data written to " + getEnvFilePath());
-    }
-
-    private static void initConfigDir() throws IOException {
-
-        final File configDir = getConfigDir();
-        if (!configDir.isDirectory()) {
-            getLogger().warnEntry().message("Config directory is not present").field("File", configDir.toPath()).log();
-            Files.createDirectories(configDir.toPath());
-            getLogger().infoEntry().message("Created config directory").field("File", configDir.toPath()).log();
-        }
+    public static  void updateDotEnv() throws IOException {
+        chandler.saveConfig(getEnvFile(), values);
     }
 
     public static String getDatabasePassword() {
