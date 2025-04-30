@@ -14,9 +14,10 @@ import java.util.Map;
 
 public class ConfigFileHandler {
     private static final CliLogger logger = LogManager.getInstance().getLogger();
+    private static final ConfigProvider cprovider = new ConfigProvider();
 
     public void ensureConfigDirExists() throws IOException {
-        File configDir = ConfigManager.getConfigDir();
+        File configDir = cprovider.getConfigDir();
         if (!configDir.isDirectory()) {
             logger.warnEntry().message("Config directory is not present").field("Directory", configDir.toPath()).log();
             Files.createDirectories(configDir.toPath());

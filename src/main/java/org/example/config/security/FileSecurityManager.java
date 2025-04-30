@@ -14,19 +14,6 @@ import java.nio.file.attribute.*;
 import java.util.Set;
 
 public class FileSecurityManager {
-    private static final String DOTENV_PERMISSIONS = "rw-------";
-    private static final String DOTENV_OWNER = "root";
-    private static final String DOTENV_GROUP = "root";
-    private static final FileAccessPolicy
-            dotenvFilePolicy =
-            new FileAccessPolicy(DOTENV_PERMISSIONS, DOTENV_OWNER, DOTENV_GROUP);
-    private static final File dotEnvFile = new File(ConfigManager.getEnvFilePath());
-
-    public void ensureDotEnvPermissions() throws IOException {
-        if (!isFilePermissionsSecure(dotEnvFile, dotenvFilePolicy)) {
-            secureDotEnvPermissionsOwnerGroup();
-        }
-    }
 
     public boolean isFilePermissionsSecure(File file,
                                            FileAccessPolicy policy) throws IOException {
@@ -69,10 +56,7 @@ public class FileSecurityManager {
         return permsOk && ownerOk && groupOk;
     }
 
-    private void secureDotEnvPermissionsOwnerGroup() throws IOException {
-        enforceFileAccessPolicy(FileSecurityManager.dotEnvFile, dotenvFilePolicy);
 
-    }
 
     public static boolean hasCorrectPermissions(Path path,
                                                 String expectedPerms) throws IOException {

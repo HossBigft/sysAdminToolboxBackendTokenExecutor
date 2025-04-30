@@ -1,6 +1,6 @@
 package org.example.utils;
 
-import org.example.config.core.ConfigManager;
+import org.example.config.core.ConfigProvider;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -53,8 +53,9 @@ public class DbUtils {
 
     private static Connection getConnection() throws SQLException {
         String pleskDbName = "psa";
-        String dbUser = ConfigManager.getDatabaseUser();
-        String dbPassword = ConfigManager.getDatabasePassword();
+        ConfigProvider cprovider = new ConfigProvider();
+        String dbUser = cprovider.getDatabaseUser();
+        String dbPassword = cprovider.getDatabasePassword();
         String dbUrl = String.format("jdbc:mysql://localhost/%s", pleskDbName);
         return DriverManager.getConnection(dbUrl, dbUser, dbPassword);
     }

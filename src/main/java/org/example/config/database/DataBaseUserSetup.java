@@ -1,12 +1,13 @@
 package org.example.config.database;
 
+import org.example.config.core.ConfigFileHandler;
+import org.example.config.core.ConfigProvider;
 import org.example.constants.EnvironmentConstants;
 import org.example.exceptions.CommandFailedException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.utils.ShellUtils;
 import org.example.utils.Utils;
-import org.example.config.core.ConfigManager;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -15,9 +16,11 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class DataBaseUserSetup {
-    private final String databaseUser = ConfigManager.getDatabaseUser();
+    private static final ConfigProvider cprovider = new ConfigProvider();
+    private final static String databaseUser = cprovider.getDatabaseUser();
+    private static final ConfigFileHandler chandler = new ConfigFileHandler();
+    private String databasePassword = cprovider.getDatabasePassword();
 
-    private String databasePassword = ConfigManager.getDatabasePassword();
 
     public void setupDatabaseUser() throws IOException {
         try {
@@ -27,7 +30,7 @@ public class DataBaseUserSetup {
                 if (!isDbUserAbleToConnect()) {
                     regenerateDbUserPassword();
                     setDbUserPassword();
-                    ConfigManager.updateDotEnv();
+                    cprovider.putValue(cprovider.getEnvDbPassFieldName(), databasePassword);
                 }
             }
         } catch (CommandFailedException e) {
@@ -106,8 +109,8 @@ public class DataBaseUserSetup {
     }
 
     private void regenerateDbUserPassword() {
-        databasePassword = Utils.generatePassword(ConfigManager.getDatabasePasswordLength());
-        ConfigManager.putValue("DATABASE_PASSWORD", databasePassword
+        databasePassword = Utils.generatePassword(cprovider.getDbUserPasswordLength());
+        cprovider.putValue("DATABASE_PASSWORD", databasePassword
         );
         getLogger().
                 info("Regenerate password for database user " + databaseUser);

@@ -1,6 +1,6 @@
 package org.example.config.security;
 
-import org.example.config.core.ConfigManager;
+import org.example.config.core.ConfigProvider;
 import org.example.constants.EnvironmentConstants;
 import org.example.exceptions.CommandFailedException;
 import org.example.logging.core.CliLogger;
@@ -23,9 +23,10 @@ public class SudoPrivilegeManager {
     private static final String SUDOERS_PERMISSIONS = "r--r-----";
     private static final FileAccessPolicy sudoersFilePolicy = new FileAccessPolicy(SUDOERS_PERMISSIONS,
             EnvironmentConstants.SUPERADMIN_USER, EnvironmentConstants.SUPERADMIN_USER);
+    private static final ConfigProvider cprovider = new ConfigProvider();
 
     public void setupSudoPrivileges() throws CommandFailedException, IOException, URISyntaxException {
-        File sudoersFile = Paths.get(SUDOERS_DIR + ConfigManager.getDatabaseUser()).toFile();
+        File sudoersFile = Paths.get(SUDOERS_DIR + cprovider.getDatabaseUser()).toFile();
 
         if (sudoersFile.isFile() && isFileInsecure(sudoersFile)) {
             securePermissions(sudoersFile);
@@ -53,7 +54,7 @@ public class SudoPrivilegeManager {
     }
 
     private boolean isSudoRuleNotPresentInFile() {
-        Path sudoersFile = Paths.get(SUDOERS_DIR + ConfigManager.getDatabaseUser());
+        Path sudoersFile = Paths.get(SUDOERS_DIR + cprovider.getDatabaseUser());
         try {
             boolean missing = Files.readAllLines(sudoersFile).stream().noneMatch(line -> {
                 try {
@@ -76,7 +77,7 @@ public class SudoPrivilegeManager {
     }
 
     private void createSudoersRuleFile(String sudoRule) throws IOException, CommandFailedException {
-        String tempFileName = TEMP_DIR + "sudoers_" + ConfigManager.getDatabaseUser();
+        String tempFileName = TEMP_DIR + "sudoers_" + cprovider.getDatabaseUser();
         Path tempFile = Paths.get(tempFileName);
 
         getLogger().debug("Creating temp sudo rule file at " + tempFile);
@@ -95,7 +96,7 @@ public class SudoPrivilegeManager {
         }
         getLogger().debug("Soon to be sudoers file is validated " + tempFile);
 
-        Path targetFile = Paths.get(SUDOERS_DIR + ConfigManager.getDatabaseUser());
+        Path targetFile = Paths.get(SUDOERS_DIR + cprovider.getDatabaseUser());
         getLogger().debug("Copying sudo rule to final location: " + targetFile);
         ShellUtils.runCommand("sudo", "cp", tempFileName, targetFile.toString());
         getLogger().debug("Applying 440 permissions to " + targetFile);
