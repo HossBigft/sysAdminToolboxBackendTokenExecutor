@@ -1,8 +1,5 @@
 package org.example.config.core;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import org.example.config.database.DatabaseSetupCoordinator;
 import org.example.config.security.FileSecurityManager;
 import org.example.config.security.SudoPrivilegeManager;
@@ -24,13 +21,15 @@ import java.util.function.Supplier;
 
 public class ConfigManager {
     private static final ConfigProvider cprovider = new ConfigProvider();
-    private static Map<String, String> values = new HashMap<>();
     private static final ConfigFileHandler chandler = new ConfigFileHandler();
+    private static Map<String, String> values = new HashMap<>();
+
     static {
         checkPrerequisites();
 
         try {
             loadConfig();
+            ensureSetup();
             getLogger().debug("Config file " + getEnvFilePath() + " is loaded.");
         } catch (IOException e) {
             throw new RuntimeException("Failed to load config", e);
@@ -43,25 +42,12 @@ public class ConfigManager {
     private ConfigManager() {
     }
 
-    public static File getEnvFile() {
-        return cprovider.getEnvFile();
-    }
     public static String getEnvFilePath() {
         return cprovider.getEnvFile().getPath();
     }
 
     public static void loadConfig() throws IOException, CommandFailedException, URISyntaxException {
-        File envFile = new File(getEnvFilePath());
-        ObjectMapper mapper = new ObjectMapper();
-
-        try {
-            values = mapper.readValue(envFile, new TypeReference<>() {
-            });
-            getLogger().debug("Loaded dotenv " + getEnvFilePath());
-        } catch (IOException e) {
-            values = new HashMap<>();
-            getLogger().info("Dotenv file not found or invalid.");
-        }
+        values = chandler.loadConfig(getEnvFile());
 
         boolean
                 updated =
@@ -72,14 +58,10 @@ public class ConfigManager {
             updateDotEnv();
         }
 
-        new FileSecurityManager().ensureDotEnvPermissions();
-        new DatabaseSetupCoordinator().ensureDatabaseSetup();
-        new SudoPrivilegeManager().setupSudoPrivileges();
-
     }
 
-    private static CliLogger getLogger() {
-        return LogManager.getInstance().getLogger();
+    public static File getEnvFile() {
+        return cprovider.getEnvFile();
     }
 
     private static boolean computeIfAbsentOrBlank(Map<String, String> map, String key, Supplier<String> supplier) {
@@ -91,20 +73,30 @@ public class ConfigManager {
         return false;
     }
 
-    public static  void updateDotEnv() throws IOException {
+    public static void updateDotEnv() throws IOException {
         chandler.saveConfig(getEnvFile(), values);
+    }
+
+    private static void ensureSetup() throws IOException, URISyntaxException, CommandFailedException {
+        new FileSecurityManager().ensureDotEnvPermissions();
+        new DatabaseSetupCoordinator().ensureDatabaseSetup();
+        new SudoPrivilegeManager().setupSudoPrivileges();
+    }
+
+    private static CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
     }
 
     public static String getDatabasePassword() {
         return getValue(cprovider.getEnvDbPassFieldName());
     }
 
-    public static File getConfigDir() {
-        return cprovider.getConfigDir();
-    }
-
     public static String getValue(String key) {
         return values.get(key);
+    }
+
+    public static File getConfigDir() {
+        return cprovider.getConfigDir();
     }
 
     public static int getDatabasePasswordLength() {
