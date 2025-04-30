@@ -29,8 +29,7 @@ public class ConfigInitialiser {
             loadConfig();
             ensureSetup();
             getLogger().debug("Config file " + getEnvFilePath() + " is loaded.");
-        } catch (
-                IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException("Failed to load config", e);
         } catch (CommandFailedException | URISyntaxException e) {
             getLogger().error("Failed to initialize", e);
@@ -49,7 +48,7 @@ public class ConfigInitialiser {
 
     }
 
-    public void loadConfig() throws IOException, CommandFailedException, URISyntaxException {
+    private void loadConfig() throws IOException, CommandFailedException, URISyntaxException {
         values = chandler.loadConfig(cprovider.getEnvFile());
 
         boolean
@@ -73,7 +72,7 @@ public class ConfigInitialiser {
         return LogManager.getInstance().getLogger();
     }
 
-    public String getEnvFilePath() {
+    private String getEnvFilePath() {
         return cprovider.getEnvFile().getPath();
     }
 
