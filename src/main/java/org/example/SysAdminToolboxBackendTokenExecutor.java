@@ -2,6 +2,7 @@ package org.example;
 
 import org.example.commands.picocli.ExecuteCliCommand;
 import org.example.commands.picocli.InitCliCommand;
+import org.example.config.core.ConfigManager;
 import org.example.logging.core.LogLevel;
 import org.example.logging.facade.LogManager;
 import picocli.CommandLine;
@@ -20,7 +21,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
 
     public static void main(String[] args) {
-
+        ConfigManager.initialize();
         SysAdminToolboxBackendTokenExecutor app = new SysAdminToolboxBackendTokenExecutor();
         CommandLine commandLine = new CommandLine(app);
 

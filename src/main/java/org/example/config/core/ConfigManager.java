@@ -24,9 +24,11 @@ public class ConfigManager {
     private static final ConfigFileHandler chandler = new ConfigFileHandler();
     private static Map<String, String> values = new HashMap<>();
 
-    static {
-        checkPrerequisites();
+    private ConfigManager() {
+    }
 
+    public static void initialize() {
+        checkPrerequisites();
         try {
             loadConfig();
             ensureSetup();
@@ -39,11 +41,15 @@ public class ConfigManager {
         }
     }
 
-    private ConfigManager() {
-    }
+    public static void checkPrerequisites() {
+        boolean pleskExists = Files.isExecutable(Paths.get(Executables.PLESK_CLI_EXECUTABLE));
+        boolean bindExists = Files.isExecutable(Paths.get(Executables.BIND_REMOVE_ZONE_EXECUTABLE));
 
-    public static String getEnvFilePath() {
-        return cprovider.getEnvFile().getPath();
+        if (!pleskExists && !bindExists) {
+            System.err.println("CRITICAL ERROR: Neither Plesk nor Bind are installed. Exiting immediately!");
+            System.exit(1);
+        }
+
     }
 
     public static void loadConfig() throws IOException, CommandFailedException, URISyntaxException {
@@ -58,6 +64,20 @@ public class ConfigManager {
             updateDotEnv();
         }
 
+    }
+
+    private static void ensureSetup() throws IOException, URISyntaxException, CommandFailedException {
+        new FileSecurityManager().ensureDotEnvPermissions();
+        new DatabaseSetupCoordinator().ensureDatabaseSetup();
+        new SudoPrivilegeManager().setupSudoPrivileges();
+    }
+
+    private static CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
+    }
+
+    public static String getEnvFilePath() {
+        return cprovider.getEnvFile().getPath();
     }
 
     public static File getEnvFile() {
@@ -75,16 +95,6 @@ public class ConfigManager {
 
     public static void updateDotEnv() throws IOException {
         chandler.saveConfig(getEnvFile(), values);
-    }
-
-    private static void ensureSetup() throws IOException, URISyntaxException, CommandFailedException {
-        new FileSecurityManager().ensureDotEnvPermissions();
-        new DatabaseSetupCoordinator().ensureDatabaseSetup();
-        new SudoPrivilegeManager().setupSudoPrivileges();
-    }
-
-    private static CliLogger getLogger() {
-        return LogManager.getInstance().getLogger();
     }
 
     public static String getDatabasePassword() {
@@ -105,17 +115,6 @@ public class ConfigManager {
 
     public static String getDatabaseUser() {
         return EnvironmentConstants.APP_NAME;
-    }
-
-    public static void checkPrerequisites() {
-        boolean pleskExists = Files.isExecutable(Paths.get(Executables.PLESK_CLI_EXECUTABLE));
-        boolean bindExists = Files.isExecutable(Paths.get(Executables.BIND_REMOVE_ZONE_EXECUTABLE));
-
-        if (!pleskExists && !bindExists) {
-            System.err.println("CRITICAL ERROR: Neither Plesk nor Bind are installed. Exiting immediately!");
-            System.exit(1);
-        }
-
     }
 
     public static void putValue(String key, String value) {
