@@ -1,6 +1,5 @@
 package org.example.logging.implementations;
 
-import org.example.config.security.FileAccessPolicy;
 import org.example.config.security.FileSecurityManager;
 import org.example.constants.EnvironmentConstants;
 import org.example.logging.config.LogConfig;
@@ -20,10 +19,12 @@ public class LogWriter {
     private static final DateTimeFormatter TIMESTAMP_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final String DIR_PERMISSIONS = "rwxr-x---";
-    private static final FileAccessPolicy logDirAccessPolicy = new FileAccessPolicy(DIR_PERMISSIONS,
+    private static final FileSecurityManager.FileAccessPolicy
+            logDirAccessPolicy = new FileSecurityManager.FileAccessPolicy(DIR_PERMISSIONS,
             EnvironmentConstants.SUPERADMIN_USER, EnvironmentConstants.SUPERADMIN_USER);
     private static final String FILE_PERMISSIONS = "rw-r-----";
-    private static final FileAccessPolicy logFileAccessPolicy = new FileAccessPolicy(FILE_PERMISSIONS,
+    private static final FileSecurityManager.FileAccessPolicy
+            logFileAccessPolicy = new FileSecurityManager.FileAccessPolicy(FILE_PERMISSIONS,
             EnvironmentConstants.SUPERADMIN_USER, EnvironmentConstants.SUPERADMIN_USER);
 
     private final LogConfig config;

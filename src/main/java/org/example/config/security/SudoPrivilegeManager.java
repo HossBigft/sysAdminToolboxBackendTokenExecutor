@@ -21,7 +21,8 @@ public class SudoPrivilegeManager {
 
     private static final String TEMP_DIR = "/tmp/";
     private static final String SUDOERS_PERMISSIONS = "r--r-----";
-    private static final FileAccessPolicy sudoersFilePolicy = new FileAccessPolicy(SUDOERS_PERMISSIONS,
+    private static final FileSecurityManager.FileAccessPolicy
+            sudoersFilePolicy = new FileSecurityManager.FileAccessPolicy(SUDOERS_PERMISSIONS,
             EnvironmentConstants.SUPERADMIN_USER, EnvironmentConstants.SUPERADMIN_USER);
     private static final ConfigProvider cprovider = new ConfigProvider();
 
