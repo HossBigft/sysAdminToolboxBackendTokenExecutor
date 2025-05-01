@@ -57,7 +57,7 @@ public class ConfigInitialiser {
                         cprovider.getEnvDbPassFieldName(),
                         () -> Utils.generatePassword(cprovider.getDbUserPasswordLength()));
         if (updated) {
-            chandler.saveConfig(cprovider.getEnvFile(), values);
+            chandler.saveConfig();
         }
 
     }
