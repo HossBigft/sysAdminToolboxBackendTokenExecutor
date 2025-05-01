@@ -21,7 +21,6 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
 
     public static void main(String[] args) {
-        ConfigManager.initialize();
         SysAdminToolboxBackendTokenExecutor app = new SysAdminToolboxBackendTokenExecutor();
         CommandLine commandLine = new CommandLine(app);
 
@@ -29,14 +28,14 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         commandLine.addSubcommand(new InitCliCommand(app));
         commandLine.parseArgs(args);
 
-
         if (app.debug) {
             new LogManager.Builder().globalLogLevel(LogLevel.DEBUG).apply();
         }
         if (app.verbose) {
             new LogManager.Builder().setVerbose().apply();
         }
-
+        ConfigManager.initialize();
+        
         int exitCode = commandLine.execute(args);
         System.exit(exitCode);
     }
