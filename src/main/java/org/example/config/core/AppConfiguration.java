@@ -1,19 +1,20 @@
 package org.example.config.core;
 
+import org.example.config.AppConfigException;
+import org.example.config.json_config.JsonConfigStore;
+
 import static org.example.utils.Utils.generatePassword;
 
 public class AppConfiguration {
     private static AppConfiguration instance;
     private final EnvironmentConfig environmentConfig;
 
-    // Private constructor for singleton pattern
+
     private AppConfiguration() {
         this.environmentConfig = new EnvironmentConfig();
     }
 
-    /**
-     * Get singleton instance
-     */
+
     public static synchronized AppConfiguration getInstance() {
         if (instance == null) {
             instance = new AppConfiguration();
@@ -21,9 +22,6 @@ public class AppConfiguration {
         return instance;
     }
 
-    /**
-     * Initialize configuration system
-     */
     public void initialize() {
         try {
             new ConfigBootstrapper(environmentConfig).initialize();
@@ -34,26 +32,10 @@ public class AppConfiguration {
         }
     }
 
-    /**
-     * Get configuration value
-     */
-    private String getConfigValue(String key) {
-        return environmentConfig.getValue(key);
-    }
 
-    public String getDatabaseUser(){
+    public String getDatabaseUser() {
         return environmentConfig.getDatabaseUser();
     }
-    public String getDatabasePassword(){
-        return  environmentConfig.getDatabasePassword();
-    }
-    /**
-     * Update configuration value
-     */
-    private void setConfigValue(String key, String value) {
-        environmentConfig.setValue(key, value);
-    }
-
 
     public String regenerateDatabasePassword() {
         setConfigValue("DATABASE_PASSWORD", generatePassword(environmentConfig.getDbUserPasswordLength()));
@@ -61,14 +43,22 @@ public class AppConfiguration {
         return getDatabasePassword();
     }
 
-    /**
-     * Save current configuration
-     */
+
+    private void setConfigValue(String key,
+                                String value) {
+        environmentConfig.setValue(key, value);
+    }
+
+
     public void saveConfig() {
         try {
             new JsonConfigStore(environmentConfig).saveConfig();
         } catch (Exception e) {
             throw new AppConfigException("Failed to save configuration", e);
         }
+    }
+
+    public String getDatabasePassword() {
+        return environmentConfig.getDatabasePassword();
     }
 }

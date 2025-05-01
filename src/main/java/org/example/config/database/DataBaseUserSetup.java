@@ -1,7 +1,7 @@
 package org.example.config.database;
 
 import org.example.config.core.AppConfiguration;
-import org.example.config.core.AppConfigException;
+import org.example.config.AppConfigException;
 import org.example.constants.EnvironmentConstants;
 import org.example.exceptions.CommandFailedException;
 import org.example.logging.core.CliLogger;

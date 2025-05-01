@@ -1,4 +1,4 @@
-package org.example.config.core;
+package org.example.config;
 
 public class AppConfigException extends RuntimeException {
     public AppConfigException(String message) {

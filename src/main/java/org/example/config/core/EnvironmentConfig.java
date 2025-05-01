@@ -1,8 +1,6 @@
 package org.example.config.core;
 
 import org.example.constants.EnvironmentConstants;
-import org.example.logging.core.CliLogger;
-import org.example.logging.facade.LogManager;
 import org.example.utils.ShellUtils;
 import org.example.utils.Utils;
 
@@ -16,27 +14,19 @@ public class EnvironmentConfig {
     private static final String ENV_DB_PASS_FIELD = "DATABASE_PASSWORD";
 
     private Map<String, String> configMap = new HashMap<>();
-    private final CliLogger logger;
 
-    public EnvironmentConfig() {
-        this.logger = LogManager.getInstance().getLogger();
-    }
 
-    public File getConfigDir() {
-        final String appUser = ShellUtils.resolveAppUser();
-        return Paths.get("/home/" + appUser + "/." + EnvironmentConstants.APP_NAME).toFile();
+    public String getEnvFilePath() {
+        return getEnvFile().getPath();
     }
 
     public File getEnvFile() {
         return Paths.get(getConfigDir() + "/" + EnvironmentConstants.ENV_FILENAME).toFile();
     }
 
-    public String getEnvFilePath() {
-        return getEnvFile().getPath();
-    }
-
-    public String getEnvDbPassFieldName() {
-        return ENV_DB_PASS_FIELD;
+    public File getConfigDir() {
+        final String appUser = ShellUtils.resolveAppUser();
+        return Paths.get("/home/" + appUser + "/." + EnvironmentConstants.APP_NAME).toFile();
     }
 
     public int getDbUserPasswordLength() {
@@ -51,12 +41,17 @@ public class EnvironmentConfig {
         return getValue(getEnvDbPassFieldName());
     }
 
-    public void setValue(String key, String value) {
-        configMap.put(key, value);
-    }
-
     public String getValue(String key) {
         return configMap.get(key);
+    }
+
+    public String getEnvDbPassFieldName() {
+        return ENV_DB_PASS_FIELD;
+    }
+
+    public void setValue(String key,
+                         String value) {
+        configMap.put(key, value);
     }
 
     public Map<String, String> getConfigMap() {
