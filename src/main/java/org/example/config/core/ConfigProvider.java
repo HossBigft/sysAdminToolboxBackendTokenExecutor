@@ -1,7 +1,10 @@
 package org.example.config.core;
 
 import org.example.constants.EnvironmentConstants;
+import org.example.logging.core.CliLogger;
+import org.example.logging.facade.LogManager;
 import org.example.utils.ShellUtils;
+import org.example.utils.Utils;
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -36,5 +39,22 @@ public class ConfigProvider {
 
     public void putValue(String key, String val) {
         values.put(key, val);
+    }
+
+    public String regenerateDbUserPassword() {
+        String databasePassword = Utils.generatePassword(getDbUserPasswordLength());
+        getLogger().
+                info("Regenerated password for database user " + getDatabaseUser());
+        putValue(getEnvDbPassFieldName(), databasePassword
+        );
+        getLogger().
+                debug("Saved new password for database user to memory config " + getDatabaseUser());
+        return getDatabasePassword();
+    }
+    private static CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
+    }
+    public Map<String, String> getConfigMap(){
+        return values;
     }
 }

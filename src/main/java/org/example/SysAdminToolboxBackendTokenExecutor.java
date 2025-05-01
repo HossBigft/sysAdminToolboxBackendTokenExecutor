@@ -35,7 +35,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             new LogManager.Builder().setVerbose().apply();
         }
         ConfigManager.initialize();
-        
+
         int exitCode = commandLine.execute(args);
         System.exit(exitCode);
     }

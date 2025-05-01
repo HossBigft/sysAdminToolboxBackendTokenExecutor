@@ -43,9 +43,28 @@ public class ConfigFileHandler {
         ensureConfigDirExists();
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
-
-        logger.info("Creating dotenv " + envFile);
+        if (!envFile.isFile()) {
+            logger.info("Creating dotenv " + envFile);
+        } else {
+            logger.info("Writing to dotenv " + envFile);
+        }
         mapper.writeValue(envFile, values);
+
+        logger.info("New data written to " + envFile);
+    }
+
+    public void saveConfig() throws IOException {
+        ensureConfigDirExists();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+
+        File envFile =cprovider.getEnvFile();
+        if (!envFile.isFile()) {
+            logger.info("Creating dotenv " + envFile);
+        } else {
+            logger.info("Writing to dotenv " + envFile);
+        }
+        mapper.writeValue(envFile, cprovider.getConfigMap());
 
         logger.info("New data written to " + envFile);
     }

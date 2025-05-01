@@ -7,7 +7,6 @@ import org.example.exceptions.CommandFailedException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.utils.ShellUtils;
-import org.example.utils.Utils;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -17,9 +16,7 @@ import java.util.List;
 
 public class DataBaseUserSetup {
     private static final ConfigProvider cprovider = new ConfigProvider();
-    private final static String databaseUser = cprovider.getDatabaseUser();
     private static final ConfigFileHandler chandler = new ConfigFileHandler();
-    private String databasePassword = cprovider.getDatabasePassword();
 
 
     public void setupDatabaseUser() throws IOException {
@@ -28,14 +25,14 @@ public class DataBaseUserSetup {
                 createUser();
             } else {
                 if (!isDbUserAbleToConnect()) {
-                    regenerateDbUserPassword();
+                    cprovider.regenerateDbUserPassword();
                     setDbUserPassword();
-                    cprovider.putValue(cprovider.getEnvDbPassFieldName(), databasePassword);
+                    chandler.saveConfig();
                 }
             }
         } catch (CommandFailedException e) {
             getLogger().
-                    error("Failed to ensure database user" + databaseUser, e);
+                    error("Failed to ensure database user" + cprovider.getDatabaseUser(), e);
         }
     }
 
@@ -43,7 +40,7 @@ public class DataBaseUserSetup {
         String mysqlCliName = ShellUtils.getSqlCliName();
         String query = String.format(
                 "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '%s') AS user_exists;",
-                databaseUser);
+                cprovider.getDatabaseUser());
 
         String[] command = new String[]{
                 mysqlCliName,
@@ -58,10 +55,10 @@ public class DataBaseUserSetup {
 
             if (exists) {
                 getLogger().
-                        debug("Database user " + databaseUser + " is present.");
+                        debug("Database user " + cprovider.getDatabaseUser() + " is present.");
             } else {
                 getLogger().
-                        info("Database user " + databaseUser + " does not exist.");
+                        info("Database user " + cprovider.getDatabaseUser() + " does not exist.");
             }
 
             return exists;
@@ -76,7 +73,7 @@ public class DataBaseUserSetup {
         String mysqlCliName = ShellUtils.getSqlCliName();
         String query = String.format(
                 "CREATE USER '%s'@'localhost' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;",
-                databaseUser, databasePassword);
+                cprovider.getDatabaseUser(), cprovider.getDatabasePassword());
 
         String[] command = new String[]{
                 mysqlCliName,
@@ -87,7 +84,7 @@ public class DataBaseUserSetup {
         try {
             ShellUtils.runCommand(command);
             getLogger().
-                    info("Created database user " + databaseUser);
+                    info("Created database user " + cprovider.getDatabaseUser());
         } catch (CommandFailedException e) {
             getLogger().
                     errorEntry().command(command).exception(e).log();
@@ -96,28 +93,21 @@ public class DataBaseUserSetup {
     }
 
     private boolean isDbUserAbleToConnect() {
-        try (Connection conn = DriverManager.getConnection(DatabaseSetupCoordinator.DB_URL, databaseUser,
-                databasePassword)) {
+        try (Connection conn = DriverManager.getConnection(DatabaseSetupCoordinator.DB_URL, cprovider.getDatabaseUser(),
+                cprovider.getDatabasePassword())) {
             getLogger().
-                    debug(databaseUser + " can connec to to database.");
+                    debug(cprovider.getDatabaseUser() + " can connect to to database.");
             return true;
         } catch (SQLException e) {
             getLogger().
-                    error(databaseUser + " can't connect to to database.", e);
+                    error(cprovider.getDatabaseUser() + " can't connect to to database.", e);
             return false;
         }
     }
 
-    private void regenerateDbUserPassword() {
-        databasePassword = Utils.generatePassword(cprovider.getDbUserPasswordLength());
-        cprovider.putValue("DATABASE_PASSWORD", databasePassword
-        );
-        getLogger().
-                info("Regenerate password for database user " + databaseUser);
-    }
 
     void setDbUserPassword() throws CommandFailedException {
-        if (databaseUser.equalsIgnoreCase(EnvironmentConstants.SUPERADMIN_USER)) {
+        if (cprovider.getDatabaseUser().equalsIgnoreCase(EnvironmentConstants.SUPERADMIN_USER)) {
             getLogger().warn(
                     "WARNING: Refusing to modify the root database user password. Please configure a different database user");
             return;
@@ -126,7 +116,7 @@ public class DataBaseUserSetup {
         String mysqlCliName = ShellUtils.getSqlCliName();
         String query = String.format(
                 "ALTER USER '%s'@'localhost' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;",
-                databaseUser, databasePassword);
+                cprovider.getDatabaseUser(), cprovider.getDatabasePassword());
 
         String[] command = new String[]{
                 mysqlCliName,
@@ -137,7 +127,7 @@ public class DataBaseUserSetup {
         try {
             ShellUtils.runCommand(command);
             getLogger().
-                    info("Set database user password " + databaseUser);
+                    info("Set database user password " + cprovider.getDatabaseUser());
         } catch (CommandFailedException e) {
             getLogger().
                     errorEntry().command(command).exception(e).log();
