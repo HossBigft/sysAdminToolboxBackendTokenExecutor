@@ -1,6 +1,6 @@
 package org.example.config.security;
 
-import org.example.config.core.ConfigProvider;
+import org.example.config.core.EnvironmentConfig;
 import org.example.constants.EnvironmentConstants;
 import org.example.exceptions.CommandFailedException;
 import org.example.logging.core.CliLogger;
@@ -24,7 +24,7 @@ public class SudoPrivilegeManager {
     private static final FileSecurityManager.FileAccessPolicy
             sudoersFilePolicy = new FileSecurityManager.FileAccessPolicy(SUDOERS_PERMISSIONS,
             EnvironmentConstants.SUPERADMIN_USER, EnvironmentConstants.SUPERADMIN_USER);
-    private static final ConfigProvider cprovider = new ConfigProvider();
+    private static final EnvironmentConfig cprovider = new EnvironmentConfig();
 
     public void setupSudoPrivileges() throws CommandFailedException, IOException, URISyntaxException {
         File sudoersFile = Paths.get(SUDOERS_DIR + cprovider.getDatabaseUser()).toFile();

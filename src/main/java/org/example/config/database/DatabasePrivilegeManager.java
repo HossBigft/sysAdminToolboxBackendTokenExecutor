@@ -1,18 +1,17 @@
 package org.example.config.database;
 
-import org.example.config.core.ConfigProvider;
+import org.example.config.core.EnvironmentConfig;
 import org.example.constants.EnvironmentConstants;
 import org.example.exceptions.CommandFailedException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.utils.ShellUtils;
-import org.example.config.core.ConfigManager;
 
 import java.util.List;
 
 public class DatabasePrivilegeManager {
 
-    private static final String databaseUser = new ConfigProvider().getDatabaseUser();
+    private static final String databaseUser = new EnvironmentConfig().getDatabaseUser();
 
     public void enforceReadOnlyAccess() {
         getLogger().

@@ -9,13 +9,8 @@ public class DatabaseSetupCoordinator {
     static final String DB_URL = "jdbc:mysql://localhost:3306";
 
     public void ensureDatabaseSetup() {
-        try {
-            new DataBaseUserSetup().setupDatabaseUser();
-            new DatabasePrivilegeManager().enforceReadOnlyAccess();
-        } catch (IOException e) {
-            getLogger().
-                    error("Database setup failed: ", e);
-        }
+        new DataBaseUserSetup().setupDatabaseUser();
+        new DatabasePrivilegeManager().enforceReadOnlyAccess();
     }
 
     private static CliLogger getLogger() {

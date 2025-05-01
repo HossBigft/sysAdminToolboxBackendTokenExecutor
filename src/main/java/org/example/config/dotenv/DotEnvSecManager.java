@@ -1,6 +1,6 @@
 package org.example.config.dotenv;
 
-import org.example.config.core.ConfigProvider;
+import org.example.config.core.EnvironmentConfig;
 import org.example.config.security.FileSecurityManager;
 
 import java.io.File;
@@ -14,7 +14,7 @@ public class DotEnvSecManager {
     private static final FileSecurityManager.FileAccessPolicy
             dotenvFilePolicy =
             new FileSecurityManager.FileAccessPolicy(DOTENV_PERMISSIONS, DOTENV_OWNER, DOTENV_GROUP);
-    private static final File dotEnvFile = new ConfigProvider().getEnvFile();
+    private static final File dotEnvFile = new EnvironmentConfig().getEnvFile();
 
     public void ensureDotEnvPermissions() throws IOException {
         FileSecurityManager fileSecurityManager = new FileSecurityManager();

@@ -2,7 +2,7 @@ package org.example;
 
 import org.example.commands.picocli.ExecuteCliCommand;
 import org.example.commands.picocli.InitCliCommand;
-import org.example.config.core.ConfigManager;
+import org.example.config.core.AppConfiguration;
 import org.example.logging.core.LogLevel;
 import org.example.logging.facade.LogManager;
 import picocli.CommandLine;
@@ -34,7 +34,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         if (app.verbose) {
             new LogManager.Builder().setVerbose().apply();
         }
-        ConfigManager.initialize();
+        AppConfiguration.getInstance().initialize();
 
         int exitCode = commandLine.execute(args);
         System.exit(exitCode);

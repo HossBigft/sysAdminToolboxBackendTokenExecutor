@@ -1,7 +1,7 @@
 package org.example.commands.picocli;
 
 import org.example.SysAdminToolboxBackendTokenExecutor;
-import org.example.config.core.ConfigManager;
+import org.example.config.core.AppConfiguration;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -17,7 +17,7 @@ public class InitCliCommand extends AbstractCliCommand {
     @Override
     public Integer call() {
         try {
-            ConfigManager.initialize();
+            AppConfiguration.getInstance().initialize();
             return 0;
         } catch (Exception e) {
             System.out.println("Failed to setup environment");
