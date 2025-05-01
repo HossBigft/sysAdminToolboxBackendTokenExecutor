@@ -8,10 +8,10 @@ import org.example.value_types.DomainName;
 
 import java.util.Optional;
 
-public class RemoveDnsZone implements Command {
+public class RemoveZone implements Command {
     private final DomainName domainNameToDelete;
 
-    public RemoveDnsZone(DomainName domainName) {
+    public RemoveZone(DomainName domainName) {
         this.domainNameToDelete = domainName;
     }
 

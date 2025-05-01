@@ -1,4 +1,4 @@
-package org.example.commands.core;
+package org.example.commands;
 
 public sealed interface AvailableCommand permits AvailableCommand.NS, AvailableCommand.Plesk {
 
@@ -17,7 +17,7 @@ public sealed interface AvailableCommand permits AvailableCommand.NS, AvailableC
     }
 
     enum NS implements AvailableCommand {
-        REMOVE_DNS_ZONE,
+        REMOVE_ZONE,
         GET_ZONE_MASTER
     }
 

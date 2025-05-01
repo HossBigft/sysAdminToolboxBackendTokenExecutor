@@ -1,11 +1,9 @@
-package org.example.commands.core;
+package org.example.commands.plesk;
 
+import org.example.commands.AvailableCommand;
 import org.example.commands.Command;
 import org.example.commands.CommandRequest;
-import org.example.commands.plesk.PleskFetchSubscriptionInfoCommand;
-import org.example.commands.plesk.PleskGetLoginLinkCommand;
-import org.example.commands.plesk.PleskGetTestMailboxCommand;
-import org.example.commands.plesk.RestartDnsService;
+import org.example.commands.core.CommandBuilderFactory;
 import org.example.value_types.DomainName;
 import org.example.value_types.LinuxUsername;
 
