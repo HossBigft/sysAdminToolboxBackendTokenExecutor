@@ -1,7 +1,7 @@
 package org.example.config.database;
 
-import org.example.config.core.AppConfiguration;
 import org.example.config.AppConfigException;
+import org.example.config.core.AppConfiguration;
 import org.example.constants.EnvironmentConstants;
 import org.example.exceptions.CommandFailedException;
 import org.example.logging.core.CliLogger;
@@ -12,8 +12,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
-
-;
 
 public class DataBaseUserSetup {
     private final AppConfiguration appConfiguration;

@@ -8,18 +8,30 @@ import static org.example.utils.Utils.generatePassword;
 public class AppConfiguration {
     private static AppConfiguration instance;
     private final EnvironmentConfig environmentConfig;
+    private final ConfigBootstrapper bootstrapper;
 
 
     private AppConfiguration() {
         this.environmentConfig = new EnvironmentConfig();
+        this.bootstrapper = new ConfigBootstrapper(environmentConfig);
     }
 
 
-    public static synchronized AppConfiguration getInstance() {
+    public static AppConfiguration getInstance() {
         if (instance == null) {
             instance = new AppConfiguration();
         }
         return instance;
+    }
+
+    public void initializeLazily() {
+        try {
+            new ConfigBootstrapper(environmentConfig).initializeLazily();
+        } catch (AppConfigException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AppConfigException("Failed to initialize configuration", e);
+        }
     }
 
     public void initialize() {
@@ -31,8 +43,6 @@ public class AppConfiguration {
             throw new AppConfigException("Failed to initialize configuration", e);
         }
     }
-
-
     public String getDatabaseUser() {
         return environmentConfig.getDatabaseUser();
     }
@@ -60,5 +70,10 @@ public class AppConfiguration {
 
     public String getDatabasePassword() {
         return environmentConfig.getDatabasePassword();
+    }
+
+
+    public ConfigBootstrapper getBootstrapper() {
+        return bootstrapper;
     }
 }

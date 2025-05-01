@@ -19,7 +19,7 @@ public class DotEnvSecManager {
     public void ensureDotEnvPermissions() throws IOException {
         FileSecurityManager fileSecurityManager = new FileSecurityManager();
         if (!fileSecurityManager.isFilePermissionsSecure(dotEnvFile, dotenvFilePolicy)) {
-              fileSecurityManager.enforceFileAccessPolicy(dotEnvFile, dotenvFilePolicy);
+            fileSecurityManager.enforceFileAccessPolicy(dotEnvFile, dotenvFilePolicy);
         }
     }
 

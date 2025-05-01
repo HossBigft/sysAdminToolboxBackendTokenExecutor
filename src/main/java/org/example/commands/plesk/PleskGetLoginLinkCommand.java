@@ -1,7 +1,7 @@
 package org.example.commands.plesk;
 
-import org.example.exceptions.CommandFailedException;
 import org.example.commands.Command;
+import org.example.exceptions.CommandFailedException;
 import org.example.utils.DbUtils;
 import org.example.utils.ShellUtils;
 import org.example.value_types.LinuxUsername;

@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 public class GetZoneMaster implements Command<String> {
     private static final Path ZONEFILE_PATH = Paths.get("/var/opt/isc/scls/isc-bind/zones/_default.nzf");
     private static final Pattern IP_REGEX = Pattern.compile("((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}");
-    private DomainName domain;
+    private final DomainName domain;
 
     public GetZoneMaster(DomainName domainName) {
         this.domain = domainName;

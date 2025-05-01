@@ -56,7 +56,6 @@ public class FileSecurityManager {
     }
 
 
-
     public static boolean hasCorrectPermissions(Path path,
                                                 String expectedPerms) throws IOException {
         Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(path);
@@ -118,7 +117,7 @@ public class FileSecurityManager {
                 info("Set permissions" + "[" + permissions + "] to" + path);
     }
 
-    public static record FileAccessPolicy(String permissions, String owner, String group) {
+    public record FileAccessPolicy(String permissions, String owner, String group) {
         public FileAccessPolicy {
             if (permissions == null || !permissions.matches("[r-][w-][x-]{1}[r-][w-][x-]{1}[r-][w-][x-]{1}")) {
                 throw new IllegalArgumentException("Invalid permissions format: " + permissions);

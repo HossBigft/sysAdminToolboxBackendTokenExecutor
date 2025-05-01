@@ -5,7 +5,8 @@ public class AppConfigException extends RuntimeException {
         super(message);
     }
 
-    public AppConfigException(String message, Throwable cause) {
+    public AppConfigException(String message,
+                              Throwable cause) {
         super(message, cause);
     }
 }

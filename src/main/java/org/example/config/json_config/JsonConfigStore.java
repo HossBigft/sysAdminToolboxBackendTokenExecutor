@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.example.config.AppConfigException;
 import org.example.config.core.EnvironmentConfig;
+import org.example.config.dotenv.DotEnvSecManager;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 
@@ -36,6 +37,7 @@ public class JsonConfigStore {
             });
             environmentConfig.setConfigMap(values);
             logger.debug("Loaded config from " + envFile);
+            new DotEnvSecManager().ensureDotEnvPermissions();
         } catch (IOException e) {
             logger.warnEntry().message("Failed to load config file").field("File", envFile).exception(e).log();
         }
@@ -53,6 +55,7 @@ public class JsonConfigStore {
         try {
             mapper.writeValue(envFile, environmentConfig.getConfigMap());
             logger.info(action + " config file " + envFile);
+
         } catch (IOException e) {
             throw new AppConfigException("Failed to save config file", e);
         }

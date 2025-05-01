@@ -141,6 +141,6 @@ public class PleskFetchSubscriptionInfoCommand implements Command<ArrayNode> {
         }
     }
 
-    public static record DomainState(String domain, String status) {
+    public record DomainState(String domain, String status) {
     }
 }

@@ -1,6 +1,7 @@
 package org.example.utils;
 
 import org.example.config.core.AppConfiguration;
+import org.example.config.core.ConfigBootstrapper;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -52,11 +53,20 @@ public class DbUtils {
     }
 
     private static Connection getConnection() throws SQLException {
-        String pleskDbName = "psa";
-        AppConfiguration cfmng = AppConfiguration.getInstance();
-        String dbUser = cfmng.getDatabaseUser();
-        String dbPassword = cfmng.getDatabasePassword();
-        String dbUrl = String.format("jdbc:mysql://localhost/%s", pleskDbName);
+        AppConfiguration config = AppConfiguration.getInstance();
+        ConfigBootstrapper bootstrapper = config.getBootstrapper();
+
+        try {
+            bootstrapper.ensureDatabaseSetup();
+        } catch (Exception e) {
+            throw new RuntimeException("Database setup failed", e);
+        }
+
+        String dbName = "psa";
+        String dbUser = config.getDatabaseUser();
+        String dbPassword = config.getDatabasePassword();
+        String dbUrl = String.format("jdbc:mysql://localhost/%s", dbName);
+
         return DriverManager.getConnection(dbUrl, dbUser, dbPassword);
     }
 

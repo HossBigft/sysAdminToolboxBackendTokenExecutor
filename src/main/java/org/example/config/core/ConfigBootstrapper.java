@@ -2,7 +2,6 @@ package org.example.config.core;
 
 import org.example.config.AppConfigException;
 import org.example.config.database.DatabaseSetupCoordinator;
-import org.example.config.dotenv.DotEnvSecManager;
 import org.example.config.json_config.JsonConfigStore;
 import org.example.config.security.SudoPrivilegeManager;
 import org.example.constants.Executables;
@@ -21,19 +20,34 @@ public class ConfigBootstrapper {
     private final JsonConfigStore fileHandler;
     private final CliLogger logger;
 
+    private boolean isDbSetup = false;
+    private boolean isSudoConfigured = false;
+    private boolean isConfigLoaded = false;
+
     public ConfigBootstrapper(EnvironmentConfig environmentConfig) {
         this.environmentConfig = environmentConfig;
         this.fileHandler = new JsonConfigStore(environmentConfig);
         this.logger = LogManager.getInstance().getLogger();
     }
 
+    public void initializeLazily() {
+        checkPrerequisites();
+        try {
+            loadConfigIfNeeded();
+            ensureSudoPrivilegesConfigured();
+            logger.debug("Config file " + environmentConfig.getEnvFilePath() + " is loaded.");
+        } catch (Exception e) {
+            logger.error("Failed to initialize configuration", e);
+            throw new AppConfigException("Configuration initialization failed", e);
+        }
+    }
     public void initialize() {
         checkPrerequisites();
-
         try {
-            loadConfig();
-            ensureSetup();
+            fileHandler.loadConfig();
             logger.debug("Config file " + environmentConfig.getEnvFilePath() + " is loaded.");
+            ensureSudoPrivilegesConfigured();
+            new DatabaseSetupCoordinator().ensureDatabaseSetup();
         } catch (Exception e) {
             logger.error("Failed to initialize configuration", e);
             throw new AppConfigException("Configuration initialization failed", e);
@@ -50,14 +64,24 @@ public class ConfigBootstrapper {
         }
     }
 
-    private void loadConfig() {
-
-        fileHandler.loadConfig();
-        setDefaultIfMissing(environmentConfig.getEnvDbPassFieldName(),
-                () -> environmentConfig.generatePassword(environmentConfig.getDbUserPasswordLength()));
+    private void loadConfigIfNeeded() {
+        if (!isConfigLoaded) {
+            fileHandler.loadConfig();
+            setDefaultIfMissing(environmentConfig.getEnvDbPassFieldName(),
+                    () -> environmentConfig.generatePassword(environmentConfig.getDbUserPasswordLength()));
+            isConfigLoaded = true;
+        }
     }
 
-    private void setDefaultIfMissing(String key, Supplier<String> defaultValueSupplier) {
+    public void ensureSudoPrivilegesConfigured() throws IOException, CommandFailedException, URISyntaxException {
+        if (!isSudoConfigured) {
+            new SudoPrivilegeManager().setupSudoPrivileges();
+            isSudoConfigured = true;
+        }
+    }
+
+    private void setDefaultIfMissing(String key,
+                                     Supplier<String> defaultValueSupplier) {
         String value = environmentConfig.getValue(key);
         if (value == null || value.isBlank()) {
             environmentConfig.setValue(key, defaultValueSupplier.get());
@@ -65,9 +89,11 @@ public class ConfigBootstrapper {
         }
     }
 
-    private void ensureSetup() throws IOException, URISyntaxException, CommandFailedException {
-        new DotEnvSecManager().ensureDotEnvPermissions();
-        new DatabaseSetupCoordinator().ensureDatabaseSetup();
-        new SudoPrivilegeManager().setupSudoPrivileges();
+    public void ensureDatabaseSetup() {
+        if (!isDbSetup) {
+            new DatabaseSetupCoordinator().ensureDatabaseSetup();
+            isDbSetup = true;
+        }
     }
 }
+
