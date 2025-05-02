@@ -1,11 +1,12 @@
 package org.example.logging.implementations;
 
-import org.example.config.security.FileSecurityManager;
+import org.example.config.security.FileAccessPolicy;
 import org.example.constants.EnvironmentConstants;
 import org.example.logging.config.LogConfig;
 import org.example.logging.core.LogLevel;
 import org.example.logging.model.LogEntry;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -15,23 +16,18 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+
 public class LogWriter {
-    private static final DateTimeFormatter TIMESTAMP_FORMAT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final String DIR_PERMISSIONS = "rwxr-x---";
-    private static final FileSecurityManager.FileAccessPolicy
-            logDirAccessPolicy = new FileSecurityManager.FileAccessPolicy(DIR_PERMISSIONS,
-            EnvironmentConstants.SUPERADMIN_USER, EnvironmentConstants.SUPERADMIN_USER);
-    private static final String FILE_PERMISSIONS = "rw-r-----";
-    private static final FileSecurityManager.FileAccessPolicy
-            logFileAccessPolicy = new FileSecurityManager.FileAccessPolicy(FILE_PERMISSIONS,
-            EnvironmentConstants.SUPERADMIN_USER, EnvironmentConstants.SUPERADMIN_USER);
+    private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final String LOGDIR_PERMISSIONS = "rwxr-x---";
+
+    private static final String LOGFILE_PERMISSIONS = "rw-r-----";
+
 
     private final LogConfig config;
     private final String userName;
 
-    public LogWriter(LogConfig config,
-                     String userName) {
+    public LogWriter(LogConfig config, String userName) {
         this.config = config;
         this.userName = userName;
 
@@ -43,30 +39,49 @@ public class LogWriter {
     }
 
     private void initializeLogFile() throws IOException {
-        Path logDir = Paths.get(config.getLogDirectory());
-        if (!Files.exists(logDir)) {
-            Files.createDirectories(logDir);
+        Path logDirPath = getLogDir().toPath();
+        if (!Files.exists(logDirPath)) {
+            Files.createDirectories(logDirPath);
             try {
-                new FileSecurityManager().enforceFileAccessPolicy(logDir.toFile(), logDirAccessPolicy);
+                getLogDirAccessPolicy().enforce();
             } catch (Exception e) {
                 System.err.println("Warning: Could not set permissions on log directory: " + e.getMessage());
             }
         }
 
         Path logFilePath = Paths.get(config.getFullLogPath());
+        FileAccessPolicy logFileAccessPolicy = getLogFileAccessPolicy();
         if (!Files.exists(logFilePath)) {
             Files.createFile(logFilePath);
             try {
-                new FileSecurityManager().enforceFileAccessPolicy(logFilePath.toFile(), logFileAccessPolicy);
-
+                logFileAccessPolicy.enforce();
             } catch (Exception e) {
                 System.err.println("Warning: Could not set permissions on log file: " + e.getMessage());
             }
         }
     }
 
-    public synchronized void write(LogLevel level,
-                                   LogEntry entry) {
+    private File getLogDir() {
+        return Paths.get(config.getLogDirectory()).toFile();
+    }
+
+    private FileAccessPolicy getLogDirAccessPolicy() {
+        return new FileAccessPolicy(getLogDir()).permissions(LOGDIR_PERMISSIONS)
+                .owner(EnvironmentConstants.SUPERADMIN_USER)
+                .group(EnvironmentConstants.SUPERADMIN_USER);
+    }
+
+    private FileAccessPolicy getLogFileAccessPolicy() {
+        return new FileAccessPolicy(getLogFile()).permissions(LOGFILE_PERMISSIONS)
+                .owner(EnvironmentConstants.SUPERADMIN_USER)
+                .group(EnvironmentConstants.SUPERADMIN_USER);
+    }
+
+    private File getLogFile() {
+        return Paths.get(config.getLogPath()).toFile();
+    }
+
+    public synchronized void write(LogLevel level, LogEntry entry) {
         if (!config.isLoggable(level)) {
             return;
         }
@@ -83,8 +98,7 @@ public class LogWriter {
             System.out.println(logEntry);
         }
 
-        try (FileWriter fw = new FileWriter(config.getFullLogPath(), true);
-             PrintWriter pw = new PrintWriter(fw)) {
+        try (FileWriter fw = new FileWriter(config.getFullLogPath(), true); PrintWriter pw = new PrintWriter(fw)) {
             pw.println(logEntry);
         } catch (IOException e) {
             System.err.println("Failed to write to audit log: " + e.getMessage());

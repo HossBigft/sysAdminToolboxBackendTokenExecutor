@@ -32,7 +32,7 @@ public class LogConfig {
         this.logDirectory = logDirectory;
     }
 
-    public String getLogFile() {
+    public String getLogPath() {
         return logFile;
     }
 

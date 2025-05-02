@@ -21,21 +21,24 @@ public class SudoPrivilegeManager {
 
     private static final String TEMP_DIR = "/tmp/";
     private static final String SUDOERS_PERMISSIONS = "r--r-----";
-    private static final FileSecurityManager.FileAccessPolicy
-            sudoersFilePolicy = new FileSecurityManager.FileAccessPolicy(SUDOERS_PERMISSIONS,
-            EnvironmentConstants.SUPERADMIN_USER, EnvironmentConstants.SUPERADMIN_USER);
     private static final EnvironmentConfig cprovider = new EnvironmentConfig();
+    private static final File SUDOERS_FILE = Paths.get(SUDOERS_DIR + cprovider.getDatabaseUser()).toFile();
+    private static final FileAccessPolicy
+            sudoersFilePolicy =
+            new FileAccessPolicy(SUDOERS_FILE).permissions(SUDOERS_PERMISSIONS)
+                    .owner(EnvironmentConstants.SUPERADMIN_USER)
+                    .group(EnvironmentConstants.SUPERADMIN_USER);
 
     public void setupSudoPrivileges() throws CommandFailedException, IOException, URISyntaxException {
         File sudoersFile = Paths.get(SUDOERS_DIR + cprovider.getDatabaseUser()).toFile();
 
-        if (sudoersFile.isFile() && isFileInsecure(sudoersFile)) {
-            securePermissions(sudoersFile);
+        if (sudoersFile.isFile() && isFileInsecure()) {
+            securePermissions();
         }
 
         if (isSudoRuleNotPresentInFile()) {
             createSudoersRuleFile(generateSudoRule());
-            securePermissions(sudoersFile);
+            securePermissions();
 
             if (isSudoRuleNotPresentInFile()) {
                 throw new CommandFailedException("Failed to apply sudo rules correctly!");
@@ -44,14 +47,14 @@ public class SudoPrivilegeManager {
         }
     }
 
-    private boolean isFileInsecure(File file) throws IOException {
+    private boolean isFileInsecure() throws IOException {
 
-        return !new FileSecurityManager().isFilePermissionsSecure(file, sudoersFilePolicy);
+        return !sudoersFilePolicy.isSecured();
 
     }
 
-    private void securePermissions(File file) throws IOException {
-        new FileSecurityManager().enforceFileAccessPolicy(file, sudoersFilePolicy);
+    private void securePermissions() throws IOException {
+        sudoersFilePolicy.enforce();
     }
 
     private boolean isSudoRuleNotPresentInFile() {
