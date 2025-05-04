@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.List;
 
 public class SudoPrivilegeManager {
     private static final String shellUser = ShellUtils.resolveAppUser();
@@ -59,14 +60,14 @@ public class SudoPrivilegeManager {
 
     private boolean isSudoRuleNotPresentInFile() {
         Path sudoersFile = Paths.get(SUDOERS_DIR + cprovider.getDatabaseUser());
+
         try {
-            boolean missing = Files.readAllLines(sudoersFile).stream().noneMatch(line -> {
-                try {
-                    return line.contains(generateSudoRule());
-                } catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+            List<String> lines = Files.readAllLines(sudoersFile);
+
+            String expectedDefaultsLine = "Defaults:" + shellUser + " env_keep += \"SSH_ORIGINAL_COMMAND\"";
+            String expectedSudoRuleLine = shellUser + " ALL=(ALL) NOPASSWD: " + ShellUtils.getExecutablePath() + " *";
+
+            boolean missing = !(lines.contains(expectedDefaultsLine) && lines.contains(expectedSudoRuleLine));
 
             if (missing) {
                 getLogger().info("Sudoers rule not present in " + sudoersFile);
@@ -75,7 +76,7 @@ public class SudoPrivilegeManager {
             return missing;
 
         } catch (IOException e) {
-            getLogger().info("Sudoers file " + sudoersFile + " is not present.");
+            getLogger().info("Sudoers file " + sudoersFile + " is not present or unreadable.");
             return true;
         }
     }
@@ -110,9 +111,13 @@ public class SudoPrivilegeManager {
         getLogger().debug("Temporary sudo rule file deleted: " + tempFile);
     }
 
-    private String generateSudoRule() throws URISyntaxException {
-        String rule = shellUser + " ALL=(ALL) NOPASSWD: " + ShellUtils.getExecutablePath() + " *";
-        return rule;
+    private String generateSudoRule() {
+        String executablePath = ShellUtils.getExecutablePath();
+        //For passing parameters via $SSH_ORIGINAL_COMMAND with SSH Forced command
+        String defaultsLine = String.format("Defaults:%s env_keep += \"SSH_ORIGINAL_COMMAND\"", shellUser);
+        String sudoRuleLine = String.format("%s ALL=(ALL) NOPASSWD: %s *", shellUser, executablePath);
+
+        return String.join("\n", defaultsLine, sudoRuleLine);
     }
 
     private void printRelevantRules() throws CommandFailedException {

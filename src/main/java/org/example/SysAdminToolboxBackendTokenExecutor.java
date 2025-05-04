@@ -9,6 +9,11 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
+import java.io.IOException;
+import java.io.StreamTokenizer;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 @Command(name = "sysadmintoolbox", description = "Safe root wrapper for executing system administration commands", version = "0.1", mixinStandardHelpOptions = true)
@@ -26,6 +31,20 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
         commandLine.addSubcommand(new ExecuteCliCommand(app));
         commandLine.addSubcommand(new InitCliCommand(app));
+
+        if (args.length == 0) {
+            String sshOriginalCommand = System.getenv("SSH_ORIGINAL_COMMAND");
+            if (sshOriginalCommand == null) {
+                System.err.println("Error: SSH_ORIGINAL_COMMAND is missing");
+                System.exit(1);
+            }
+            try {
+                args = tokenizeSSHORIGINALCOMMAND(sshOriginalCommand);
+            } catch (IOException e) {
+
+            }
+        }
+
         commandLine.parseArgs(args);
 
         if (app.debug) {
@@ -34,17 +53,33 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         if (app.verbose) {
             new LogManager.Builder().setVerbose().apply();
         }
+
         AppConfiguration.getInstance().initializeLazily();
 
         int exitCode = commandLine.execute(args);
         System.exit(exitCode);
     }
 
+    private static String[] tokenizeSSHORIGINALCOMMAND(String cmdString) throws IOException {
+
+        StreamTokenizer tok = new StreamTokenizer(new StringReader(cmdString));
+        tok.resetSyntax();
+        tok.wordChars(' ', 255);
+        tok.whitespaceChars(0, ' ');
+        tok.quoteChar('"');
+        tok.quoteChar('\'');
+        tok.commentChar('#');
+
+        List<String> arguments = new ArrayList<>();
+        while (tok.nextToken() != StreamTokenizer.TT_EOF) {
+            arguments.add(tok.sval);
+        }
+        return arguments.toArray(String[]::new);
+    }
 
     @Override
     public Integer call() {
         CommandLine.usage(this, System.out);
         return 0;
     }
-
 }
