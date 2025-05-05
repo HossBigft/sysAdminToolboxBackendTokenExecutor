@@ -28,8 +28,8 @@ public class TokenManager {
                 getLogger().
                         debugEntry()
                         .message("Token signature verification result")
+                        .field("Result", signatureValid ? "True" : "False")
                         .field("Token", token.toString())
-                        .field("SignatureValid", signatureValid)
                         .log();
 
                 return signatureValid;
@@ -81,7 +81,7 @@ public class TokenManager {
             getLogger().
                     debugEntry()
                     .message("Signature verification completed")
-                    .field("Valid", valid)
+                    .field("Result", valid ? "True" : "False")
                     .log();
 
             return valid;
