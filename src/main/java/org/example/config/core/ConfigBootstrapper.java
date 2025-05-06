@@ -66,6 +66,7 @@ public class ConfigBootstrapper {
     public void initialize() {
         checkPrerequisites();
         try {
+            logger.debugEntry().message("Starting initialisation...").log();
             environmentConfig.loadConfig();
             logger.debug("Config file " + environmentConfig.getEnvFilePath() + " is loaded.");
             ensureSudoPrivilegesConfigured();

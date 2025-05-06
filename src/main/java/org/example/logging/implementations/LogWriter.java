@@ -27,7 +27,8 @@ public class LogWriter {
     private final LogConfig config;
     private final String userName;
 
-    public LogWriter(LogConfig config, String userName) {
+    public LogWriter(LogConfig config,
+                     String userName) {
         this.config = config;
         this.userName = userName;
 
@@ -81,7 +82,8 @@ public class LogWriter {
         return Paths.get(config.getLogPath()).toFile();
     }
 
-    public synchronized void write(LogLevel level, LogEntry entry) {
+    public synchronized void write(LogLevel level,
+                                   LogEntry entry) {
         if (!config.isLoggable(level)) {
             return;
         }

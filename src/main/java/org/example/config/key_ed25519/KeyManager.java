@@ -72,9 +72,10 @@ public class KeyManager {
                     .log();
         }
     }
-    private String getPublicKeyStr(){
+
+    private String getPublicKeyStr() {
         String keyStr = fetchPublicKey(AppConfiguration.getInstance().getPublicKeyURI());
         savePublicKey(keyStr);
-      return  keyStr;
+        return keyStr;
     }
 }

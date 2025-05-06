@@ -1,7 +1,7 @@
 package org.example.token_handler;
 
-import org.example.commands.CommandRequest;
 import org.example.commands.AvailableCommand;
+import org.example.commands.CommandRequest;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.value_types.Token;

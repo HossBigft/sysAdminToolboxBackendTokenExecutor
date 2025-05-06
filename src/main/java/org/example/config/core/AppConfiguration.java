@@ -3,7 +3,6 @@ package org.example.config.core;
 import org.example.config.AppConfigException;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 
 import static org.example.utils.Utils.generatePassword;
@@ -71,9 +70,10 @@ public class AppConfiguration {
     }
 
     public URI getPublicKeyURI() {
-            return environmentConfig.getPublicKeyURI();
+        return environmentConfig.getPublicKeyURI();
 
     }
+
     public void setPublicKeyURI(String keyURI) {
         environmentConfig.setPublicKeyURI(keyURI);
     }
