@@ -71,10 +71,10 @@ public class AppConfiguration {
     }
 
     public URI getPublicKeyURI() {
-        try {
-            return new URI(environmentConfig.getPublicKeyURI());
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+            return environmentConfig.getPublicKeyURI();
+
+    }
+    public void setPublicKeyURI(String keyURI) {
+        environmentConfig.setPublicKeyURI(keyURI);
     }
 }

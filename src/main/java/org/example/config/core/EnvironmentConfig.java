@@ -13,6 +13,8 @@ import org.example.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -58,23 +60,15 @@ public class EnvironmentConfig {
         setValue(EnvironmentConstants.ENV_DB_PASS_FIELD, password);
     }
 
-    public Path getPublicKeyPath() {
-        return Paths.get(
-                new EnvironmentConfig().getConfigDir().toString() + "/" + EnvironmentConstants.PUBLIC_KEY_FILENAME);
-    }
-
-    public String getPublicKeyURI() {
-        return getValue(EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD);
-    }
-
-    public void setPublicKeyURI(String uri) {
-        setValue(EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD, uri);
-    }
-
     private void setValue(String key,
                           String value) {
+        getLogger().debugEntry().message("Put key, value pair to in memory config.").field(key, value).log();
         configMap.put(key, value);
         saveConfig();
+    }
+
+    private CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
     }
 
     private void saveConfig() {
@@ -115,8 +109,9 @@ public class EnvironmentConfig {
         return configMap;
     }
 
-    private CliLogger getLogger() {
-        return LogManager.getInstance().getLogger();
+    public Path getPublicKeyPath() {
+        return Paths.get(
+                new EnvironmentConfig().getConfigDir().toString() + "/" + EnvironmentConstants.PUBLIC_KEY_FILENAME);
     }
 
     public void loadConfig() {
@@ -163,6 +158,22 @@ public class EnvironmentConfig {
 
     public int getDbUserPasswordLength() {
         return EnvironmentConstants.DB_USER_PASSWORD_LENGTH;
+    }
+
+    public URI getPublicKeyURI() {
+        String uriStr = getValue(EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD);
+        try {
+            return new URI(uriStr);
+        } catch (URISyntaxException e) {
+            getLogger().errorEntry().message("Failed to read public key URI")
+                    .field("Field", EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD).field("Value", uriStr).exception(e)
+                    .log();
+            throw new AppConfigException("Failed to read public key URI", e);
+        }
+    }
+
+    public void setPublicKeyURI(String uri) {
+        setValue(EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD, uri);
     }
 }
 

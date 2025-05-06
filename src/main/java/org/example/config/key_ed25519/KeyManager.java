@@ -29,7 +29,7 @@ public class KeyManager {
             base64Key = Files.readString(keyPath).trim();
         } catch (IOException e) {
             getLogger().infoEntry().message("Public key file not found.").field("File", keyPath).log();
-            base64Key = fetchPublicKey(AppConfiguration.getInstance().getPublicKeyURI());
+            base64Key = getPublicKeyStr();
             savePublicKey(base64Key);
         }
         byte[] derBytes = Base64.getDecoder().decode(base64Key);
@@ -46,7 +46,7 @@ public class KeyManager {
     public String fetchPublicKey(URI link) {
         HttpRequest request = HttpRequest.newBuilder().uri(link).GET().build();
         getLogger().infoEntry().message("Fetching backend public key.").log();
-        HttpResponse<String> response = null;
+        HttpResponse<String> response;
         try {
             response = HttpClient.newBuilder()
                     .build()
@@ -57,6 +57,7 @@ public class KeyManager {
         }
         String keyStr = response.body();
         getLogger().debugEntry().message("Public key fetched").field("Public key", keyStr).log();
+        AppConfiguration.getInstance().setPublicKeyURI(link.toString());
         return keyStr;
     }
 
@@ -70,5 +71,10 @@ public class KeyManager {
             getLogger().errorEntry().message("Failed to save public key to file").field("File", keyPath).exception(e)
                     .log();
         }
+    }
+    private String getPublicKeyStr(){
+        String keyStr = fetchPublicKey(AppConfiguration.getInstance().getPublicKeyURI());
+        savePublicKey(keyStr);
+      return  keyStr;
     }
 }
