@@ -1,7 +1,6 @@
 package org.example.config.core;
 
 import org.example.config.AppConfigException;
-import org.example.config.json_config.JsonConfigStore;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -53,25 +52,10 @@ public class AppConfiguration {
     }
 
     public String regenerateDatabasePassword() {
-        setConfigValue("DATABASE_PASSWORD", generatePassword(environmentConfig.getDbUserPasswordLength()));
-        saveConfig();
+        environmentConfig.setDatabasePassword(generatePassword(environmentConfig.getDbUserPasswordLength()));
         return getDatabasePassword();
     }
 
-
-    private void setConfigValue(String key,
-                                String value) {
-        environmentConfig.setValue(key, value);
-    }
-
-
-    public void saveConfig() {
-        try {
-            new JsonConfigStore(environmentConfig).saveConfig();
-        } catch (Exception e) {
-            throw new AppConfigException("Failed to save configuration", e);
-        }
-    }
 
     public String getDatabasePassword() {
         return environmentConfig.getDatabasePassword();
