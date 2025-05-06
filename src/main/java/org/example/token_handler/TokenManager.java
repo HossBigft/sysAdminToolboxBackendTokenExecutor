@@ -1,5 +1,6 @@
 package org.example.token_handler;
 
+import org.example.config.key_ed25519.KeyManager;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.value_types.Token;
@@ -70,7 +71,7 @@ public class TokenManager {
                 throw new IllegalArgumentException("Invalid signature length: " + signatureBytes.length);
             }
 
-            PublicKey publicKey = new KeyManager().getPublicKey();
+            PublicKey publicKey = new KeyManager().loadPublicKey();
 
             Signature signature = Signature.getInstance("Ed25519");
             signature.initVerify(publicKey);

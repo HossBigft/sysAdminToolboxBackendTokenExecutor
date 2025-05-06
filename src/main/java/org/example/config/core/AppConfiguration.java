@@ -3,6 +3,8 @@ package org.example.config.core;
 import org.example.config.AppConfigException;
 import org.example.config.json_config.JsonConfigStore;
 
+import java.nio.file.Path;
+
 import static org.example.utils.Utils.generatePassword;
 
 public class AppConfiguration {
@@ -75,5 +77,8 @@ public class AppConfiguration {
 
     public ConfigBootstrapper getBootstrapper() {
         return bootstrapper;
+    }
+    public Path getPublicKeyPath(){
+        return environmentConfig.getPublicKeyPath();
     }
 }

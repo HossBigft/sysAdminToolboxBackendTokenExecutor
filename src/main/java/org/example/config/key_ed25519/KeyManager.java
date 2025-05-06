@@ -1,11 +1,10 @@
-package org.example.token_handler;
+package org.example.config.key_ed25519;
 
-import org.example.config.core.EnvironmentConfig;
+import org.example.config.core.AppConfiguration;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -15,10 +14,10 @@ import java.util.Base64;
 
 
 public class KeyManager {
-    private static final Path PUBLIC_KEY_FILENAME = Paths.get("pub.key");
 
-    public PublicKey getPublicKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        Path keyPath = Paths.get(new EnvironmentConfig().getConfigDir().toString() + "/" + PUBLIC_KEY_FILENAME);
+
+    public PublicKey loadPublicKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        Path keyPath = AppConfiguration.getInstance().getPublicKeyPath();
         String base64Key = Files.readString(keyPath).trim();
         byte[] derBytes = Base64.getDecoder().decode(base64Key);
 

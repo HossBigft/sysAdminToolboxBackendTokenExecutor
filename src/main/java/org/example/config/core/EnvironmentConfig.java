@@ -5,6 +5,7 @@ import org.example.utils.ShellUtils;
 import org.example.utils.Utils;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +13,7 @@ import java.util.Map;
 public class EnvironmentConfig {
     private static final int DB_USER_PASSWORD_LENGTH = 15;
     private static final String ENV_DB_PASS_FIELD = "DATABASE_PASSWORD";
+    private static final Path PUBLIC_KEY_FILENAME = Paths.get("pub.key");
 
     private Map<String, String> configMap = new HashMap<>();
 
@@ -65,6 +67,9 @@ public class EnvironmentConfig {
 
     public String generatePassword(int length) {
         return Utils.generatePassword(length);
+    }
+    public Path getPublicKeyPath(){
+        return Paths.get(new EnvironmentConfig().getConfigDir().toString() + "/" + PUBLIC_KEY_FILENAME);
     }
 }
 
