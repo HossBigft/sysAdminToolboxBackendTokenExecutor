@@ -11,9 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EnvironmentConfig {
-    private static final int DB_USER_PASSWORD_LENGTH = 15;
-    private static final String ENV_DB_PASS_FIELD = "DATABASE_PASSWORD";
-    private static final Path PUBLIC_KEY_FILENAME = Paths.get("pub.key");
 
     private Map<String, String> configMap = new HashMap<>();
 
@@ -32,7 +29,7 @@ public class EnvironmentConfig {
     }
 
     public int getDbUserPasswordLength() {
-        return DB_USER_PASSWORD_LENGTH;
+        return EnvironmentConstants.DB_USER_PASSWORD_LENGTH;
     }
 
     public String getDatabaseUser() {
@@ -48,7 +45,7 @@ public class EnvironmentConfig {
     }
 
     public String getEnvDbPassFieldName() {
-        return ENV_DB_PASS_FIELD;
+        return EnvironmentConstants.ENV_DB_PASS_FIELD;
     }
 
     public void setValue(String key,
@@ -68,8 +65,15 @@ public class EnvironmentConfig {
     public String generatePassword(int length) {
         return Utils.generatePassword(length);
     }
-    public Path getPublicKeyPath(){
-        return Paths.get(new EnvironmentConfig().getConfigDir().toString() + "/" + PUBLIC_KEY_FILENAME);
+
+    public Path getPublicKeyPath() {
+        return Paths.get(new EnvironmentConfig().getConfigDir().toString() + "/" + EnvironmentConstants.PUBLIC_KEY_FILENAME);
+    }
+    public String getPublicKeyURI(){
+        return getValue(EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD);
+    }
+    public void setPublicKeyURI(String uri){
+        setValue(EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD,uri);
     }
 }
 

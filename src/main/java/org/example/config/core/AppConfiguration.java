@@ -3,6 +3,8 @@ package org.example.config.core;
 import org.example.config.AppConfigException;
 import org.example.config.json_config.JsonConfigStore;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 
 import static org.example.utils.Utils.generatePassword;
@@ -45,6 +47,7 @@ public class AppConfiguration {
             throw new AppConfigException("Failed to initialize configuration", e);
         }
     }
+
     public String getDatabaseUser() {
         return environmentConfig.getDatabaseUser();
     }
@@ -78,7 +81,16 @@ public class AppConfiguration {
     public ConfigBootstrapper getBootstrapper() {
         return bootstrapper;
     }
-    public Path getPublicKeyPath(){
+
+    public Path getPublicKeyPath() {
         return environmentConfig.getPublicKeyPath();
+    }
+
+    public URI getPublicKeyURI() {
+        try {
+            return new URI(environmentConfig.getPublicKeyURI());
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
