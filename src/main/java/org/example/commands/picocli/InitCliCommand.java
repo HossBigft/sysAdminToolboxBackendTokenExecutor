@@ -17,7 +17,7 @@ public class InitCliCommand extends AbstractCliCommand {
     @Override
     public Integer call() {
         try {
-            AppConfiguration.getInstance().initializeLazily();
+            AppConfiguration.getInstance().initialize();
             return 0;
         } catch (Exception e) {
             System.out.println("Failed to setup environment");
