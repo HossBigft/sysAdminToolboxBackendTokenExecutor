@@ -62,13 +62,8 @@ public class EnvironmentConfig {
 
     private void setValue(String key,
                           String value) {
-        getLogger().debugEntry().message("Put key, value pair to in memory config.").field(key, value).log();
         configMap.put(key, value);
         saveConfig();
-    }
-
-    private CliLogger getLogger() {
-        return LogManager.getInstance().getLogger();
     }
 
     private void saveConfig() {
@@ -82,7 +77,9 @@ public class EnvironmentConfig {
 
         try {
             mapper.writeValue(envFile, getConfigMap());
-            getLogger().info(action + " config file " + envFile);
+            getConfigMap().forEach(
+                    (k, v) -> getLogger().debugEntry().field(k, v).field("Action", action).field("File", envFile)
+                            .log());
 
         } catch (IOException e) {
             throw new AppConfigException("Failed to save config file", e);
@@ -107,6 +104,10 @@ public class EnvironmentConfig {
 
     public Map<String, String> getConfigMap() {
         return configMap;
+    }
+
+    private CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
     }
 
     public Path getPublicKeyPath() {
