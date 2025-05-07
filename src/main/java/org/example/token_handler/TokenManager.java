@@ -1,14 +1,13 @@
 package org.example.token_handler;
 
 import org.example.config.key_ed25519.KeyManager;
+import org.example.exceptions.KeyManagerException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.value_types.Token;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 
 public class TokenManager {
@@ -52,8 +51,8 @@ public class TokenManager {
 
         private static boolean verifyDigitalSignature(String message,
                                                       String digitalSignature)
-                throws IOException, NoSuchAlgorithmException, InvalidKeySpecException,
-                InvalidKeyException, SignatureException {
+                throws NoSuchAlgorithmException,
+                InvalidKeyException, SignatureException, KeyManagerException {
 
             getLogger().
                     debugEntry()
@@ -70,6 +69,7 @@ public class TokenManager {
                         warn("Invalid signature length: " + signatureBytes.length);
                 throw new IllegalArgumentException("Invalid signature length: " + signatureBytes.length);
             }
+
 
             PublicKey publicKey = new KeyManager().loadPublicKey();
 
