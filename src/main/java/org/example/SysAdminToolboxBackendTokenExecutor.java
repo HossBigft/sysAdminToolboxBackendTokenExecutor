@@ -1,7 +1,6 @@
 package org.example;
 
 import org.example.commands.picocli.ExecuteCliCommand;
-import org.example.commands.picocli.FetchKeyCliCommand;
 import org.example.commands.picocli.InitCliCommand;
 import org.example.config.core.AppConfiguration;
 import org.example.logging.core.LogLevel;
@@ -31,7 +30,6 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
         commandLine.addSubcommand(new ExecuteCliCommand(app));
         commandLine.addSubcommand(new InitCliCommand(app));
-        commandLine.addSubcommand(new FetchKeyCliCommand(app));
 
         if (args.length == 0) {
             String sshOriginalCommand = System.getenv("SSH_ORIGINAL_COMMAND");
