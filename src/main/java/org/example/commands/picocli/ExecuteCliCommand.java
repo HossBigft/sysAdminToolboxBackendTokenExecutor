@@ -1,9 +1,9 @@
 package org.example.commands.picocli;
 
 import org.example.SysAdminToolboxBackendTokenExecutor;
+import org.example.commands.AvailableCommand;
 import org.example.commands.Command;
 import org.example.commands.CommandRequest;
-import org.example.commands.AvailableCommand;
 import org.example.commands.dns.NsExecutorFactory;
 import org.example.commands.plesk.PleskCommandExecutorFactory;
 import org.example.token_handler.TokenProcessor;
