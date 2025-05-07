@@ -1,6 +1,5 @@
 package org.example.config.key_ed25519;
 
-import org.example.config.core.AppConfiguration;
 import org.example.exceptions.KeyManagerException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
@@ -20,62 +19,41 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.Optional;
 
-/**
- * Manages Ed25519 public key operations including loading, fetching, and saving.
- */
+
 public class KeyManager {
     private static final String ED25519_ALGORITHM = "Ed25519";
+    private final Path keyPath;
 
-    private final AppConfiguration appConfig;
-    private final CliLogger logger;
 
-    /**
-     * Default constructor that uses the singleton AppConfiguration and LogManager.
-     */
-    public KeyManager() {
-        this(AppConfiguration.getInstance(), LogManager.getInstance().getLogger());
-    }
-
-    /**
-     * Constructor with dependencies injection for better testability.
-     *
-     * @param appConfig The application configuration
-     * @param logger    The logger instance
-     */
-    public KeyManager(AppConfiguration appConfig,
-                      CliLogger logger) {
-        this.appConfig = appConfig;
-        this.logger = logger;
-
-        logger.debugEntry()
+    public KeyManager(Path keyPath) {
+        this.keyPath = keyPath;
+        getLogger().debugEntry()
                 .message("KeyManager initialized")
-
                 .log();
     }
 
-    /**
-     * Loads the public key from file or fetches it if not found.
-     *
-     * @return The Ed25519 public key
-     * @throws KeyManagerException if the key cannot be loaded or generated
-     */
-    public PublicKey loadPublicKey() throws KeyManagerException {
-        logger.debugEntry()
+    private CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
+    }
+
+
+    public PublicKey getPublicKeyOrFetch(URI keyURI) throws KeyManagerException {
+        getLogger().debugEntry()
                 .message("Loading public key")
                 .log();
 
         try {
-            String base64Key = loadKeyFromFileOrFetch();
+            String base64Key = loadKeyFromFileOrFetch(keyURI);
             PublicKey key = convertToPublicKey(base64Key);
 
-            logger.debugEntry()
+            getLogger().debugEntry()
                     .message("Public key successfully loaded")
                     .field("KeyAlgorithm", ED25519_ALGORITHM)
                     .log();
 
             return key;
         } catch (KeyManagerException e) {
-            logger.errorEntry()
+            getLogger().errorEntry()
                     .message("Failed to load public key")
                     .exception(e)
                     .log();
@@ -83,37 +61,30 @@ public class KeyManager {
         }
     }
 
-    /**
-     * Attempts to load the key from file, fetches from server if not found.
-     *
-     * @return Base64 encoded public key string
-     * @throws KeyManagerException if both file read and fetch operations fail
-     */
-    private String loadKeyFromFileOrFetch() throws KeyManagerException {
-        logger.debugEntry()
+
+    private String loadKeyFromFileOrFetch(URI keyURI) throws KeyManagerException {
+        getLogger().debugEntry()
                 .message("Attempting to load key from file or fetch from server")
                 .log();
 
         Optional<String> fileKey = readKeyFromFile();
         if (fileKey.isPresent()) {
-            logger.debugEntry()
+            getLogger().debugEntry()
                     .message("Using key from file")
                     .log();
             return fileKey.get();
         }
-
-        return fetchAndSavePublicKey();
+        String keyStr = fetchPublicKey(keyURI);
+        savePublicKey(keyStr);
+        return keyStr;
     }
 
-    /**
-     * Converts a Base64 encoded key string to a PublicKey object.
-     *
-     * @param base64Key The Base64 encoded key string
-     * @return The PublicKey object
-     * @throws KeyManagerException if key conversion fails
-     */
+    public void fetchKeyAndSave(URI keyURI) throws KeyManagerException {
+        String keyStr = fetchPublicKey(keyURI);
+        savePublicKey(keyStr);
+    }
     private PublicKey convertToPublicKey(String base64Key) throws KeyManagerException {
-        logger.debugEntry()
+        getLogger().debugEntry()
                 .message("Converting Base64 key to PublicKey object")
                 .field("KeyLength", base64Key.length())
                 .log();
@@ -121,7 +92,7 @@ public class KeyManager {
         try {
             byte[] derBytes = Base64.getDecoder().decode(base64Key);
 
-            logger.debugEntry()
+            getLogger().debugEntry()
                     .message("Decoded Base64 key")
 
                     .field("DecodedLength", derBytes.length)
@@ -131,7 +102,7 @@ public class KeyManager {
             KeyFactory keyFactory = KeyFactory.getInstance(ED25519_ALGORITHM);
             PublicKey publicKey = keyFactory.generatePublic(keySpec);
 
-            logger.debugEntry()
+            getLogger().debugEntry()
                     .message("Successfully created PublicKey object")
 
                     .field("KeyAlgorithm", publicKey.getAlgorithm())
@@ -140,21 +111,21 @@ public class KeyManager {
 
             return publicKey;
         } catch (NoSuchAlgorithmException e) {
-            logger.errorEntry()
+            getLogger().errorEntry()
                     .message("Ed25519 algorithm not supported by this JVM")
 
                     .exception(e)
                     .log();
             throw new KeyManagerException("Ed25519 algorithm not supported by this JVM", e);
         } catch (InvalidKeySpecException e) {
-            logger.errorEntry()
+            getLogger().errorEntry()
                     .message("Invalid key format")
 
                     .exception(e)
                     .log();
             throw new KeyManagerException("Invalid key format", e);
         } catch (IllegalArgumentException e) {
-            logger.errorEntry()
+            getLogger().errorEntry()
                     .message("Invalid Base64 encoding in key")
 
                     .exception(e)
@@ -163,22 +134,17 @@ public class KeyManager {
         }
     }
 
-    /**
-     * Reads the key from the configured file path.
-     *
-     * @return Optional containing the key if file exists and is readable, empty otherwise
-     */
-    private Optional<String> readKeyFromFile() {
-        Path keyPath = appConfig.getPublicKeyPath();
 
-        logger.debugEntry()
+    private Optional<String> readKeyFromFile() {
+
+        getLogger().debugEntry()
                 .message("Reading key from file")
                 .field("KeyPath", keyPath)
                 .log();
 
         try {
             if (!Files.exists(keyPath)) {
-                logger.infoEntry()
+                getLogger().infoEntry()
                         .message("Public key file not found")
                         .field("KeyPath", keyPath)
                         .log();
@@ -188,21 +154,21 @@ public class KeyManager {
             String key = Files.readString(keyPath).trim();
 
             if (key.isEmpty()) {
-                logger.warnEntry()
+                getLogger().warnEntry()
                         .message("Public key file exists but is empty")
                         .field("KeyPath", keyPath)
                         .log();
                 return Optional.empty();
             }
 
-            logger.debugEntry()
+            getLogger().debugEntry()
                     .message("Public key successfully loaded from file")
                     .field("KeyPath", keyPath)
                     .field("KeyLength", key.length())
                     .log();
             return Optional.of(key);
         } catch (IOException e) {
-            logger.warnEntry()
+            getLogger().warnEntry()
                     .message("Failed to read public key file")
                     .field("KeyPath", keyPath)
                     .field("Error", e.getMessage())
@@ -212,57 +178,24 @@ public class KeyManager {
         }
     }
 
-    /**
-     * Fetches the public key from the server and saves it locally.
-     *
-     * @return The fetched public key string
-     * @throws KeyManagerException if fetching fails
-     */
-    private String fetchAndSavePublicKey() throws KeyManagerException {
-        URI uri = appConfig.getPublicKeyURI();
 
-        logger.debugEntry()
-                .message("Fetching public key")
-                .field("URI", uri)
-                .log();
 
-        try {
-            String keyStr = fetchPublicKey(uri);
-            savePublicKey(keyStr);
-            return keyStr;
-        } catch (KeyManagerException e) {
-            logger.errorEntry()
-                    .message("Failed to fetch and save public key")
-                    .field("URI", uri)
-                    .exception(e)
-                    .log();
-            throw e;
-        }
-    }
-
-    /**
-     * Fetches the public key from the specified URI.
-     *
-     * @param uri The URI to fetch the key from
-     * @return The public key string
-     * @throws KeyManagerException if fetching fails
-     */
-    public String fetchPublicKey(URI uri) throws KeyManagerException {
+    private String fetchPublicKey(URI uri) throws KeyManagerException {
         if (uri == null) {
-            logger.errorEntry()
+            getLogger().errorEntry()
                     .message("Cannot fetch public key: URI is null")
                     .log();
             throw new KeyManagerException("Public key URI is null");
         }
 
-        logger.infoEntry()
+        getLogger().infoEntry()
                 .message("Fetching public key from server")
                 .field("URI", uri)
                 .log();
         HttpRequest request = HttpRequest.newBuilder().uri(uri).GET().build();
 
         try {
-            logger.debugEntry()
+            getLogger().debugEntry()
                     .message("Sending HTTP request")
                     .field("Method", request.method())
                     .field("URI", request.uri())
@@ -271,14 +204,14 @@ public class KeyManager {
                     .build()
                     .send(request, HttpResponse.BodyHandlers.ofString());
 
-            logger.debugEntry()
+            getLogger().debugEntry()
                     .message("Received HTTP response")
                     .field("StatusCode", response.statusCode())
                     .field("Body", response.body())
                     .log();
 
             if (response.statusCode() != 200) {
-                logger.errorEntry()
+                getLogger().errorEntry()
                         .message("Failed to fetch public key: Non-200 HTTP status")
                         .field("StatusCode", response.statusCode())
                         .field("URI", uri)
@@ -288,30 +221,28 @@ public class KeyManager {
 
             String keyStr = response.body();
             if (keyStr == null || keyStr.isBlank()) {
-                logger.errorEntry()
+                getLogger().errorEntry()
                         .message("Received empty public key from server")
                         .field("URI", uri)
                         .log();
                 throw new KeyManagerException("Received empty public key");
             }
 
-            logger.infoEntry()
+            getLogger().infoEntry()
                     .message("Public key successfully fetched")
                     .field("URI", uri)
                     .field("Key", keyStr)
                     .log();
-
-            appConfig.setPublicKeyURI(uri.toString());
             return keyStr;
         } catch (IOException e) {
-            logger.errorEntry()
+            getLogger().errorEntry()
                     .message("Network error while fetching public key")
                     .field("URI", uri)
                     .exception(e)
                     .log();
             throw new KeyManagerException("Network error while fetching public key", e);
         } catch (InterruptedException e) {
-            logger.errorEntry()
+            getLogger().errorEntry()
                     .message("Thread interrupted while fetching public key")
                     .field("URI", uri)
                     .exception(e)
@@ -322,23 +253,17 @@ public class KeyManager {
         }
     }
 
-    /**
-     * Saves the public key to the configured file path.
-     *
-     * @param keyStr The key string to save
-     * @throws KeyManagerException if saving fails
-     */
-    public void savePublicKey(String keyStr) throws KeyManagerException {
+
+    private void savePublicKey(String keyStr) throws KeyManagerException {
         if (keyStr == null || keyStr.isBlank()) {
-            logger.errorEntry()
+            getLogger().errorEntry()
                     .message("Cannot save empty or null public key")
                     .log();
             throw new KeyManagerException("Cannot save empty or null public key");
         }
 
-        Path keyPath = appConfig.getPublicKeyPath();
 
-        logger.infoEntry()
+        getLogger().infoEntry()
                 .message("Saving public key to file")
                 .field("KeyPath", keyPath)
                 .field("KeyLength", keyStr.length())
@@ -347,7 +272,7 @@ public class KeyManager {
         try {
             Path parentDir = keyPath.getParent();
             if (parentDir != null && !Files.exists(parentDir)) {
-                logger.debugEntry()
+                getLogger().debugEntry()
                         .message("Creating parent directories for key file")
                         .field("Directory", parentDir)
                         .log();
@@ -357,12 +282,12 @@ public class KeyManager {
 
             Files.writeString(keyPath, keyStr);
 
-            logger.infoEntry()
+            getLogger().infoEntry()
                     .message("Public key successfully saved to file")
                     .field("KeyPath", keyPath)
                     .log();
         } catch (IOException e) {
-            logger.errorEntry()
+            getLogger().errorEntry()
                     .message("Failed to save public key to file")
                     .field("KeyPath", keyPath)
                     .exception(e)

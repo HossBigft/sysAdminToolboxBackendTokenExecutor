@@ -1,5 +1,6 @@
 package org.example.token_handler;
 
+import org.example.config.core.AppConfiguration;
 import org.example.config.key_ed25519.KeyManager;
 import org.example.exceptions.KeyManagerException;
 import org.example.logging.core.CliLogger;
@@ -52,7 +53,7 @@ public class TokenManager {
         private static boolean verifyDigitalSignature(String message,
                                                       String digitalSignature)
                 throws NoSuchAlgorithmException,
-                InvalidKeyException, SignatureException, KeyManagerException {
+                InvalidKeyException, SignatureException {
 
             getLogger().
                     debugEntry()
@@ -71,7 +72,7 @@ public class TokenManager {
             }
 
 
-            PublicKey publicKey = new KeyManager().loadPublicKey();
+            PublicKey publicKey = AppConfiguration.getInstance().getPublicKey();
 
             Signature signature = Signature.getInstance("Ed25519");
             signature.initVerify(publicKey);

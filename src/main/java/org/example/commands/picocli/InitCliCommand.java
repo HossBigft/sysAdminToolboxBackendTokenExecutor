@@ -2,9 +2,7 @@ package org.example.commands.picocli;
 
 import org.example.SysAdminToolboxBackendTokenExecutor;
 import org.example.config.core.AppConfiguration;
-import org.example.config.key_ed25519.KeyManager;
 import picocli.CommandLine;
-import java.net.URI;
 
 @CommandLine.Command(
         name = "init",
@@ -28,8 +26,7 @@ public class InitCliCommand extends AbstractCliCommand {
         try {
             if (keyLink != null && !keyLink.isEmpty()) {
                 System.out.println("Fetching public key from: " + keyLink);
-                KeyManager km = new KeyManager();
-                km.savePublicKey(km.fetchPublicKey(new URI(keyLink)));
+                AppConfiguration.getInstance().setPublicKeyURI(keyLink);
                 System.out.println("Public key fetched and saved successfully");
             }
             AppConfiguration.getInstance().initialize();

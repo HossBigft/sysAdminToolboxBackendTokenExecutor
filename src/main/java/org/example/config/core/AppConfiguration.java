@@ -1,9 +1,11 @@
 package org.example.config.core;
 
 import org.example.config.AppConfigException;
+import org.example.config.key_ed25519.KeyManager;
+import org.example.exceptions.KeyManagerException;
 
 import java.net.URI;
-import java.nio.file.Path;
+import java.security.PublicKey;
 
 import static org.example.utils.Utils.generatePassword;
 
@@ -11,11 +13,13 @@ public class AppConfiguration {
     private static AppConfiguration instance;
     private final EnvironmentConfig environmentConfig;
     private final ConfigBootstrapper bootstrapper;
+    private final KeyManager keyManager;
 
 
     private AppConfiguration() {
         this.environmentConfig = new EnvironmentConfig();
         this.bootstrapper = new ConfigBootstrapper(environmentConfig);
+        this.keyManager = new KeyManager(environmentConfig.getPublicKeyPath());
     }
 
 
@@ -65,16 +69,21 @@ public class AppConfiguration {
         return bootstrapper;
     }
 
-    public Path getPublicKeyPath() {
-        return environmentConfig.getPublicKeyPath();
-    }
-
-    public URI getPublicKeyURI() {
+    public PublicKey getPublicKey() {
+        try {
+            return keyManager.getPublicKeyOrFetch(getPublicKeyURI());
+        } catch (KeyManagerException e) {
+            throw new AppConfigException("Failed to retrieve public key", e);
+        }
+    }    private URI getPublicKeyURI() {
         return environmentConfig.getPublicKeyURI();
 
     }
 
-    public void setPublicKeyURI(String keyURI) {
+    public void setPublicKeyURI(String keyURI) throws KeyManagerException {
         environmentConfig.setPublicKeyURI(keyURI);
+        keyManager.fetchKeyAndSave(getPublicKeyURI());
     }
+
+
 }
