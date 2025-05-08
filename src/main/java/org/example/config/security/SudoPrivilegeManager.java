@@ -30,7 +30,7 @@ public class SudoPrivilegeManager {
                     .owner(EnvironmentConstants.SUPERADMIN_USER)
                     .group(EnvironmentConstants.SUPERADMIN_USER);
 
-    public void setupSudoPrivileges() throws CommandFailedException, IOException, URISyntaxException {
+    public void setupSudoPrivileges() throws CommandFailedException, IOException {
         File sudoersFile = Paths.get(SUDOERS_DIR + cprovider.getDatabaseUser()).toFile();
 
         if (sudoersFile.isFile() && isFileInsecure()) {
@@ -48,13 +48,13 @@ public class SudoPrivilegeManager {
         }
     }
 
-    private boolean isFileInsecure() throws IOException {
+    private boolean isFileInsecure()  {
 
         return !sudoersFilePolicy.isSecured();
 
     }
 
-    private void securePermissions() throws IOException {
+    private void securePermissions()  {
         sudoersFilePolicy.enforce();
     }
 

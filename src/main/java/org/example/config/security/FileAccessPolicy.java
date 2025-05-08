@@ -50,14 +50,20 @@ public class FileAccessPolicy {
         return this;
     }
 
-    @CheckReturnValue
+    public void enforce() {
+        if (!isSecured()) {
+            owner.ifPresent(o -> quietly(() -> setOwner(o)));
+            group.ifPresent(g -> quietly(() -> setGroup(g)));
+            permissions.ifPresent(p -> quietly(() -> setPermissions(p)));
+        }
+    }
+
     public boolean isSecured() {
 
         boolean permsOk = permissions.map(this::hasCorrectPermissions).orElse(true);
         boolean ownerOk = owner.map(this::hasCorrectOwner).orElse(true);
         boolean groupOk = group.map(this::hasCorrectGroup).orElse(true);
 
-        String filename = path.getFileName().toString();
 
         if (!permsOk) {
             permissions.map(PosixFilePermissions::toString)
@@ -85,6 +91,43 @@ public class FileAccessPolicy {
         return permsOk && ownerOk && groupOk;
     }
 
+    private void quietly(IORunnable r) {
+        try {
+            r.run();
+        } catch (IOException e) {
+            getLogger().errorEntry()
+                    .message("Failed to apply file policy")
+                    .field("path", path.toString())
+                    .exception(e)
+                    .log();
+            throw new RuntimeException("File policy enforcement failed", e);
+        }
+    }
+
+    private void setOwner(String owner) throws IOException {
+        UserPrincipal
+                userPrincipal =
+                FileSystems.getDefault().getUserPrincipalLookupService().lookupPrincipalByName(owner);
+        Files.setAttribute(path, "posix:owner", userPrincipal, LinkOption.NOFOLLOW_LINKS);
+        getLogger().infoEntry().message("Set owner [" + owner + "]").field("File", path).log();
+    }
+
+    private void setGroup(String group) throws IOException {
+        GroupPrincipal
+                groupPrincipal =
+                FileSystems.getDefault().getUserPrincipalLookupService().lookupPrincipalByGroupName(group);
+        Files.setAttribute(path, "posix:group", groupPrincipal, LinkOption.NOFOLLOW_LINKS);
+        getLogger().infoEntry().message("Set group [" + group + "]").field("File", path).log();
+    }
+
+    private void setPermissions(Set<PosixFilePermission> permissions) throws IOException {
+        Files.setPosixFilePermissions(path, permissions);
+        getLogger().infoEntry()
+                .message("Set file permissions")
+                .field("permissions", PosixFilePermissions.toString(permissions))
+                .field("path", path.toString())
+                .log();
+    }
 
     private boolean hasCorrectPermissions(Set<PosixFilePermission> expectedPerms) {
         try {
@@ -129,54 +172,8 @@ public class FileAccessPolicy {
         }
     }
 
-
     private static CliLogger getLogger() {
         return LogManager.getInstance().getLogger();
-    }
-
-    public void enforce() {
-
-        owner.ifPresent(o -> quietly(() -> setOwner(o)));
-        group.ifPresent(g -> quietly(() -> setGroup(g)));
-        permissions.ifPresent(p -> quietly(() -> setPermissions(p)));
-    }
-
-    private void quietly(IORunnable r) {
-        try {
-            r.run();
-        } catch (IOException e) {
-            getLogger().errorEntry()
-                    .message("Failed to apply file policy")
-                    .field("path", path.toString())
-                    .exception(e)
-                    .log();
-            throw new RuntimeException("File policy enforcement failed", e);
-        }
-    }
-
-    private void setOwner(String owner) throws IOException {
-        UserPrincipal
-                userPrincipal =
-                FileSystems.getDefault().getUserPrincipalLookupService().lookupPrincipalByName(owner);
-        Files.setAttribute(path, "posix:owner", userPrincipal, LinkOption.NOFOLLOW_LINKS);
-        getLogger().infoEntry().message("Set owner [" + owner + "]").field("File", path).log();
-    }
-
-    private void setGroup(String group) throws IOException {
-        GroupPrincipal
-                groupPrincipal =
-                FileSystems.getDefault().getUserPrincipalLookupService().lookupPrincipalByGroupName(group);
-        Files.setAttribute(path, "posix:group", groupPrincipal, LinkOption.NOFOLLOW_LINKS);
-        getLogger().infoEntry().message("Set group [" + group + "]").field("File", path).log();
-    }
-
-    private void setPermissions(Set<PosixFilePermission> permissions) throws IOException {
-        Files.setPosixFilePermissions(path, permissions);
-        getLogger().infoEntry()
-                .message("Set file permissions")
-                .field("permissions", PosixFilePermissions.toString(permissions))
-                .field("path", path.toString())
-                .log();
     }
 
     @FunctionalInterface
