@@ -88,7 +88,8 @@ public class KeyManager {
 
     private PublicKey convertToPublicKey(String base64Key) throws KeyManagerException {
         getLogger().debugEntry()
-                .message("Converting Base64 key to PublicKey object")
+                .message("Converting Base64 encoded key to PublicKey object")
+                .field("Encoded key", base64Key)
                 .field("KeyLength", base64Key.length())
                 .log();
 
@@ -96,27 +97,18 @@ public class KeyManager {
             byte[] derBytes = Base64.getDecoder().decode(base64Key);
 
             getLogger().debugEntry()
-                    .message("Decoded Base64 key")
-
+                    .field("Decode Base64 key", "Success")
                     .field("DecodedLength", derBytes.length)
                     .log();
 
             X509EncodedKeySpec keySpec = new X509EncodedKeySpec(derBytes);
             KeyFactory keyFactory = KeyFactory.getInstance(ED25519_ALGORITHM);
-            PublicKey publicKey = keyFactory.generatePublic(keySpec);
 
-            getLogger().debugEntry()
-                    .message("Successfully created PublicKey object")
 
-                    .field("KeyAlgorithm", publicKey.getAlgorithm())
-                    .field("KeyFormat", publicKey.getFormat())
-                    .log();
-
-            return publicKey;
+            return keyFactory.generatePublic(keySpec);
         } catch (NoSuchAlgorithmException e) {
             getLogger().errorEntry()
                     .message("Ed25519 algorithm not supported by this JVM")
-
                     .exception(e)
                     .log();
             throw new KeyManagerException("Ed25519 algorithm not supported by this JVM", e);
@@ -260,6 +252,10 @@ public class KeyManager {
             throw new KeyManagerException("Cannot save empty or null public key");
         }
 
+        String keyWithoutPem = keyStr.replace("-----BEGIN PUBLIC KEY-----", "")
+                .replaceAll(System.lineSeparator(), "")
+                .replace("-----END PUBLIC KEY-----", "");
+
 
         getLogger().infoEntry()
                 .message("Saving public key to file")
@@ -278,11 +274,12 @@ public class KeyManager {
                 Files.createDirectories(parentDir);
             }
 
-            Files.writeString(keyPath, keyStr);
+            Files.writeString(keyPath, keyWithoutPem);
             accessPolicy.enforce();
 
             getLogger().infoEntry()
                     .message("Public key successfully saved to file")
+                    .field("Key", keyWithoutPem)
                     .field("KeyPath", keyPath)
                     .log();
         } catch (IOException e) {
