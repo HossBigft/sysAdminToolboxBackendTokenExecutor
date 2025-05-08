@@ -2,9 +2,11 @@ package org.example.config.core;
 
 import org.example.config.AppConfigException;
 import org.example.config.database.DatabaseSetupCoordinator;
+import org.example.config.key_ed25519.KeyManager;
 import org.example.config.security.SudoPrivilegeManager;
 import org.example.constants.Executables;
 import org.example.exceptions.CommandFailedException;
+import org.example.exceptions.KeyManagerException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 
@@ -71,6 +73,7 @@ public class ConfigBootstrapper {
             logger.debug("Config file " + environmentConfig.getEnvFilePath() + " is loaded.");
             ensureSudoPrivilegesConfigured();
             new DatabaseSetupCoordinator().ensureDatabaseSetup();
+            ensurePublicKey();
         } catch (Exception e) {
             logger.error("Failed to initialize configuration", e);
             throw new AppConfigException("Configuration initialization failed", e);
@@ -82,6 +85,13 @@ public class ConfigBootstrapper {
             new DatabaseSetupCoordinator().ensureDatabaseSetup();
             isDbSetup = true;
         }
+    }
+    private void ensurePublicKey() throws KeyManagerException {
+        logger.debugEntry().message("Ensuring public key is present.").log();
+        KeyManager km =  new KeyManager(environmentConfig.getPublicKeyPath());
+        if (km.readKeyFromFile().isEmpty()){
+           km.fetchKeyAndSave(environmentConfig.getPublicKeyURI());
+        };
     }
 }
 

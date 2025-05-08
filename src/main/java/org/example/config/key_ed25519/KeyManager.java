@@ -1,5 +1,6 @@
 package org.example.config.key_ed25519;
 
+import org.example.config.security.FileAccessPolicy;
 import org.example.exceptions.KeyManagerException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
@@ -22,11 +23,17 @@ import java.util.Optional;
 
 public class KeyManager {
     private static final String ED25519_ALGORITHM = "Ed25519";
+    private static final String KEYFILE_PERMISSIONS = "rw-------";
+    private static final String KEYFILE_OWNER = "root";
+    private static final String KEYFILE_GROUP = "root";
     private final Path keyPath;
-
+    private final FileAccessPolicy accessPolicy;
 
     public KeyManager(Path keyPath) {
         this.keyPath = keyPath;
+
+        this.accessPolicy = new FileAccessPolicy(keyPath.toFile()).permissions(KEYFILE_PERMISSIONS).owner(KEYFILE_OWNER)
+                .group(KEYFILE_GROUP);
         getLogger().debugEntry()
                 .message("KeyManager initialized")
                 .log();
@@ -79,10 +86,6 @@ public class KeyManager {
         return keyStr;
     }
 
-    public void fetchKeyAndSave(URI keyURI) throws KeyManagerException {
-        String keyStr = fetchPublicKey(keyURI);
-        savePublicKey(keyStr);
-    }
     private PublicKey convertToPublicKey(String base64Key) throws KeyManagerException {
         getLogger().debugEntry()
                 .message("Converting Base64 key to PublicKey object")
@@ -127,15 +130,13 @@ public class KeyManager {
         } catch (IllegalArgumentException e) {
             getLogger().errorEntry()
                     .message("Invalid Base64 encoding in key")
-
                     .exception(e)
                     .log();
             throw new KeyManagerException("Invalid Base64 encoding in key", e);
         }
     }
 
-
-    private Optional<String> readKeyFromFile() {
+    public Optional<String> readKeyFromFile() {
 
         getLogger().debugEntry()
                 .message("Reading key from file")
@@ -178,9 +179,7 @@ public class KeyManager {
         }
     }
 
-
-
-    private String fetchPublicKey(URI uri) throws KeyManagerException {
+    public String fetchPublicKey(URI uri) throws KeyManagerException {
         if (uri == null) {
             getLogger().errorEntry()
                     .message("Cannot fetch public key: URI is null")
@@ -253,7 +252,6 @@ public class KeyManager {
         }
     }
 
-
     private void savePublicKey(String keyStr) throws KeyManagerException {
         if (keyStr == null || keyStr.isBlank()) {
             getLogger().errorEntry()
@@ -281,6 +279,7 @@ public class KeyManager {
             }
 
             Files.writeString(keyPath, keyStr);
+            accessPolicy.enforce();
 
             getLogger().infoEntry()
                     .message("Public key successfully saved to file")
@@ -294,5 +293,10 @@ public class KeyManager {
                     .log();
             throw new KeyManagerException("Failed to save public key to file: " + keyPath, e);
         }
+    }
+
+    public void fetchKeyAndSave(URI keyURI) throws KeyManagerException {
+        String newKeyStr = fetchPublicKey(keyURI);
+        savePublicKey(newKeyStr);
     }
 }

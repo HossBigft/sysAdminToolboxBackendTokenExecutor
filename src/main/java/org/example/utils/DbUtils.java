@@ -1,7 +1,7 @@
 package org.example.utils;
 
+import org.example.config.AppConfigException;
 import org.example.config.core.AppConfiguration;
-import org.example.config.core.ConfigBootstrapper;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -52,22 +52,24 @@ public class DbUtils {
         return new Query(sql, id);
     }
 
-    private static Connection getConnection() throws SQLException {
+    private static Connection getConnection() {
         AppConfiguration config = AppConfiguration.getInstance();
-        ConfigBootstrapper bootstrapper = config.getBootstrapper();
-
-        try {
-            bootstrapper.ensureDatabaseSetup();
-        } catch (Exception e) {
-            throw new RuntimeException("Database setup failed", e);
-        }
-
-        String dbName = "psa";
+        String dbUrl = "jdbc:mysql://localhost/psa";
         String dbUser = config.getDatabaseUser();
         String dbPassword = config.getDatabasePassword();
-        String dbUrl = String.format("jdbc:mysql://localhost/%s", dbName);
 
-        return DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+        try {
+            return DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+        } catch (SQLException firstEx) {
+            config.getBootstrapper().ensureDatabaseSetup();
+            try {
+                return DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+            } catch (SQLException secondEx) {
+                SQLException combined = new SQLException("Failed to connect to database after setup", secondEx);
+                combined.addSuppressed(firstEx);
+                throw new AppConfigException("Database connection failed", combined);
+            }
+        }
     }
 
     public static Optional<List<String>> fetchSubscriptionInfoByDomain(String domain) throws SQLException {
