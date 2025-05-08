@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 public class LogEntry {
     private static final String[] SENSITIVE_FIELD_NAMES = {
-            "PASSWORD", "SECRET", "TOKEN", "CREDENTIAL", "AUTH"
+            "PASSWORD", "SECRET", "CREDENTIAL", "AUTH"
     };
     private final Map<String, Object> fields = new LinkedHashMap<>();
 
