@@ -57,15 +57,15 @@ public class EnvironmentConfig {
     }
 
     public void setDatabasePassword(String password) {
-        setValue(EnvironmentConstants.ENV_DB_PASS_FIELD, password);
+        updateValue(EnvironmentConstants.ENV_DB_PASS_FIELD, password);
     }
 
-    private void setValue(String key,
-                          String value) {
+    private void updateValue(String key,
+                             String value) {
+        loadConfig();
         configMap.put(key, value);
         saveConfig();
     }
-
     private void saveConfig() {
         ensureConfigDirExists();
 
@@ -149,7 +149,7 @@ public class EnvironmentConfig {
                                      Supplier<String> defaultValueSupplier) {
         String value = getValue(key);
         if (value == null || value.isBlank()) {
-            setValue(key, defaultValueSupplier.get());
+            updateValue(key, defaultValueSupplier.get());
         }
     }
 
@@ -174,7 +174,7 @@ public class EnvironmentConfig {
     }
 
     public void setPublicKeyURI(String uri) {
-        setValue(EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD, uri);
+        updateValue(EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD, uri);
     }
 }
 
