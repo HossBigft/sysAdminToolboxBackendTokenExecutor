@@ -26,20 +26,6 @@ public class EnvironmentConfig {
 
     private Map<String, String> configMap = new HashMap<>();
 
-
-    public String getEnvFilePath() {
-        return getEnvFile().getPath();
-    }
-
-    public File getEnvFile() {
-        return Paths.get(getConfigDir() + "/" + EnvironmentConstants.ENV_FILENAME).toFile();
-    }
-
-    public File getConfigDir() {
-        final String appUser = ShellUtils.resolveAppUser();
-        return Paths.get("/home/" + appUser + "/." + EnvironmentConstants.APP_NAME).toFile();
-    }
-
     public String getDatabaseUser() {
         return EnvironmentConstants.APP_NAME;
     }
@@ -66,6 +52,7 @@ public class EnvironmentConfig {
         configMap.put(key, value);
         saveConfig();
     }
+
     private void saveConfig() {
         ensureConfigDirExists();
 
@@ -106,13 +93,18 @@ public class EnvironmentConfig {
         return configMap;
     }
 
-    private CliLogger getLogger() {
-        return LogManager.getInstance().getLogger();
+    public void setConfigMap(Map<String, String> configMap) {
+        this.configMap = new HashMap<>(configMap);
     }
 
     public Path getPublicKeyPath() {
         return Paths.get(
                 new EnvironmentConfig().getConfigDir().toString() + "/" + EnvironmentConstants.PUBLIC_KEY_FILENAME);
+    }
+
+    public File getConfigDir() {
+        final String appUser = ShellUtils.resolveAppUser();
+        return Paths.get("/home/" + appUser + "/." + EnvironmentConstants.APP_NAME).toFile();
     }
 
     public void loadConfig() {
@@ -141,10 +133,6 @@ public class EnvironmentConfig {
         }
     }
 
-    public void setConfigMap(Map<String, String> configMap) {
-        this.configMap = new HashMap<>(configMap);
-    }
-
     private void setDefaultIfMissing(String key,
                                      Supplier<String> defaultValueSupplier) {
         String value = getValue(key);
@@ -163,6 +151,12 @@ public class EnvironmentConfig {
 
     public URI getPublicKeyURI() {
         String uriStr = getValue(EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD);
+        if (uriStr == null) {
+            getLogger().errorEntry().message("Public key URI is not set or config is nto readable")
+                    .field("Field", EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD)
+                    .field("File", getEnvFilePath()).log();
+            throw new AppConfigException("Failed to read public key URI from config file.");
+        }
         try {
             return new URI(uriStr);
         } catch (URISyntaxException e) {
@@ -171,6 +165,18 @@ public class EnvironmentConfig {
                     .log();
             throw new AppConfigException("Failed to read public key URI", e);
         }
+    }
+
+    private CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
+    }
+
+    public String getEnvFilePath() {
+        return getEnvFile().getPath();
+    }
+
+    public File getEnvFile() {
+        return Paths.get(getConfigDir() + "/" + EnvironmentConstants.ENV_FILENAME).toFile();
     }
 
     public void setPublicKeyURI(String uri) {

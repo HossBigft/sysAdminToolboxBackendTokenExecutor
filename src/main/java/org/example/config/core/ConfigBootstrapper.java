@@ -86,11 +86,17 @@ public class ConfigBootstrapper {
             isDbSetup = true;
         }
     }
-    private void ensurePublicKey() throws KeyManagerException {
+    private void ensurePublicKey(){
         logger.debugEntry().message("Ensuring public key is present.").log();
         KeyManager km =  new KeyManager(environmentConfig.getPublicKeyPath());
         if (km.readKeyFromFile().isEmpty()){
-           km.fetchKeyAndSave(environmentConfig.getPublicKeyURI());
+            try {
+                km.fetchKeyAndSave(environmentConfig.getPublicKeyURI());
+            } catch (AppConfigException e){
+                System.err.println("Public key link is not set. Set it with 'init LINK' command");
+            } catch (KeyManagerException e){
+
+            }
         };
     }
 }
