@@ -1,6 +1,7 @@
 package org.example;
 
 import org.example.commands.picocli.ExecuteCliCommand;
+import org.example.commands.picocli.HealthCheckCliCommand;
 import org.example.commands.picocli.InitCliCommand;
 import org.example.config.core.AppConfiguration;
 import org.example.logging.core.LogLevel;
@@ -16,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-@Command(name = "sysadmintoolbox", description = "Safe root wrapper for executing system administration commands", version = "0.1", mixinStandardHelpOptions = true)
+@Command(name = "sysadmintoolbox", description = "Safe root wrapper for executing system administration commands", version = "0.2", mixinStandardHelpOptions = true)
 public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
     @Option(names = {"--debug"}, description = "Enable debug output", scope = CommandLine.ScopeType.INHERIT)
@@ -30,6 +31,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
         commandLine.addSubcommand(new ExecuteCliCommand(app));
         commandLine.addSubcommand(new InitCliCommand(app));
+        commandLine.addSubcommand(new HealthCheckCliCommand(app));
 
         if (args.length == 0) {
             String sshOriginalCommand = System.getenv("SSH_ORIGINAL_COMMAND");
