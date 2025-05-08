@@ -155,7 +155,7 @@ public class EnvironmentConfig {
                                      Supplier<String> defaultValueSupplier) {
         String value = getValue(key);
         if (value == null || value.isBlank()) {
-            updateValue(key, defaultValueSupplier.get());
+            configMap.put(key, defaultValueSupplier.get());
         }
     }
 
