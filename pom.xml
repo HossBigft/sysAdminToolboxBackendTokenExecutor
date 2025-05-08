@@ -122,7 +122,7 @@
         <profile>
             <id>prod</id>
             <properties>
-                <buildArgs>--no-fallback -Os</buildArgs>
+                <buildArgs>--no-fallback -O3</buildArgs>
             </properties>
         </profile>
     </profiles>
