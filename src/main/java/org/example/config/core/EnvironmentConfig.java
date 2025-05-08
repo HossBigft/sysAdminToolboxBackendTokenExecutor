@@ -26,15 +26,23 @@ public class EnvironmentConfig {
     private static final String DOTENV_PERMISSIONS = "rw-------";
     private static final String DOTENV_OWNER = "root";
     private static final String DOTENV_GROUP = "root";
-    private static final File dotEnvFile = new EnvironmentConfig().getEnvFile();
-    private static final FileAccessPolicy
-            dotenvFilePolicy =
-            new FileAccessPolicy(dotEnvFile)
-                    .permissions(DOTENV_PERMISSIONS)
-                    .owner(DOTENV_OWNER)
-                    .group(DOTENV_GROUP);
-
+    private final File dotEnvFile;
+    private final FileAccessPolicy
+            dotenvFilePolicy;
     private Map<String, String> configMap = new HashMap<>();
+
+    public EnvironmentConfig() {
+        this.dotEnvFile = getEnvFile();
+        this.dotenvFilePolicy =
+                new FileAccessPolicy(dotEnvFile)
+                        .permissions(DOTENV_PERMISSIONS)
+                        .owner(DOTENV_OWNER)
+                        .group(DOTENV_GROUP);
+    }
+
+    public File getEnvFile() {
+        return Paths.get(getConfigDir() + "/" + EnvironmentConstants.ENV_FILENAME).toFile();
+    }
 
     public String getDatabaseUser() {
         return EnvironmentConstants.APP_NAME;
@@ -183,10 +191,6 @@ public class EnvironmentConfig {
 
     public String getEnvFilePath() {
         return getEnvFile().getPath();
-    }
-
-    public File getEnvFile() {
-        return Paths.get(getConfigDir() + "/" + EnvironmentConstants.ENV_FILENAME).toFile();
     }
 
     public void setPublicKeyURI(String uri) {
