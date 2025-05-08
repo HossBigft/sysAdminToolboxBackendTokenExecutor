@@ -23,6 +23,7 @@ public class DataBaseUserSetup {
     }
 
     public void setupDatabaseUser() {
+        String dbUser = getDatabaseUser();
         try {
             if (!doesUserExist()) {
                 createUser();
@@ -32,16 +33,21 @@ public class DataBaseUserSetup {
                 }
             }
         } catch (Exception e) {
-            logger.error("Failed to ensure database user " + getDatabaseUser(), e);
+            logger.errorEntry().message("Failed to ensure database user.").field("User", dbUser).log();
             throw new AppConfigException("Database user setup failed", e);
         }
     }
 
+    private String getDatabaseUser() {
+        return appConfiguration.getDatabaseUser();
+    }
+
     boolean doesUserExist() throws CommandFailedException {
         String mysqlCliName = ShellUtils.getSqlCliName();
+        String dbUser = getDatabaseUser();
         String query = String.format(
                 "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '%s') AS user_exists;",
-                getDatabaseUser());
+                dbUser);
 
         String[] command = new String[]{
                 mysqlCliName,
@@ -55,9 +61,9 @@ public class DataBaseUserSetup {
             boolean exists = output.getFirst().trim().equals("1");
 
             if (exists) {
-                logger.debug("Database user " + getDatabaseUser() + " is present.");
+                logger.debugEntry().message("Database user is present.").field("User", dbUser).log();
             } else {
-                logger.info("Database user " + getDatabaseUser() + " does not exist.");
+                logger.infoEntry().message("Database user does not exist.").field("User", dbUser).log();
             }
 
             return exists;
@@ -68,10 +74,12 @@ public class DataBaseUserSetup {
     }
 
     void createUser() throws CommandFailedException {
+        String dbUser = getDatabaseUser();
+        String dbPass = getDatabasePassword();
         String mysqlCliName = ShellUtils.getSqlCliName();
         String query = String.format(
                 "CREATE USER '%s'@'localhost' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;",
-                getDatabaseUser(), getDatabasePassword());
+                dbUser, dbPass);
 
         String[] command = new String[]{
                 mysqlCliName,
@@ -81,7 +89,7 @@ public class DataBaseUserSetup {
 
         try {
             ShellUtils.runCommand(command);
-            logger.info("Created database user " + getDatabaseUser());
+            logger.infoEntry().message("Created database user").field("User", dbUser).log();
         } catch (Exception e) {
             logger.errorEntry().command(command).exception(e).log();
             throw new AppConfigException("Failed to create database user", e);
@@ -89,11 +97,12 @@ public class DataBaseUserSetup {
     }
 
     private boolean isDbUserAbleToConnect() {
+        String dbUser = getDatabaseUser();
+        String dbPass = getDatabasePassword();
         try (Connection conn = DriverManager.getConnection(
                 DatabaseSetupCoordinator.DB_URL,
-                getDatabaseUser(),
-                getDatabasePassword())) {
-            logger.debug(getDatabaseUser() + " can connect to database.");
+                dbUser, dbPass)) {
+            logger.debugEntry().message("User can connect to database.").field("User", dbUser).log();
             return true;
         } catch (SQLException e) {
             logger.error(getDatabaseUser() + " can't connect to database.", e);
@@ -106,10 +115,6 @@ public class DataBaseUserSetup {
         setDbUserPassword(appConfiguration.regenerateDatabasePassword());
 
 
-    }
-
-    private String getDatabaseUser() {
-        return appConfiguration.getDatabaseUser();
     }
 
     private String getDatabasePassword() {
@@ -136,7 +141,8 @@ public class DataBaseUserSetup {
 
         try {
             ShellUtils.runCommand(command);
-            logger.info("Set database user password for " + getDatabaseUser());
+            logger.infoEntry().message("Set database user password").field("User", getDatabaseUser())
+                    .field("Password", getDatabasePassword()).log();
         } catch (Exception e) {
             logger.errorEntry().command(command).exception(e).log();
             throw new AppConfigException("Failed to set database user password", e);
