@@ -4,7 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class EnvironmentConstants {
-    public static final String APP_NAME = "authOpsDispatcher";
+    public static final String APP_NAME = "secOpsDispatcher";
     public static final String ENV_FILENAME = ".env.json";
     public static final String SUPERADMIN_USER = "root";
     public static final int DB_USER_PASSWORD_LENGTH = 15;
