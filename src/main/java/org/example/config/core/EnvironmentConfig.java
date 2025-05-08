@@ -44,6 +44,11 @@ public class EnvironmentConfig {
         return Paths.get(getConfigDir() + "/" + EnvironmentConstants.ENV_FILENAME).toFile();
     }
 
+    public File getConfigDir() {
+        final String appUser = ShellUtils.resolveAppUser();
+        return Paths.get("/home/" + appUser + "/." + EnvironmentConstants.APP_NAME).toFile();
+    }
+
     public String getDatabaseUser() {
         return EnvironmentConstants.APP_NAME;
     }
@@ -120,11 +125,6 @@ public class EnvironmentConfig {
                 new EnvironmentConfig().getConfigDir().toString() + "/" + EnvironmentConstants.PUBLIC_KEY_FILENAME);
     }
 
-    public File getConfigDir() {
-        final String appUser = ShellUtils.resolveAppUser();
-        return Paths.get("/home/" + appUser + "/." + EnvironmentConstants.APP_NAME).toFile();
-    }
-
     public void loadConfig() {
         ObjectMapper mapper = new ObjectMapper();
         File envFile = getEnvFile();
@@ -167,23 +167,31 @@ public class EnvironmentConfig {
         return EnvironmentConstants.DB_USER_PASSWORD_LENGTH;
     }
 
-    public URI getPublicKeyURI() {
-        String uriStr = getValue(EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD);
-        if (uriStr == null) {
-            getLogger().errorEntry().message("Public key URI is not set or config is nto readable")
-                    .field("Field", EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD)
-                    .field("File", getEnvFilePath()).log();
-            throw new AppConfigException("Failed to read public key URI from config file.");
-        }
-        try {
-            return new URI(uriStr);
-        } catch (URISyntaxException e) {
-            getLogger().errorEntry().message("Failed to read public key URI")
-                    .field("Field", EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD).field("Value", uriStr).exception(e)
+    public URI getPublicKeyURI() throws AppConfigException {
+        String uriString = configMap.get(EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD);
+
+
+        if (uriString == null || uriString.trim().isEmpty()) {
+            getLogger().warnEntry()
+                    .message("Public key URI is not set or config is not readable")
+                    .field("PUBLIC_KEY_URI", "null")
+                    .field("File", getEnvFilePath())
                     .log();
-            throw new AppConfigException("Failed to read public key URI", e);
+            return null;
+        }
+
+        try {
+            return new URI(uriString);
+        } catch (URISyntaxException e) {
+            getLogger().errorEntry()
+                    .message("Invalid public key URI format")
+                    .field("PUBLIC_KEY_URI", uriString)
+                    .exception(e)
+                    .log();
+            throw new AppConfigException("Invalid public key URI format: " + uriString, e);
         }
     }
+
 
     private CliLogger getLogger() {
         return LogManager.getInstance().getLogger();

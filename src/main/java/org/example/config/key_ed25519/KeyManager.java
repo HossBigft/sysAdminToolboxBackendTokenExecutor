@@ -81,12 +81,20 @@ public class KeyManager {
                     .log();
             return fileKey.get();
         }
+
+        if (keyURI == null) {
+            getLogger().errorEntry()
+                    .message("Public key not found in file and URI is null")
+                    .log();
+            throw new KeyManagerException("Public key not found in file and URI is null");
+        }
+
         String keyStr = fetchPublicKey(keyURI);
         savePublicKey(keyStr);
         return keyStr;
     }
 
-    private PublicKey convertToPublicKey(String keyStr) throws KeyManagerException {
+    public PublicKey convertToPublicKey(String keyStr) throws KeyManagerException {
         getLogger().debugEntry()
                 .message("Converting key  string to PublicKey object")
                 .field("Key", keyStr)
