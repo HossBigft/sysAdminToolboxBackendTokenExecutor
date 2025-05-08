@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.example.config.AppConfigException;
-import org.example.config.dotenv.DotEnvSecManager;
+import org.example.config.security.FileAccessPolicy;
 import org.example.constants.EnvironmentConstants;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
@@ -23,6 +23,16 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class EnvironmentConfig {
+    private static final String DOTENV_PERMISSIONS = "rw-------";
+    private static final String DOTENV_OWNER = "root";
+    private static final String DOTENV_GROUP = "root";
+    private static final File dotEnvFile = new EnvironmentConfig().getEnvFile();
+    private static final FileAccessPolicy
+            dotenvFilePolicy =
+            new FileAccessPolicy(dotEnvFile)
+                    .permissions(DOTENV_PERMISSIONS)
+                    .owner(DOTENV_OWNER)
+                    .group(DOTENV_GROUP);
 
     private Map<String, String> configMap = new HashMap<>();
 
@@ -127,7 +137,7 @@ public class EnvironmentConfig {
 
 
             getLogger().debug("Loaded config from " + envFile);
-            new DotEnvSecManager().ensureDotEnvPermissions();
+            dotenvFilePolicy.enforce();
         } catch (IOException e) {
             getLogger().warnEntry().message("Failed to load config file").field("File", envFile).exception(e).log();
         }
