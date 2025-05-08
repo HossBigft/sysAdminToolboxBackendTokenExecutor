@@ -86,15 +86,15 @@ public class KeyManager {
         return keyStr;
     }
 
-    private PublicKey convertToPublicKey(String base64Key) throws KeyManagerException {
+    private PublicKey convertToPublicKey(String keyStr) throws KeyManagerException {
         getLogger().debugEntry()
-                .message("Converting Base64 encoded key to PublicKey object")
-                .field("Encoded key", base64Key)
-                .field("KeyLength", base64Key.length())
+                .message("Converting key  string to PublicKey object")
+                .field("Key", keyStr)
+                .field("KeyLength", keyStr.length())
                 .log();
 
         try {
-            byte[] derBytes = Base64.getDecoder().decode(base64Key);
+            byte[] derBytes = Base64.getDecoder().decode(keyStr);
 
             getLogger().debugEntry()
                     .field("Decode Base64 key", "Success")
@@ -115,7 +115,6 @@ public class KeyManager {
         } catch (InvalidKeySpecException e) {
             getLogger().errorEntry()
                     .message("Invalid key format")
-
                     .exception(e)
                     .log();
             throw new KeyManagerException("Invalid key format", e);
