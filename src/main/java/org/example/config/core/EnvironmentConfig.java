@@ -26,13 +26,13 @@ public class EnvironmentConfig {
     private static final String DOTENV_PERMISSIONS = "rw-------";
     private static final String DOTENV_OWNER = "root";
     private static final String DOTENV_GROUP = "root";
-    private final File dotEnvFile;
+    private final Path dotEnvFile;
     private final FileAccessPolicy
             dotenvFilePolicy;
     private Map<String, String> configMap = new HashMap<>();
 
     public EnvironmentConfig() {
-        this.dotEnvFile = getEnvFile();
+        this.dotEnvFile = Paths.get(getConfigDir() + "/" + EnvironmentConstants.ENV_FILENAME);
         this.dotenvFilePolicy =
                 new FileAccessPolicy(dotEnvFile)
                         .permissions(DOTENV_PERMISSIONS)
@@ -40,9 +40,6 @@ public class EnvironmentConfig {
                         .group(DOTENV_GROUP);
     }
 
-    public File getEnvFile() {
-        return Paths.get(getConfigDir() + "/" + EnvironmentConstants.ENV_FILENAME).toFile();
-    }
 
     public File getConfigDir() {
         final String appUser = ShellUtils.resolveAppUser();
@@ -82,7 +79,7 @@ public class EnvironmentConfig {
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
-        File envFile = getEnvFile();
+        File envFile = dotEnvFile.toFile();
         String action = envFile.exists() ? "Updated" : "Created";
 
         try {
@@ -127,7 +124,7 @@ public class EnvironmentConfig {
 
     public void loadConfig() {
         ObjectMapper mapper = new ObjectMapper();
-        File envFile = getEnvFile();
+        File envFile = dotEnvFile.toFile();
 
         if (!envFile.exists()) {
             getLogger().infoEntry().message("Config file does not exist, will create on save").field("File", envFile)
@@ -198,7 +195,7 @@ public class EnvironmentConfig {
     }
 
     public String getEnvFilePath() {
-        return getEnvFile().getPath();
+        return dotEnvFile.toString();
     }
 
     public void setPublicKeyURI(String uri) {

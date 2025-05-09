@@ -21,8 +21,8 @@ public class FileAccessPolicy {
     private Optional<String> group = Optional.empty();
 
     @CheckReturnValue
-    public FileAccessPolicy(File file) {
-        this.path = file.toPath();
+    public FileAccessPolicy(Path filePath) {
+        this.path = filePath;
     }
 
     public FileAccessPolicy permissions(String permissions) {

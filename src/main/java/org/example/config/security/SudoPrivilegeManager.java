@@ -23,7 +23,7 @@ public class SudoPrivilegeManager {
     private static final String TEMP_DIR = "/tmp/";
     private static final String SUDOERS_PERMISSIONS = "r--r-----";
     private static final EnvironmentConfig cprovider = new EnvironmentConfig();
-    private static final File SUDOERS_FILE = Paths.get(SUDOERS_DIR + cprovider.getDatabaseUser()).toFile();
+    private static final Path SUDOERS_FILE = Paths.get(SUDOERS_DIR + cprovider.getDatabaseUser());
     private static final FileAccessPolicy
             sudoersFilePolicy =
             new FileAccessPolicy(SUDOERS_FILE).permissions(SUDOERS_PERMISSIONS)

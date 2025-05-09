@@ -6,7 +6,6 @@ import org.example.logging.config.LogConfig;
 import org.example.logging.core.LogLevel;
 import org.example.logging.model.LogEntry;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -40,30 +39,35 @@ public class LogWriter {
     }
 
     private void initializeLogFile() throws IOException {
-        Path logDirPath = getLogDir().toPath();
+        Path logDirPath = getLogDir();
         if (!Files.exists(logDirPath)) {
+            System.out.println("Creating log dir " + logDirPath);
             Files.createDirectories(logDirPath);
             try {
                 getLogDirAccessPolicy().enforce();
             } catch (Exception e) {
-                System.err.println("Warning: Could not set permissions on log directory: " + e.getMessage());
+                System.err.println(
+                        "Warning: Could not set permissions on log directory: " + logDirPath + " " + e.getMessage());
             }
         }
 
         Path logFilePath = Paths.get(config.getFullLogPath());
         FileAccessPolicy logFileAccessPolicy = getLogFileAccessPolicy();
         if (!Files.exists(logFilePath)) {
+            System.out.println("Creating log file " + logFilePath);
             Files.createFile(logFilePath);
             try {
                 logFileAccessPolicy.enforce();
             } catch (Exception e) {
-                System.err.println("Warning: Could not set permissions on log file: " + e.getMessage());
+                System.err.println(
+                        "Warning: Could not set permissions on log file: " + logFilePath + " " + e.getMessage());
+                e.printStackTrace();
             }
         }
     }
 
-    private File getLogDir() {
-        return Paths.get(config.getLogDirectory()).toFile();
+    private Path getLogDir() {
+        return Paths.get(config.getLogDirectory());
     }
 
     private FileAccessPolicy getLogDirAccessPolicy() {
@@ -78,8 +82,8 @@ public class LogWriter {
                 .group(EnvironmentConstants.SUPERADMIN_USER);
     }
 
-    private File getLogFile() {
-        return Paths.get(config.getLogPath()).toFile();
+    private Path getLogFile() {
+        return Paths.get(config.getFullLogPath());
     }
 
     public synchronized void write(LogLevel level,

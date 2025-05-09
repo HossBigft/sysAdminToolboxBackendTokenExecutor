@@ -32,7 +32,7 @@ public class KeyManager {
     public KeyManager(Path keyPath) {
         this.keyPath = keyPath;
 
-        this.accessPolicy = new FileAccessPolicy(keyPath.toFile()).permissions(KEYFILE_PERMISSIONS).owner(KEYFILE_OWNER)
+        this.accessPolicy = new FileAccessPolicy(keyPath).permissions(KEYFILE_PERMISSIONS).owner(KEYFILE_OWNER)
                 .group(KEYFILE_GROUP);
         getLogger().debugEntry()
                 .message("KeyManager initialized")
