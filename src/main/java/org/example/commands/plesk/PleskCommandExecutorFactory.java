@@ -21,7 +21,9 @@ public class PleskCommandExecutorFactory implements CommandBuilderFactory {
             AvailableCommand.Plesk.FETCH_SUBSCRIPTION_INFO,
             args -> new PleskFetchSubscriptionInfoCommand(new DomainName(args[0])),
             AvailableCommand.Plesk.RESTART_DNS_SERVICE,
-            args -> new RestartDnsService(new DomainName(args[0]))
+            args -> new RestartDnsService(new DomainName(args[0])),
+            AvailableCommand.Plesk.GET_SUBSCRIPTION_ID_BY_DOMAIN,
+            args -> new PleskGetSubscriptionIdByDomainCommand(new DomainName(args[0]))
     );
 
     @Override

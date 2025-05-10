@@ -6,9 +6,12 @@ import org.example.exceptions.CommandFailedException;
 import org.example.utils.ShellUtils;
 import org.example.value_types.DomainName;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
-public class RemoveZone implements Command {
+public class RemoveZone implements Command<Void> {
     private final DomainName domainNameToDelete;
 
     public RemoveZone(DomainName domainName) {
@@ -17,7 +20,29 @@ public class RemoveZone implements Command {
 
     @Override
     public Optional<Void> execute() throws CommandFailedException {
-        ShellUtils.runCommand(Executables.BIND_REMOVE_ZONE_EXECUTABLE, "delzone", "-clean", domainNameToDelete.name());
+        Path removeZoneExecutable = findRemoveZoneExecutable();
+
+        ShellUtils.runCommand(
+                removeZoneExecutable.toString(),
+                "delzone",
+                "-clean",
+                domainNameToDelete.name()
+        );
+
         return Optional.empty();
     }
+
+    private Path findRemoveZoneExecutable() throws CommandFailedException {
+        Path primaryPath = Paths.get(Executables.BIND_REMOVE_ZONE_EXECUTABLE);
+        Path fallbackPath = Paths.get(Executables.BIND_REMOVE_ZONE_EXECUTABLE_FALLBACK);
+
+        if (Files.isExecutable(primaryPath)) {
+            return primaryPath;
+        } else if (Files.isExecutable(fallbackPath)) {
+            return fallbackPath;
+        } else {
+            throw new CommandFailedException("Cannot find executable remove zone script");
+        }
+    }
+
 }

@@ -2,6 +2,7 @@ package org.example.utils;
 
 import org.example.config.AppConfigException;
 import org.example.config.core.AppConfiguration;
+import org.example.value_types.DomainName;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -13,15 +14,13 @@ public class DbUtils {
     }
 
     public static Optional<String> fetchSubscriptionNameById(int id) throws SQLException {
-        return executeSqlQueryJDBC(prepareFetchSubscriptionNameById(id))
-                .flatMap(list -> list.stream().findFirst());
+        return executeSqlQueryJDBC(prepareFetchSubscriptionNameById(id)).flatMap(list -> list.stream().findFirst());
 
     }
 
 
     private static Optional<List<String>> executeSqlQueryJDBC(Query query) throws SQLException {
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query.sql())) {
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query.sql())) {
 
             for (int i = 0; i < query.params().length; i++) {
                 stmt.setObject(i + 1, query.params()[i]);
@@ -101,6 +100,17 @@ public class DbUtils {
                     FROM domains
                     WHERE name LIKE ?
                 ) AS base;
+                """;
+        return new Query(sql, domain);
+    }
+
+    public static Optional<List<String>> fetchSubscriptionIdByDomain(DomainName domain) throws SQLException {
+        return executeSqlQueryJDBC(prepareGetSubscriptionIdByDomain(domain.name()));
+    }
+
+    private static Query prepareGetSubscriptionIdByDomain(String domain) {
+        String sql = """
+                SELECT CASE WHEN webspace_id = 0 THEN id ELSE webspace_id END AS result FROM domains WHERE name LIKE ?
                 """;
         return new Query(sql, domain);
     }

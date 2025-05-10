@@ -25,6 +25,7 @@ public sealed interface AvailableCommand permits AvailableCommand.NS, AvailableC
         GET_LOGIN_LINK,
         FETCH_SUBSCRIPTION_INFO,
         GET_TESTMAIL_CREDENTIALS,
-        RESTART_DNS_SERVICE
+        RESTART_DNS_SERVICE,
+        GET_SUBSCRIPTION_ID_BY_DOMAIN
     }
 }
