@@ -47,6 +47,7 @@ public class PleskGetTestMailboxCommand implements Command<ObjectNode> {
             try {
                 createMail(TEST_MAIL_LOGIN, testMailDomain, password,
                         TEST_MAIL_DESCRIPTION);
+                mailCredentials.put("new_email_created","true");
             } catch (CommandFailedException e) {
                 System.err.println(
                         "Email creation for " + testMailDomain + " failed with " + e);
@@ -57,6 +58,7 @@ public class PleskGetTestMailboxCommand implements Command<ObjectNode> {
         mailCredentials.put("email", TEST_MAIL_LOGIN + "@" + testMailDomain);
         mailCredentials.put("password", password);
         mailCredentials.put("login_link", login_link.toString());
+        mailCredentials.put("new_email_created","false");
         return mailCredentials.isEmpty() ? Optional.empty() : Optional.of(mailCredentials);
     }
 
