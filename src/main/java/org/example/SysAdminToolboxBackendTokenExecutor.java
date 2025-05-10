@@ -11,18 +11,20 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 @Command(name = "sysadmintoolbox", description = "Safe root wrapper for executing system administration commands", version = "0.2.1", mixinStandardHelpOptions = true)
 public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
 
-    @Option(names = {"--debug"}, description = "Enable debug output", scope = CommandLine.ScopeType.INHERIT)
+    @Option(names = {"--debug"}, description = "Enable debug output. Also prints everything logged.", scope = CommandLine.ScopeType.INHERIT)
     boolean debug;
-    @Option(names = {"--verbose"}, description = "Print log information", scope = CommandLine.ScopeType.INHERIT)
+    @Option(names = {"--verbose"}, description = "Print logged information.", scope = CommandLine.ScopeType.INHERIT)
     boolean verbose;
 
     public static void main(String[] args) {
@@ -47,8 +49,14 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
             }
         }
 
-
-        commandLine.parseArgs(args);
+        try {
+            commandLine.parseArgs(args);
+        } catch (CommandLine.UnmatchedArgumentException e) {
+            PrintWriter err = commandLine.getErr();
+            err.println("Unknown command: " + Arrays.toString(args));
+            commandLine.usage(err);
+            return;
+        }
         setupLogging(app);
 
         commandLine.setExecutionStrategy(parseResult -> {
