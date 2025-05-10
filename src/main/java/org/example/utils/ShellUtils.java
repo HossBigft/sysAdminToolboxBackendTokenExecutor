@@ -45,16 +45,14 @@ public class ShellUtils {
             List<String> outputLines = new ArrayList<>();
             StringBuilder errorBuilder = new StringBuilder();
 
-            try (BufferedReader stdOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                 BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-                CompletableFuture<Void>
-                        outputFuture =
-                        CompletableFuture.runAsync(() -> stdOutput.lines().forEach(outputLines::add));
+            try (BufferedReader stdOutput = new BufferedReader(
+                    new InputStreamReader(process.getInputStream())); BufferedReader stdError = new BufferedReader(
+                    new InputStreamReader(process.getErrorStream()))) {
+                CompletableFuture<Void> outputFuture = CompletableFuture.runAsync(
+                        () -> stdOutput.lines().forEach(outputLines::add));
 
-                CompletableFuture<Void>
-                        errorFuture =
-                        CompletableFuture.runAsync(() -> stdError.lines()
-                                .forEach(line -> errorBuilder.append(line).append("\n")));
+                CompletableFuture<Void> errorFuture = CompletableFuture.runAsync(
+                        () -> stdError.lines().forEach(line -> errorBuilder.append(line).append("\n")));
 
                 boolean completed = process.waitFor(30, TimeUnit.SECONDS);
                 if (!completed) {
@@ -68,36 +66,26 @@ public class ShellUtils {
                 int exitCode = process.exitValue();
                 if (exitCode != 0) {
 
-                    String
-                            errorMessage =
-                            String.format("Command '%s' failed with exit code %d: %s",
-                                    String.join(" ", args),
-                                    exitCode,
-                                    String.join("\n", outputLines));
-                    getLogger().errorEntry()
-                            .message("Command failed")
-                            .field("command", String.join(" ", args))
-                            .field("exitCode", exitCode)
-                            .field("stdout", String.join("\n", outputLines))
-                            .field("stderr", errorBuilder.toString())
-                            .log();
+                    String errorMessage = String.format("Command '%s' failed with exit code %d: %s\n Stderr: %s",
+                            String.join(" ", args), exitCode, String.join("\n", outputLines), errorBuilder);
+                    getLogger().errorEntry().message("Command failed").field("command", String.join(" ", args))
+                            .field("exitCode", exitCode).field("stdout", String.join("\n", outputLines))
+                            .field("stderr", errorBuilder.toString()).log();
 
                     throw new CommandFailedException(errorMessage);
                 }
 
-                return Collections.unmodifiableList(outputLines);
+                return outputLines;
             }
         } catch (IOException e) {
-            String
-                    errorMessage =
-                    String.format("Failed to execute command '%s': %s", String.join(" ", args), e.getMessage());
+            String errorMessage = String.format("Failed to execute command '%s': %s", String.join(" ", args),
+                    e.getMessage());
             getLogger().error(errorMessage);
             throw new CommandFailedException(errorMessage);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            String
-                    errorMessage =
-                    String.format("Failed to execute command '%s': %s", String.join(" ", args), e.getMessage());
+            String errorMessage = String.format("Failed to execute command '%s': %s", String.join(" ", args),
+                    e.getMessage());
             getLogger().error(errorMessage);
             throw new CommandFailedException(errorMessage);
         }
@@ -113,9 +101,7 @@ public class ShellUtils {
         Optional<String> systemUser = getSystemUser();
         Optional<String> pathUser = getUserFromPath();
 
-        return Stream.of(sudoUser, systemUser, pathUser)
-                .flatMap(Optional::stream)
-                .filter(ShellUtils::isValidUser)
+        return Stream.of(sudoUser, systemUser, pathUser).flatMap(Optional::stream).filter(ShellUtils::isValidUser)
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Could not determine valid system user for app."));
     }
@@ -152,9 +138,7 @@ public class ShellUtils {
     }
 
     public static String resolveShellUser() {
-        return Stream.of(getSudoUser(), getSystemUser())
-                .flatMap(Optional::stream)
-                .findFirst()
+        return Stream.of(getSudoUser(), getSystemUser()).flatMap(Optional::stream).findFirst()
                 .orElseThrow(() -> new IllegalStateException("Could not determine valid user for running executable."));
     }
 
