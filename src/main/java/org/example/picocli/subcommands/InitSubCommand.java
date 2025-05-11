@@ -8,7 +8,7 @@ import picocli.CommandLine;
         name = "init",
         description = "Initialises and repairs environment setup. Optionally accepts a key link to fetch and save a public key."
 )
-public class InitCliCommand extends AbstractCliCommand {
+public class InitSubCommand extends AbstractSubCommand {
 
     @CommandLine.Parameters(
             index = "0",
@@ -17,7 +17,7 @@ public class InitCliCommand extends AbstractCliCommand {
     )
     private String keyLink;
 
-    public InitCliCommand(SysAdminToolboxBackendTokenExecutor parent) {
+    public InitSubCommand(SysAdminToolboxBackendTokenExecutor parent) {
         super(parent);
     }
 

@@ -7,9 +7,9 @@ import picocli.CommandLine;
         name = "status",
         description = "Checks if the system is online."
 )
-public class HealthCheckCliCommand extends AbstractCliCommand {
+public class HealthCheckSubCommand extends AbstractSubCommand {
 
-    public HealthCheckCliCommand(SysAdminToolboxBackendTokenExecutor parent) {
+    public HealthCheckSubCommand(SysAdminToolboxBackendTokenExecutor parent) {
         super(parent);
     }
 

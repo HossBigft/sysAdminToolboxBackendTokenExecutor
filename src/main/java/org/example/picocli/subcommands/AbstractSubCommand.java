@@ -4,10 +4,10 @@ import org.example.SysAdminToolboxBackendTokenExecutor;
 
 import java.util.concurrent.Callable;
 
-public abstract class AbstractCliCommand implements Callable<Integer> {
+public abstract class AbstractSubCommand implements Callable<Integer> {
     protected final SysAdminToolboxBackendTokenExecutor parent;
 
-    public AbstractCliCommand(SysAdminToolboxBackendTokenExecutor parent) {
+    public AbstractSubCommand(SysAdminToolboxBackendTokenExecutor parent) {
         this.parent = parent;
     }
 

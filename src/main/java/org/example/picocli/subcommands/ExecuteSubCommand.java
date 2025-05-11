@@ -18,7 +18,7 @@ import java.util.Optional;
         name = "execute",
         description = "Executes command from signed base64 token. Usage: execute [TOKEN] "
 )
-public class ExecuteCliCommand extends AbstractCliCommand {
+public class ExecuteSubCommand extends AbstractSubCommand {
     @CommandLine.Parameters(index = "0", description = "The signed token")
     private String encodedJson;
 
@@ -26,7 +26,7 @@ public class ExecuteCliCommand extends AbstractCliCommand {
     private java.util.List<String> unmatchedArgs;
 
 
-    public ExecuteCliCommand(SysAdminToolboxBackendTokenExecutor parent) {
+    public ExecuteSubCommand(SysAdminToolboxBackendTokenExecutor parent) {
         super(parent);
     }
 

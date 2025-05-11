@@ -1,8 +1,8 @@
 package org.example;
 
-import org.example.picocli.subcommands.ExecuteCliCommand;
-import org.example.picocli.subcommands.HealthCheckCliCommand;
-import org.example.picocli.subcommands.InitCliCommand;
+import org.example.picocli.subcommands.ExecuteSubCommand;
+import org.example.picocli.subcommands.HealthCheckSubCommand;
+import org.example.picocli.subcommands.InitSubCommand;
 import org.example.config.core.AppConfiguration;
 import org.example.logging.core.LogLevel;
 import org.example.logging.facade.LogManager;
@@ -31,9 +31,9 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         SysAdminToolboxBackendTokenExecutor app = new SysAdminToolboxBackendTokenExecutor();
         CommandLine commandLine = new CommandLine(app);
 
-        commandLine.addSubcommand(new ExecuteCliCommand(app));
-        commandLine.addSubcommand(new InitCliCommand(app));
-        commandLine.addSubcommand(new HealthCheckCliCommand(app));
+        commandLine.addSubcommand(new ExecuteSubCommand(app));
+        commandLine.addSubcommand(new InitSubCommand(app));
+        commandLine.addSubcommand(new HealthCheckSubCommand(app));
 
         if (args.length == 0) {
             String sshOriginalCommand = System.getenv("SSH_ORIGINAL_COMMAND");
