@@ -1,8 +1,6 @@
 package org.example.token_handler;
 
 import org.example.config.core.AppConfiguration;
-import org.example.config.key_ed25519.KeyManager;
-import org.example.exceptions.KeyManagerException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.value_types.Token;

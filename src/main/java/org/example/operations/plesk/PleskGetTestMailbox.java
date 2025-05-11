@@ -1,9 +1,9 @@
-package org.example.commands.plesk;
+package org.example.operations.plesk;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.example.commands.Operation;
-import org.example.exceptions.OperationFailedException;
+import org.example.operations.Operation;
+import org.example.operations.OperationFailedException;
 import org.example.utils.ShellUtils;
 import org.example.utils.Utils;
 import org.example.value_types.DomainName;

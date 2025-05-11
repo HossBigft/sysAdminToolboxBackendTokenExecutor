@@ -1,6 +1,6 @@
-package org.example.commands.dns;
+package org.example.operations.dns;
 
-import org.example.commands.Operation;
+import org.example.operations.Operation;
 import org.example.value_types.DomainName;
 
 import java.io.IOException;
@@ -12,13 +12,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-public class GetZoneMaster implements Operation<String> {
+public class NsGetZoneMaster implements Operation<String> {
     private static final Path ZONEFILE_PATH_BIND = Paths.get("/var/opt/isc/scls/isc-bind/zones/_default.nzf");
     private static final Path PLESK_BIND_ZONE_DIR = Paths.get("/var/named/run-root/");
     private static final Pattern IP_REGEX = Pattern.compile("((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}");
     private final DomainName domain;
 
-    public GetZoneMaster(DomainName domainName) {
+    public NsGetZoneMaster(DomainName domainName) {
         this.domain = domainName;
     }
 
@@ -41,7 +41,7 @@ public class GetZoneMaster implements Operation<String> {
             try (Stream<String> lines = Files.lines(ZONEFILE_PATH_BIND)) {
                 return lines
                         .filter(line -> domainPattern.matcher(line).find())
-                        .flatMap(GetZoneMaster::extractIps)
+                        .flatMap(NsGetZoneMaster::extractIps)
                         .findFirst();
             }
         }
@@ -59,7 +59,7 @@ public class GetZoneMaster implements Operation<String> {
                 return lines
                         .filter(line -> nsPattern.matcher(line).find())
                         .filter(line -> line.contains("IN A"))
-                        .flatMap(GetZoneMaster::extractIps)
+                        .flatMap(NsGetZoneMaster::extractIps)
                         .findFirst();
             }
         }

@@ -1,4 +1,4 @@
-package org.example.commands.picocli;
+package org.example.picocli.subcommands;
 
 import org.example.SysAdminToolboxBackendTokenExecutor;
 import picocli.CommandLine;

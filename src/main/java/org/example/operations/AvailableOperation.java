@@ -1,4 +1,4 @@
-package org.example.commands;
+package org.example.operations;
 
 public sealed interface AvailableOperation permits AvailableOperation.NS, AvailableOperation.Plesk {
 

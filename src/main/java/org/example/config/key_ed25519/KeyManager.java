@@ -1,7 +1,6 @@
 package org.example.config.key_ed25519;
 
 import org.example.config.security.FileAccessPolicy;
-import org.example.exceptions.KeyManagerException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 

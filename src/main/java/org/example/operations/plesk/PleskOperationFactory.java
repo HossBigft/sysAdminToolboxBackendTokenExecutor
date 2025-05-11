@@ -1,15 +1,15 @@
-package org.example.commands.plesk;
+package org.example.operations.plesk;
 
-import org.example.commands.AvailableOperation;
-import org.example.commands.Operation;
-import org.example.commands.OperationRequest;
-import org.example.commands.core.CommandBuilderFactory;
+import org.example.operations.AvailableOperation;
+import org.example.operations.Operation;
+import org.example.operations.OperationRequest;
+import org.example.operations.core.OperationFactory;
 import org.example.value_types.DomainName;
 import org.example.value_types.LinuxUsername;
 
 import java.util.Map;
 
-public class PleskOperationFactory implements CommandBuilderFactory {
+public class PleskOperationFactory implements OperationFactory {
     private static final Map<AvailableOperation, CommandBuilder> COMMANDS = Map.of(
             AvailableOperation.Plesk.GET_LOGIN_LINK, args -> new PleskGetLoginLink(
                     Integer.parseInt(args[0]),

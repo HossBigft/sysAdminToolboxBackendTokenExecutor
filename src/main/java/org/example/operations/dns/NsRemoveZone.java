@@ -1,8 +1,8 @@
-package org.example.commands.dns;
+package org.example.operations.dns;
 
-import org.example.commands.Operation;
+import org.example.operations.Operation;
 import org.example.constants.Executables;
-import org.example.exceptions.OperationFailedException;
+import org.example.operations.OperationFailedException;
 import org.example.utils.ShellUtils;
 import org.example.value_types.DomainName;
 
@@ -11,10 +11,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-public class RemoveZone implements Operation<Void> {
+public class NsRemoveZone implements Operation<Void> {
     private final DomainName domainNameToDelete;
 
-    public RemoveZone(DomainName domainName) {
+    public NsRemoveZone(DomainName domainName) {
         this.domainNameToDelete = domainName;
     }
 

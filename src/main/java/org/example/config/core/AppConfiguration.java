@@ -2,7 +2,7 @@ package org.example.config.core;
 
 import org.example.config.AppConfigException;
 import org.example.config.key_ed25519.KeyManager;
-import org.example.exceptions.KeyManagerException;
+import org.example.config.key_ed25519.KeyManagerException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 

@@ -1,11 +1,11 @@
-package org.example.commands.picocli;
+package org.example.picocli.subcommands;
 
 import org.example.SysAdminToolboxBackendTokenExecutor;
-import org.example.commands.AvailableOperation;
-import org.example.commands.Operation;
-import org.example.commands.OperationRequest;
-import org.example.commands.dns.NsOperationFactory;
-import org.example.commands.plesk.PleskOperationFactory;
+import org.example.operations.AvailableOperation;
+import org.example.operations.Operation;
+import org.example.operations.OperationRequest;
+import org.example.operations.dns.NsOperationFactory;
+import org.example.operations.plesk.PleskOperationFactory;
 import org.example.token_handler.TokenProcessor;
 import org.example.value_types.Token;
 import picocli.CommandLine;

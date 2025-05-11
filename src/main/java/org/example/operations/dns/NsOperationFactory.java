@@ -1,18 +1,18 @@
-package org.example.commands.dns;
+package org.example.operations.dns;
 
-import org.example.commands.AvailableOperation;
-import org.example.commands.Operation;
-import org.example.commands.OperationRequest;
-import org.example.commands.core.CommandBuilderFactory;
+import org.example.operations.AvailableOperation;
+import org.example.operations.Operation;
+import org.example.operations.OperationRequest;
+import org.example.operations.core.OperationFactory;
 import org.example.value_types.DomainName;
 
 import java.util.Map;
 
-public class NsOperationFactory implements CommandBuilderFactory {
+public class NsOperationFactory implements OperationFactory {
 
     private static final Map<AvailableOperation, CommandBuilder> COMMANDS = Map.of(AvailableOperation.NS.GET_ZONE_MASTER,
-            args -> new GetZoneMaster(new DomainName(args[0])), AvailableOperation.NS.REMOVE_ZONE,
-            args -> new RemoveZone(new DomainName(args[0])));
+            args -> new NsGetZoneMaster(new DomainName(args[0])), AvailableOperation.NS.REMOVE_ZONE,
+            args -> new NsRemoveZone(new DomainName(args[0])));
 
     @Override
     public Operation<?> build(OperationRequest parsed) {

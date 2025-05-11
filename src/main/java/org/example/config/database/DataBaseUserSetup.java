@@ -3,7 +3,7 @@ package org.example.config.database;
 import org.example.config.AppConfigException;
 import org.example.config.core.AppConfiguration;
 import org.example.constants.EnvironmentConstants;
-import org.example.exceptions.OperationFailedException;
+import org.example.operations.OperationFailedException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.utils.ShellUtils;

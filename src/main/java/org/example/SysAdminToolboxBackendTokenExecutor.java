@@ -1,8 +1,8 @@
 package org.example;
 
-import org.example.commands.picocli.ExecuteCliCommand;
-import org.example.commands.picocli.HealthCheckCliCommand;
-import org.example.commands.picocli.InitCliCommand;
+import org.example.picocli.subcommands.ExecuteCliCommand;
+import org.example.picocli.subcommands.HealthCheckCliCommand;
+import org.example.picocli.subcommands.InitCliCommand;
 import org.example.config.core.AppConfiguration;
 import org.example.logging.core.LogLevel;
 import org.example.logging.facade.LogManager;

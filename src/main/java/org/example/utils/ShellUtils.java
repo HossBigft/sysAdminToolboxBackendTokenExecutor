@@ -1,6 +1,6 @@
 package org.example.utils;
 
-import org.example.exceptions.OperationFailedException;
+import org.example.operations.OperationFailedException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 

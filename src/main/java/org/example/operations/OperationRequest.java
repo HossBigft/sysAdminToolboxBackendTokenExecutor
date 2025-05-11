@@ -1,4 +1,4 @@
-package org.example.commands;
+package org.example.operations;
 
 
 import java.util.Arrays;

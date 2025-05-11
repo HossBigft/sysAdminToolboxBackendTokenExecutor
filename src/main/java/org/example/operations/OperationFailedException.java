@@ -1,4 +1,4 @@
-package org.example.exceptions;
+package org.example.operations;
 
 public class OperationFailedException extends Exception {
     public OperationFailedException(String message) {

@@ -1,4 +1,4 @@
-package org.example.exceptions;
+package org.example.config.key_ed25519;
 
 public class KeyManagerException extends Exception {
 
