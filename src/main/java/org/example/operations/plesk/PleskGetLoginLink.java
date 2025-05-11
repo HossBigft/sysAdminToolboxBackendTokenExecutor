@@ -3,7 +3,7 @@ package org.example.operations.plesk;
 import org.example.operations.Operation;
 import org.example.operations.OperationFailedException;
 import org.example.utils.DbUtils;
-import org.example.utils.ProcessFailedException;
+import org.example.utils.CommandFailedException;
 import org.example.utils.ShellUtils;
 import org.example.value_types.LinuxUsername;
 
@@ -36,7 +36,7 @@ public class PleskGetLoginLink implements Operation<String> {
             String link;
             try {
                 link = pleskGetUserLoginLink(username.value());
-            } catch (ProcessFailedException e) {
+            } catch (CommandFailedException e) {
                 throw new OperationFailedException(
                         "Operation get subscription login link for subscription with ID " + subscriptionId + " for user " + username + " failed.");
             }
@@ -46,7 +46,7 @@ public class PleskGetLoginLink implements Operation<String> {
         }
     }
 
-    private String pleskGetUserLoginLink(String username) throws ProcessFailedException {
+    private String pleskGetUserLoginLink(String username) throws CommandFailedException {
         ShellUtils.ShellCommandResult result = ShellUtils.execute(PLESK_CLI_EXECUTABLE, "login", username);
 
         return result.stdout().getFirst();

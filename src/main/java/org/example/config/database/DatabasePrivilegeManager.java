@@ -4,7 +4,7 @@ import org.example.config.core.EnvironmentConfig;
 import org.example.constants.EnvironmentConstants;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
-import org.example.utils.ProcessFailedException;
+import org.example.utils.CommandFailedException;
 import org.example.utils.ShellUtils;
 
 import java.util.List;
@@ -40,7 +40,7 @@ public class DatabasePrivilegeManager {
 
                     output = result.stdout();
             if (!result.isSuccessful()) {
-                throw new ProcessFailedException(result.getFormattedErrorMessage());
+                throw new CommandFailedException(result.getFormattedErrorMessage());
             }
 
             boolean hasOnlySelectPrivileges = true;
@@ -61,7 +61,7 @@ public class DatabasePrivilegeManager {
             }
 
             return hasOnlySelectPrivileges;
-        } catch (ProcessFailedException e) {
+        } catch (CommandFailedException e) {
             getLogger().
                     error("Error checking user permissions for " + databaseUser, e);
             return false;
@@ -85,7 +85,7 @@ public class DatabasePrivilegeManager {
                     commands);
             getLogger().
                     info(String.format("Set user %s as read-only successfully.", databaseUser));
-        } catch (ProcessFailedException e) {
+        } catch (CommandFailedException e) {
             getLogger().
                     error("Error setting database user " + databaseUser + " as read-only.", e);
         }

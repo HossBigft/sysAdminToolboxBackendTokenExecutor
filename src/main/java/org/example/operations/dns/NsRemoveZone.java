@@ -3,7 +3,7 @@ package org.example.operations.dns;
 import org.example.constants.Executables;
 import org.example.operations.Operation;
 import org.example.operations.OperationFailedException;
-import org.example.utils.ProcessFailedException;
+import org.example.utils.CommandFailedException;
 import org.example.utils.ShellUtils;
 import org.example.value_types.DomainName;
 
@@ -30,7 +30,7 @@ public class NsRemoveZone implements Operation<Void> {
                     "-clean",
                     domainNameToDelete.name()
             );
-        } catch (ProcessFailedException e) {
+        } catch (CommandFailedException e) {
             throw new OperationFailedException("Remove DNS zone operation failed with", e);
         }
 

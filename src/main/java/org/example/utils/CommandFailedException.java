@@ -1,12 +1,12 @@
 package org.example.utils;
 
-public class ProcessFailedException extends Exception {
+public class CommandFailedException extends Exception {
 
-    public ProcessFailedException(String message) {
+    public CommandFailedException(String message) {
         super(message);
     }
 
-    public ProcessFailedException(String message,
+    public CommandFailedException(String message,
                                   Throwable cause) {
         super(message,
                 cause);

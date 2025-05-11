@@ -21,13 +21,13 @@ public class ShellUtils {
     private ShellUtils() {
     }
 
-    public static String getSqlCliName() throws ProcessFailedException {
+    public static String getSqlCliName() throws CommandFailedException {
         if (isCommandAvailable("mariadb")) {
             return "mariadb";
         } else if (isCommandAvailable("mysql")) {
             return "mysql";
         } else {
-            throw new ProcessFailedException("Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
+            throw new CommandFailedException("Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
         }
     }
 
@@ -36,53 +36,54 @@ public class ShellUtils {
     }
 
 
-    public static ShellCommandResult execute(String... args) throws ProcessFailedException {
+    public static ShellCommandResult execute(String... args) throws CommandFailedException {
         try {
             getLogger().debugEntry().command(args).log();
             Process process = new ProcessBuilder(args).start();
 
-            List<String> outputLines = new ArrayList<>();
-            List<String> errorLines = new ArrayList<>();
+            List<String> stdoutLines = new ArrayList<>();
+            List<String> stderrLines = new ArrayList<>();
 
-            try (BufferedReader stdOutput = new BufferedReader(
-                    new InputStreamReader(process.getInputStream())); BufferedReader stdError = new BufferedReader(
+            try (BufferedReader stdoutReader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream())); BufferedReader stderrReader = new BufferedReader(
                     new InputStreamReader(process.getErrorStream()))) {
                 CompletableFuture<Void> outputFuture = CompletableFuture.runAsync(
-                        () -> stdOutput.lines().forEach(outputLines::add));
+                        () -> stdoutReader.lines().forEach(stdoutLines::add));
 
                 CompletableFuture<Void> errorFuture = CompletableFuture.runAsync(
-                        () -> stdError.lines().forEach(errorLines::add));
+                        () -> stderrReader.lines().forEach(stderrLines::add));
 
                 boolean completed = process.waitFor(30, TimeUnit.SECONDS);
                 if (!completed) {
                     process.destroyForcibly();
-                    throw new ProcessFailedException("Process execution timed out: " + String.join(" ", args));
+                    throw new CommandFailedException(
+                            "Shell command timed out after " + TimeUnit.SECONDS + "s: " + String.join(" ", args));
                 }
 
                 CompletableFuture.allOf(outputFuture, errorFuture).join();
 
                 int exitCode = process.exitValue();
                 if (exitCode != 0) {
-                    getLogger().warnEntry().message("Process completed with non-zero exit code")
+                    getLogger().warnEntry().message("Shell command completed with non-zero exit code")
                             .field("command", String.join(" ", args))
-                            .field("exitCode", exitCode).field("stdout", String.join("\n", outputLines))
-                            .field("stderr", String.join("\n", errorLines)).log();
+                            .field("exitCode", exitCode).field("stdout", String.join("\n", stdoutLines))
+                            .field("stderr", String.join("\n", stderrLines)).log();
                 }
 
-                return new ShellCommandResult(args, Collections.unmodifiableList(outputLines),
-                        Collections.unmodifiableList(errorLines), exitCode);
+                return new ShellCommandResult(args, Collections.unmodifiableList(stdoutLines),
+                        Collections.unmodifiableList(stderrLines), exitCode);
             }
         } catch (IOException e) {
-            String errorMessage = String.format("Failed to execute process '%s': %s", String.join(" ", args),
+            String errorMessage = String.format("Failed to execute shell command '%s': %s", String.join(" ", args),
                     e.getMessage());
             getLogger().error(errorMessage);
-            throw new ProcessFailedException(errorMessage, e);
+            throw new CommandFailedException(errorMessage, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            String errorMessage = String.format("Failed to execute process'%s': %s", String.join(" ", args),
+            String errorMessage = String.format("Failed to execute shell command '%s': %s", String.join(" ", args),
                     e.getMessage());
             getLogger().error(errorMessage);
-            throw new ProcessFailedException(errorMessage, e);
+            throw new CommandFailedException(errorMessage, e);
         }
     }
 

@@ -8,7 +8,7 @@ import org.example.config.security.SudoPrivilegeManager;
 import org.example.constants.Executables;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
-import org.example.utils.ProcessFailedException;
+import org.example.utils.CommandFailedException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -57,7 +57,7 @@ public class ConfigBootstrapper {
         }
     }
 
-    public void ensureSudoPrivilegesConfigured() throws IOException, ProcessFailedException {
+    public void ensureSudoPrivilegesConfigured() throws IOException, CommandFailedException {
         if (!isSudoConfigured) {
             new SudoPrivilegeManager().setupSudoPrivileges();
             isSudoConfigured = true;

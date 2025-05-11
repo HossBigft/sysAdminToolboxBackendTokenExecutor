@@ -5,7 +5,7 @@ import org.example.config.core.AppConfiguration;
 import org.example.constants.EnvironmentConstants;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
-import org.example.utils.ProcessFailedException;
+import org.example.utils.CommandFailedException;
 import org.example.utils.ShellUtils;
 
 import java.sql.Connection;
@@ -42,7 +42,7 @@ public class DataBaseUserSetup {
         return appConfiguration.getDatabaseUser();
     }
 
-    boolean doesUserExist() throws ProcessFailedException {
+    boolean doesUserExist() throws CommandFailedException {
         String mysqlCliName = ShellUtils.getSqlCliName();
         String dbUser = getDatabaseUser();
         String query = String.format(
@@ -60,7 +60,7 @@ public class DataBaseUserSetup {
             ShellUtils.ShellCommandResult result = ShellUtils.execute(command);
             List<String> output = result.stdout();
             if (!result.isSuccessful()) {
-                throw new ProcessFailedException(result.getFormattedErrorMessage());
+                throw new CommandFailedException(result.getFormattedErrorMessage());
             }
             boolean exists = output.getFirst().trim().equals("1");
 
@@ -71,13 +71,13 @@ public class DataBaseUserSetup {
             }
 
             return exists;
-        } catch (ProcessFailedException e) {
+        } catch (CommandFailedException e) {
             logger.errorEntry().command(command).exception(e).log();
             throw new AppConfigException("Failed to check if database user exists", e);
         }
     }
 
-    void createUser() throws ProcessFailedException {
+    void createUser() throws CommandFailedException {
         String dbUser = getDatabaseUser();
         String dbPass = getDatabasePassword();
         String mysqlCliName = ShellUtils.getSqlCliName();
@@ -114,7 +114,7 @@ public class DataBaseUserSetup {
         }
     }
 
-    private void regenerateAndSavePassword() throws ProcessFailedException {
+    private void regenerateAndSavePassword() throws CommandFailedException {
 
         setDbUserPassword(appConfiguration.regenerateDatabasePassword());
 
@@ -125,7 +125,7 @@ public class DataBaseUserSetup {
         return appConfiguration.getDatabasePassword();
     }
 
-    void setDbUserPassword(String password) throws ProcessFailedException {
+    void setDbUserPassword(String password) throws CommandFailedException {
         if (getDatabaseUser().equalsIgnoreCase(EnvironmentConstants.SUPERADMIN_USER)) {
             logger.warn(
                     "WARNING: Refusing to modify the root database user password. Please configure a different database user");

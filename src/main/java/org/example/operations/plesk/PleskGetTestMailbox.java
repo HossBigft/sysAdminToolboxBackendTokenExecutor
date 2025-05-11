@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.example.operations.Operation;
 import org.example.operations.OperationFailedException;
-import org.example.utils.ProcessFailedException;
+import org.example.utils.CommandFailedException;
 import org.example.utils.ShellUtils;
 import org.example.utils.Utils;
 import org.example.value_types.DomainName;
@@ -33,7 +33,7 @@ public class PleskGetTestMailbox implements Operation<ObjectNode> {
     }
 
     @Override
-    public Optional<ObjectNode> execute() throws OperationFailedException, ProcessFailedException {
+    public Optional<ObjectNode> execute() throws OperationFailedException, CommandFailedException {
         ObjectMapper om = new ObjectMapper();
         ObjectNode mailCredentials = om.createObjectNode();
         String password;
@@ -43,19 +43,21 @@ public class PleskGetTestMailbox implements Operation<ObjectNode> {
                         StandardCharsets.UTF_8));
         Optional<String> existing_password;
         existing_password = getEmailPassword(TEST_MAIL_LOGIN, testMailDomain);
+
         password = existing_password.orElseGet(() -> Utils.generatePassword(TEST_MAIL_PASSWORD_LENGTH));
         if (existing_password.isEmpty()) {
             try {
                 createMail(TEST_MAIL_LOGIN, testMailDomain, password,
                         TEST_MAIL_DESCRIPTION);
                 mailCredentials.put("new_email_created", "true");
-            } catch (ProcessFailedException e) {
+            } catch (CommandFailedException e) {
                 System.err.println(
                         "Email creation for " + testMailDomain + " failed with " + e);
                 throw new OperationFailedException(
                         "Email creation for " + testMailDomain + " failed with " + e);
             }
         }
+
         mailCredentials.put("email", TEST_MAIL_LOGIN + "@" + testMailDomain);
         mailCredentials.put("password", password);
         mailCredentials.put("login_link", login_link.toString());
@@ -65,7 +67,7 @@ public class PleskGetTestMailbox implements Operation<ObjectNode> {
 
     private Optional<String> getEmailPassword(String login,
                                               DomainName mailDomain) throws
-            ProcessFailedException {
+            CommandFailedException {
         String emailPassword = "";
 
         List<String> result = ShellUtils.execute(PLESK_CLI_GET_MAIL_USERS_CREDENTIALS).stdout();
@@ -89,7 +91,7 @@ public class PleskGetTestMailbox implements Operation<ObjectNode> {
     private void createMail(String login,
                             DomainName mailDomain,
                             String password,
-                            String description) throws ProcessFailedException {
+                            String description) throws CommandFailedException {
         String email = login + "@" + mailDomain;
         ShellUtils.execute(PLESK_CLI_EXECUTABLE,
                 "bin",
