@@ -1,6 +1,6 @@
 package org.example.picocli.subcommands;
 
-import org.example.SysAdminToolboxBackendTokenExecutor;
+import org.example.main;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -9,7 +9,7 @@ import picocli.CommandLine;
 )
 public class HealthCheckSubCommand extends AbstractSubCommand {
 
-    public HealthCheckSubCommand(SysAdminToolboxBackendTokenExecutor parent) {
+    public HealthCheckSubCommand(main parent) {
         super(parent);
     }
 

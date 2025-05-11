@@ -1,6 +1,6 @@
 package org.example.picocli.subcommands;
 
-import org.example.SysAdminToolboxBackendTokenExecutor;
+import org.example.main;
 import org.example.operations.AvailableOperation;
 import org.example.operations.Operation;
 import org.example.operations.OperationRequest;
@@ -26,7 +26,7 @@ public class ExecuteSubCommand extends AbstractSubCommand {
     private java.util.List<String> unmatchedArgs;
 
 
-    public ExecuteSubCommand(SysAdminToolboxBackendTokenExecutor parent) {
+    public ExecuteSubCommand(main parent) {
         super(parent);
     }
 

@@ -1,6 +1,6 @@
 package org.example.picocli.subcommands;
 
-import org.example.SysAdminToolboxBackendTokenExecutor;
+import org.example.main;
 import org.example.config.core.AppConfiguration;
 import picocli.CommandLine;
 
@@ -17,7 +17,7 @@ public class InitSubCommand extends AbstractSubCommand {
     )
     private String keyLink;
 
-    public InitSubCommand(SysAdminToolboxBackendTokenExecutor parent) {
+    public InitSubCommand(main parent) {
         super(parent);
     }
 

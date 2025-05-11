@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 @Command(name = "sysadmintoolbox", description = "Safe root wrapper for executing system administration commands", version = "0.2.1", mixinStandardHelpOptions = true)
-public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
+public class main implements Callable<Integer> {
 
     @Option(names = {"--debug"}, description = "Enable debug output. Also prints everything logged.", scope = CommandLine.ScopeType.INHERIT)
     boolean debug;
@@ -28,7 +28,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
     boolean verbose;
 
     public static void main(String[] args) {
-        SysAdminToolboxBackendTokenExecutor app = new SysAdminToolboxBackendTokenExecutor();
+        main app = new main();
         CommandLine commandLine = new CommandLine(app);
 
         commandLine.addSubcommand(new ExecuteSubCommand(app));
@@ -90,7 +90,7 @@ public class SysAdminToolboxBackendTokenExecutor implements Callable<Integer> {
         return arguments.toArray(String[]::new);
     }
 
-    private static void setupLogging(SysAdminToolboxBackendTokenExecutor app) {
+    private static void setupLogging(main app) {
         if (app.debug) {
             new LogManager.Builder().globalLogLevel(LogLevel.DEBUG).apply();
         }

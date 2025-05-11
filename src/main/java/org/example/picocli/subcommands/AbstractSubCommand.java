@@ -1,13 +1,13 @@
 package org.example.picocli.subcommands;
 
-import org.example.SysAdminToolboxBackendTokenExecutor;
+import org.example.main;
 
 import java.util.concurrent.Callable;
 
 public abstract class AbstractSubCommand implements Callable<Integer> {
-    protected final SysAdminToolboxBackendTokenExecutor parent;
+    protected final main parent;
 
-    public AbstractSubCommand(SysAdminToolboxBackendTokenExecutor parent) {
+    public AbstractSubCommand(main parent) {
         this.parent = parent;
     }
 
