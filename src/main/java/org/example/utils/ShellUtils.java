@@ -1,6 +1,5 @@
 package org.example.utils;
 
-import org.example.operations.OperationFailedException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 
@@ -22,13 +21,13 @@ public class ShellUtils {
     private ShellUtils() {
     }
 
-    public static String getSqlCliName() throws OperationFailedException {
+    public static String getSqlCliName() throws ProcessFailedException {
         if (isCommandAvailable("mariadb")) {
             return "mariadb";
         } else if (isCommandAvailable("mysql")) {
             return "mysql";
         } else {
-            throw new OperationFailedException("Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
+            throw new ProcessFailedException("Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
         }
     }
 
@@ -37,7 +36,7 @@ public class ShellUtils {
     }
 
 
-    public static ShellCommandResult execute(String... args) throws OperationFailedException {
+    public static ShellCommandResult execute(String... args) throws ProcessFailedException {
         try {
             getLogger().debugEntry().command(args).log();
             Process process = new ProcessBuilder(args).start();
@@ -57,14 +56,14 @@ public class ShellUtils {
                 boolean completed = process.waitFor(30, TimeUnit.SECONDS);
                 if (!completed) {
                     process.destroyForcibly();
-                    throw new OperationFailedException("Command execution timed out: " + String.join(" ", args));
+                    throw new ProcessFailedException("Process execution timed out: " + String.join(" ", args));
                 }
 
                 CompletableFuture.allOf(outputFuture, errorFuture).join();
 
                 int exitCode = process.exitValue();
                 if (exitCode != 0) {
-                    getLogger().warnEntry().message("Command completed with non-zero exit code")
+                    getLogger().warnEntry().message("Process completed with non-zero exit code")
                             .field("command", String.join(" ", args))
                             .field("exitCode", exitCode).field("stdout", String.join("\n", outputLines))
                             .field("stderr", String.join("\n", errorLines)).log();
@@ -74,16 +73,16 @@ public class ShellUtils {
                         Collections.unmodifiableList(errorLines), exitCode);
             }
         } catch (IOException e) {
-            String errorMessage = String.format("Failed to execute command '%s': %s", String.join(" ", args),
+            String errorMessage = String.format("Failed to execute process '%s': %s", String.join(" ", args),
                     e.getMessage());
             getLogger().error(errorMessage);
-            throw new OperationFailedException(errorMessage, e);
+            throw new ProcessFailedException(errorMessage, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            String errorMessage = String.format("Failed to execute command '%s': %s", String.join(" ", args),
+            String errorMessage = String.format("Failed to execute process'%s': %s", String.join(" ", args),
                     e.getMessage());
             getLogger().error(errorMessage);
-            throw new OperationFailedException(errorMessage, e);
+            throw new ProcessFailedException(errorMessage, e);
         }
     }
 

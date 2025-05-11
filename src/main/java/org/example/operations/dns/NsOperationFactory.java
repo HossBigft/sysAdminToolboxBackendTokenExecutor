@@ -10,7 +10,8 @@ import java.util.Map;
 
 public class NsOperationFactory implements OperationFactory {
 
-    private static final Map<AvailableOperation, CommandBuilder> COMMANDS = Map.of(AvailableOperation.NS.GET_ZONE_MASTER,
+    private static final Map<AvailableOperation, CommandBuilder> COMMANDS = Map.of(
+            AvailableOperation.NS.GET_ZONE_MASTER,
             args -> new NsGetZoneMaster(new DomainName(args[0])), AvailableOperation.NS.REMOVE_ZONE,
             args -> new NsRemoveZone(new DomainName(args[0])));
 

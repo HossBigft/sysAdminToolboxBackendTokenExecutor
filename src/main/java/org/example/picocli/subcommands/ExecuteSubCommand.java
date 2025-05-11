@@ -35,7 +35,8 @@ public class ExecuteSubCommand extends AbstractSubCommand {
         if (unmatchedArgs != null && !unmatchedArgs.isEmpty()) {
             System.err.println("Unexpected extra arguments: " + unmatchedArgs);
             System.err.println("Usage: execute <signed-token>");
-            System.err.println("Hint: You should pass a single base64-encoded signed token, not separate command components.");
+            System.err.println(
+                    "Hint: You should pass a single base64-encoded signed token, not separate command components.");
             return 2;
         }
 
@@ -55,19 +56,6 @@ public class ExecuteSubCommand extends AbstractSubCommand {
         }
     }
 
-    private void printAvailableCommands() {
-        System.err.println("Available commands:");
-        System.err.println("PLESK:");
-        for (AvailableOperation.Plesk cmd : AvailableOperation.Plesk.values()) {
-            System.err.println("  PLESK." + cmd.name());
-        }
-
-        System.err.println("NS:");
-        for (AvailableOperation.NS cmd : AvailableOperation.NS.values()) {
-            System.err.println("  NS." + cmd.name());
-        }
-    }
-
     private OperationRequest decodeAndProcessToken(String encodedToken) throws Exception {
         String rawJson = new String(Base64.getDecoder().decode(encodedToken));
         Token token = Token.fromJson(rawJson);
@@ -79,6 +67,19 @@ public class ExecuteSubCommand extends AbstractSubCommand {
     private Optional<?> executeCommand(OperationRequest operationRequest) throws Exception {
         Operation<?> executor = getExecutorForCommand(operationRequest);
         return executor.execute();
+    }
+
+    private void printAvailableCommands() {
+        System.err.println("Available commands:");
+        System.err.println("PLESK:");
+        for (AvailableOperation.Plesk cmd : AvailableOperation.Plesk.values()) {
+            System.err.println("  PLESK." + cmd.name());
+        }
+
+        System.err.println("NS:");
+        for (AvailableOperation.NS cmd : AvailableOperation.NS.values()) {
+            System.err.println("  NS." + cmd.name());
+        }
     }
 
     private Operation<?> getExecutorForCommand(OperationRequest operationRequest) {

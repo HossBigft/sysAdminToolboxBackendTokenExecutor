@@ -1,8 +1,9 @@
 package org.example.operations.dns;
 
-import org.example.operations.Operation;
 import org.example.constants.Executables;
+import org.example.operations.Operation;
 import org.example.operations.OperationFailedException;
+import org.example.utils.ProcessFailedException;
 import org.example.utils.ShellUtils;
 import org.example.value_types.DomainName;
 
@@ -21,13 +22,18 @@ public class NsRemoveZone implements Operation<Void> {
     @Override
     public Optional<Void> execute() throws OperationFailedException {
         Path removeZoneExecutable = findRemoveZoneExecutable();
+        ShellUtils.ShellCommandResult result;
+        try {
+            result = ShellUtils.execute(
+                    removeZoneExecutable.toString(),
+                    "delzone",
+                    "-clean",
+                    domainNameToDelete.name()
+            );
+        } catch (ProcessFailedException e) {
+            throw new OperationFailedException("Remove DNS zone operation failed with", e);
+        }
 
-        ShellUtils.ShellCommandResult result = ShellUtils.execute(
-                removeZoneExecutable.toString(),
-                "delzone",
-                "-clean",
-                domainNameToDelete.name()
-        );
         if (!result.isSuccessful()) {
             if (!result.stderrString().contains("not found")) {
                 throw new OperationFailedException(result.getFormattedErrorMessage());
@@ -46,7 +52,7 @@ public class NsRemoveZone implements Operation<Void> {
         } else if (Files.isExecutable(fallbackPath)) {
             return fallbackPath;
         } else {
-            throw new OperationFailedException("Cannot find executable remove zone script");
+            throw new OperationFailedException("Bind executable not found " + primaryPath);
         }
     }
 

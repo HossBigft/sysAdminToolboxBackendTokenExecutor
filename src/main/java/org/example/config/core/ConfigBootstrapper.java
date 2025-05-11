@@ -3,15 +3,14 @@ package org.example.config.core;
 import org.example.config.AppConfigException;
 import org.example.config.database.DatabaseSetupCoordinator;
 import org.example.config.key_ed25519.KeyManager;
+import org.example.config.key_ed25519.KeyManagerException;
 import org.example.config.security.SudoPrivilegeManager;
 import org.example.constants.Executables;
-import org.example.operations.OperationFailedException;
-import org.example.config.key_ed25519.KeyManagerException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
+import org.example.utils.ProcessFailedException;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -58,7 +57,7 @@ public class ConfigBootstrapper {
         }
     }
 
-    public void ensureSudoPrivilegesConfigured() throws IOException, OperationFailedException, URISyntaxException {
+    public void ensureSudoPrivilegesConfigured() throws IOException, ProcessFailedException {
         if (!isSudoConfigured) {
             new SudoPrivilegeManager().setupSudoPrivileges();
             isSudoConfigured = true;
@@ -80,24 +79,25 @@ public class ConfigBootstrapper {
         }
     }
 
+    private void ensurePublicKey() {
+        logger.debugEntry().message("Ensuring public key is present.").log();
+        KeyManager km = new KeyManager(environmentConfig.getPublicKeyPath());
+        if (km.readKeyFromFile().isEmpty()) {
+            try {
+                km.fetchKeyAndSave(environmentConfig.getPublicKeyURI());
+            } catch (AppConfigException e) {
+                System.err.println("Public key link is not set. Set it with 'init LINK' command");
+            } catch (KeyManagerException e) {
+
+            }
+        }
+    }
+
     public void ensureDatabaseSetup() {
         if (!isDbSetup) {
             new DatabaseSetupCoordinator().ensureDatabaseSetup();
             isDbSetup = true;
         }
-    }
-    private void ensurePublicKey(){
-        logger.debugEntry().message("Ensuring public key is present.").log();
-        KeyManager km =  new KeyManager(environmentConfig.getPublicKeyPath());
-        if (km.readKeyFromFile().isEmpty()){
-            try {
-                km.fetchKeyAndSave(environmentConfig.getPublicKeyURI());
-            } catch (AppConfigException e){
-                System.err.println("Public key link is not set. Set it with 'init LINK' command");
-            } catch (KeyManagerException e){
-
-            }
-        };
     }
 }
 

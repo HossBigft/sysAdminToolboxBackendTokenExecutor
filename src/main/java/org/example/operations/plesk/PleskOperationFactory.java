@@ -21,7 +21,7 @@ public class PleskOperationFactory implements OperationFactory {
             AvailableOperation.Plesk.FETCH_SUBSCRIPTION_INFO,
             args -> new PleskFetchSubscriptionInfo(new DomainName(args[0])),
             AvailableOperation.Plesk.RESTART_DNS_SERVICE,
-            args -> new RestartDnsService(new DomainName(args[0])),
+            args -> new PleskRestartDnsService(new DomainName(args[0])),
             AvailableOperation.Plesk.GET_SUBSCRIPTION_ID_BY_DOMAIN,
             args -> new PleskGetSubscriptionIdByDomain(new DomainName(args[0]))
     );

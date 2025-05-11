@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.example.operations.Operation;
 import org.example.operations.OperationFailedException;
+import org.example.utils.ProcessFailedException;
 import org.example.utils.ShellUtils;
 import org.example.utils.Utils;
 import org.example.value_types.DomainName;
@@ -32,7 +33,7 @@ public class PleskGetTestMailbox implements Operation<ObjectNode> {
     }
 
     @Override
-    public Optional<ObjectNode> execute() throws OperationFailedException {
+    public Optional<ObjectNode> execute() throws OperationFailedException, ProcessFailedException {
         ObjectMapper om = new ObjectMapper();
         ObjectNode mailCredentials = om.createObjectNode();
         String password;
@@ -48,7 +49,7 @@ public class PleskGetTestMailbox implements Operation<ObjectNode> {
                 createMail(TEST_MAIL_LOGIN, testMailDomain, password,
                         TEST_MAIL_DESCRIPTION);
                 mailCredentials.put("new_email_created", "true");
-            } catch (OperationFailedException e) {
+            } catch (ProcessFailedException e) {
                 System.err.println(
                         "Email creation for " + testMailDomain + " failed with " + e);
                 throw new OperationFailedException(
@@ -64,7 +65,7 @@ public class PleskGetTestMailbox implements Operation<ObjectNode> {
 
     private Optional<String> getEmailPassword(String login,
                                               DomainName mailDomain) throws
-            OperationFailedException {
+            ProcessFailedException {
         String emailPassword = "";
 
         List<String> result = ShellUtils.execute(PLESK_CLI_GET_MAIL_USERS_CREDENTIALS).stdout();
@@ -88,7 +89,7 @@ public class PleskGetTestMailbox implements Operation<ObjectNode> {
     private void createMail(String login,
                             DomainName mailDomain,
                             String password,
-                            String description) throws OperationFailedException {
+                            String description) throws ProcessFailedException {
         String email = login + "@" + mailDomain;
         ShellUtils.execute(PLESK_CLI_EXECUTABLE,
                 "bin",

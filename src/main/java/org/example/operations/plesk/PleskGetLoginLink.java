@@ -3,6 +3,7 @@ package org.example.operations.plesk;
 import org.example.operations.Operation;
 import org.example.operations.OperationFailedException;
 import org.example.utils.DbUtils;
+import org.example.utils.ProcessFailedException;
 import org.example.utils.ShellUtils;
 import org.example.value_types.LinuxUsername;
 
@@ -32,15 +33,22 @@ public class PleskGetLoginLink implements Operation<String> {
         result = DbUtils.fetchSubscriptionNameById(subscriptionId);
 
         if (result.isPresent()) {
-            String link = pleskGetUserLoginLink(username.value());
+            String link;
+            try {
+                link = pleskGetUserLoginLink(username.value());
+            } catch (ProcessFailedException e) {
+                throw new OperationFailedException(
+                        "Operation get subscription login link for subscription with ID " + subscriptionId + " for user " + username + " failed.");
+            }
             return Optional.of(link + REDIRECTION_HEADER + subscriptionId);
         } else {
             throw new OperationFailedException("Subscription with ID " + subscriptionId + " doesn't exist.");
         }
     }
 
-    private String pleskGetUserLoginLink(String username) throws OperationFailedException {
+    private String pleskGetUserLoginLink(String username) throws ProcessFailedException {
         ShellUtils.ShellCommandResult result = ShellUtils.execute(PLESK_CLI_EXECUTABLE, "login", username);
+
         return result.stdout().getFirst();
     }
 

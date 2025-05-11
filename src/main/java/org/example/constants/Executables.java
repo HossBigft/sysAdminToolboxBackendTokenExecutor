@@ -5,6 +5,7 @@ public final class Executables {
     public static final String PLESK_CLI_EXECUTABLE = "/usr/sbin/plesk";
     public static final String BIND_REMOVE_ZONE_EXECUTABLE_FALLBACK = "/usr/sbin/rndc";
     public static final String BIND_REMOVE_ZONE_EXECUTABLE = "/opt/isc/isc-bind/root/usr/sbin/rndc";
+
     private Executables() {
     }
 }

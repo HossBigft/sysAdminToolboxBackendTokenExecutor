@@ -4,7 +4,6 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;

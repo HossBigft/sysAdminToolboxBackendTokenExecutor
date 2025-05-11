@@ -73,55 +73,6 @@ public class EnvironmentConfig {
         saveConfig();
     }
 
-    private void saveConfig() {
-        ensureConfigDirExists();
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-
-        File envFile = dotEnvFile.toFile();
-        String action = envFile.exists() ? "Updated" : "Created";
-
-        try {
-            mapper.writeValue(envFile, getConfigMap());
-            getConfigMap().forEach(
-                    (k, v) -> getLogger().debugEntry().field(k, v).field("Action", action).field("File", envFile)
-                            .log());
-
-        } catch (IOException e) {
-            throw new AppConfigException("Failed to save config file", e);
-        }
-    }
-
-    private void ensureConfigDirExists() {
-        File configDir = getConfigDir();
-        if (!configDir.isDirectory()) {
-            try {
-                getLogger().warnEntry().message("Config directory is not present")
-                        .field("Directory", configDir.toPath())
-                        .log();
-                Files.createDirectories(configDir.toPath());
-                getLogger().infoEntry().message("Created config directory").field("Directory", configDir.toPath())
-                        .log();
-            } catch (IOException e) {
-                throw new AppConfigException("Failed to create config directory", e);
-            }
-        }
-    }
-
-    public Map<String, String> getConfigMap() {
-        return configMap;
-    }
-
-    public void setConfigMap(Map<String, String> configMap) {
-        this.configMap = new HashMap<>(configMap);
-    }
-
-    public Path getPublicKeyPath() {
-        return Paths.get(
-                new EnvironmentConfig().getConfigDir().toString() + "/" + EnvironmentConstants.PUBLIC_KEY_FILENAME);
-    }
-
     public void loadConfig() {
         ObjectMapper mapper = new ObjectMapper();
         File envFile = dotEnvFile.toFile();
@@ -148,20 +99,51 @@ public class EnvironmentConfig {
         }
     }
 
-    private void setDefaultIfMissing(String key,
-                                     Supplier<String> defaultValueSupplier) {
-        String value = getValue(key);
-        if (value == null || value.isBlank()) {
-            configMap.put(key, defaultValueSupplier.get());
+    private void saveConfig() {
+        ensureConfigDirExists();
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+
+        File envFile = dotEnvFile.toFile();
+        String action = envFile.exists() ? "Updated" : "Created";
+
+        try {
+            mapper.writeValue(envFile, getConfigMap());
+            getConfigMap().forEach(
+                    (k, v) -> getLogger().debugEntry().field(k, v).field("Action", action).field("File", envFile)
+                            .log());
+
+        } catch (IOException e) {
+            throw new AppConfigException("Failed to save config file", e);
+        }
+    }    private void ensureConfigDirExists() {
+        File configDir = getConfigDir();
+        if (!configDir.isDirectory()) {
+            try {
+                getLogger().warnEntry().message("Config directory is not present")
+                        .field("Directory", configDir.toPath())
+                        .log();
+                Files.createDirectories(configDir.toPath());
+                getLogger().infoEntry().message("Created config directory").field("Directory", configDir.toPath())
+                        .log();
+            } catch (IOException e) {
+                throw new AppConfigException("Failed to create config directory", e);
+            }
         }
     }
 
-    public String generatePassword(int length) {
-        return Utils.generatePassword(length);
+    private CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
+    }    public Map<String, String> getConfigMap() {
+        return configMap;
     }
 
-    public int getDbUserPasswordLength() {
-        return EnvironmentConstants.DB_USER_PASSWORD_LENGTH;
+    public Path getPublicKeyPath() {
+        return Paths.get(
+                new EnvironmentConfig().getConfigDir().toString() + "/" + EnvironmentConstants.PUBLIC_KEY_FILENAME);
+    }    public void setConfigMap(Map<String, String> configMap) {
+        this.configMap = new HashMap<>(configMap);
     }
 
     public URI getPublicKeyURI() throws AppConfigException {
@@ -189,17 +171,35 @@ public class EnvironmentConfig {
         }
     }
 
-
-    private CliLogger getLogger() {
-        return LogManager.getInstance().getLogger();
-    }
-
     public String getEnvFilePath() {
         return dotEnvFile.toString();
     }
 
     public void setPublicKeyURI(String uri) {
         updateValue(EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD, uri);
+    }    private void setDefaultIfMissing(String key,
+                                     Supplier<String> defaultValueSupplier) {
+        String value = getValue(key);
+        if (value == null || value.isBlank()) {
+            configMap.put(key, defaultValueSupplier.get());
+        }
     }
+
+    public String generatePassword(int length) {
+        return Utils.generatePassword(length);
+    }
+
+    public int getDbUserPasswordLength() {
+        return EnvironmentConstants.DB_USER_PASSWORD_LENGTH;
+    }
+
+
+
+
+
+
+
+
+
 }
 
