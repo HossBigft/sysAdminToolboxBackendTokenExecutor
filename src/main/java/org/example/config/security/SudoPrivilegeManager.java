@@ -9,7 +9,6 @@ import org.example.utils.ShellUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,13 +47,13 @@ public class SudoPrivilegeManager {
         }
     }
 
-    private boolean isFileInsecure()  {
+    private boolean isFileInsecure() {
 
         return !sudoersFilePolicy.isSecured();
 
     }
 
-    private void securePermissions()  {
+    private void securePermissions() {
         sudoersFilePolicy.enforce();
     }
 
@@ -92,7 +91,7 @@ public class SudoPrivilegeManager {
         Files.setPosixFilePermissions(tempFile, PosixFilePermissions.fromString("r--r-----"));
         try {
             getLogger().debug("Validating sudoers syntax with visudo -cf");
-            ShellUtils.runCommand("visudo", "-cf", tempFileName);
+            ShellUtils.execute("visudo", "-cf", tempFileName);
         } catch (CommandFailedException e) {
             getLogger().error("Invalid sudoers syntax detected!", e);
             Files.delete(tempFile);
@@ -103,9 +102,9 @@ public class SudoPrivilegeManager {
 
         Path targetFile = Paths.get(SUDOERS_DIR + cprovider.getDatabaseUser());
         getLogger().debug("Copying sudo rule to final location: " + targetFile);
-        ShellUtils.runCommand("sudo", "cp", tempFileName, targetFile.toString());
+        ShellUtils.execute("sudo", "cp", tempFileName, targetFile.toString());
         getLogger().debug("Applying 440 permissions to " + targetFile);
-        ShellUtils.runCommand("sudo", "chmod", "440", targetFile.toString());
+        ShellUtils.execute("sudo", "chmod", "440", targetFile.toString());
 
         Files.delete(tempFile);
         getLogger().debug("Temporary sudo rule file deleted: " + tempFile);
@@ -122,7 +121,9 @@ public class SudoPrivilegeManager {
 
     private void printRelevantRules() throws CommandFailedException {
         getLogger().debug("Printing relevant sudo rules from /etc/sudoers");
-        ShellUtils.runCommand("cat", "/etc/sudoers").stream().filter(l -> l.contains(shellUser))
+        ShellUtils.ShellCommandResult result = ShellUtils.execute("cat", "/etc/sudoers");
+
+        result.stdout().stream().filter(l -> l.contains(shellUser))
                 .forEach(System.out::println);
     }
 

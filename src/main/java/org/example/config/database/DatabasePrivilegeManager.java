@@ -30,14 +30,18 @@ public class DatabasePrivilegeManager {
 
     private boolean isDbUserReadOnly() {
         try {
+            ShellUtils.ShellCommandResult result = ShellUtils.execute(ShellUtils.getSqlCliName(),
+                    "-u",
+                    EnvironmentConstants.SUPERADMIN_USER,
+                    "--skip-column-names",
+                    "-e",
+                    String.format("SHOW GRANTS FOR '%s'@'localhost'", databaseUser));
             List<String>
-                    output =
-                    ShellUtils.runCommand(ShellUtils.getSqlCliName(),
-                            "-u",
-                            EnvironmentConstants.SUPERADMIN_USER,
-                            "--skip-column-names",
-                            "-e",
-                            String.format("SHOW GRANTS FOR '%s'@'localhost'", databaseUser));
+
+                    output = result.stdout();
+            if (!result.isSuccessful()) {
+                throw new CommandFailedException(result.getFormattedErrorMessage());
+            }
 
             boolean hasOnlySelectPrivileges = true;
             for (String line : output) {
@@ -77,7 +81,7 @@ public class DatabasePrivilegeManager {
                             "GRANT SELECT ON *.* TO '%s'@'localhost'; " +
                             "FLUSH PRIVILEGES;", databaseUser, databaseUser);
 
-            ShellUtils.runCommand(ShellUtils.getSqlCliName(), "-u", EnvironmentConstants.SUPERADMIN_USER, "-e",
+            ShellUtils.execute(ShellUtils.getSqlCliName(), "-u", EnvironmentConstants.SUPERADMIN_USER, "-e",
                     commands);
             getLogger().
                     info(String.format("Set user %s as read-only successfully.", databaseUser));

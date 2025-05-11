@@ -36,14 +36,14 @@ public class ShellUtils {
         return new File("/usr/bin/" + cmd).exists() || new File("/usr/local/bin/" + cmd).exists();
     }
 
-    public static List<String> runCommand(String... args) throws CommandFailedException {
+
+    public static ShellCommandResult execute(String... args) throws CommandFailedException {
         try {
             getLogger().debugEntry().command(args).log();
             Process process = new ProcessBuilder(args).start();
 
-
             List<String> outputLines = new ArrayList<>();
-            StringBuilder errorBuilder = new StringBuilder();
+            List<String> errorLines = new ArrayList<>();
 
             try (BufferedReader stdOutput = new BufferedReader(
                     new InputStreamReader(process.getInputStream())); BufferedReader stdError = new BufferedReader(
@@ -52,7 +52,7 @@ public class ShellUtils {
                         () -> stdOutput.lines().forEach(outputLines::add));
 
                 CompletableFuture<Void> errorFuture = CompletableFuture.runAsync(
-                        () -> stdError.lines().forEach(line -> errorBuilder.append(line).append("\n")));
+                        () -> stdError.lines().forEach(errorLines::add));
 
                 boolean completed = process.waitFor(30, TimeUnit.SECONDS);
                 if (!completed) {
@@ -60,34 +60,30 @@ public class ShellUtils {
                     throw new CommandFailedException("Command execution timed out: " + String.join(" ", args));
                 }
 
-
                 CompletableFuture.allOf(outputFuture, errorFuture).join();
 
                 int exitCode = process.exitValue();
                 if (exitCode != 0) {
-
-                    String errorMessage = String.format("Command '%s' failed with exit code %d: %s\n Stderr: %s",
-                            String.join(" ", args), exitCode, String.join("\n", outputLines), errorBuilder);
-                    getLogger().errorEntry().message("Command failed").field("command", String.join(" ", args))
+                    getLogger().warnEntry().message("Command completed with non-zero exit code")
+                            .field("command", String.join(" ", args))
                             .field("exitCode", exitCode).field("stdout", String.join("\n", outputLines))
-                            .field("stderr", errorBuilder.toString()).log();
-
-                    throw new CommandFailedException(errorMessage);
+                            .field("stderr", String.join("\n", errorLines)).log();
                 }
 
-                return outputLines;
+                return new ShellCommandResult(args, Collections.unmodifiableList(outputLines),
+                        Collections.unmodifiableList(errorLines), exitCode);
             }
         } catch (IOException e) {
             String errorMessage = String.format("Failed to execute command '%s': %s", String.join(" ", args),
                     e.getMessage());
             getLogger().error(errorMessage);
-            throw new CommandFailedException(errorMessage);
+            throw new CommandFailedException(errorMessage, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             String errorMessage = String.format("Failed to execute command '%s': %s", String.join(" ", args),
                     e.getMessage());
             getLogger().error(errorMessage);
-            throw new CommandFailedException(errorMessage);
+            throw new CommandFailedException(errorMessage, e);
         }
     }
 
@@ -142,4 +138,23 @@ public class ShellUtils {
                 .orElseThrow(() -> new IllegalStateException("Could not determine valid user for running executable."));
     }
 
+    public record ShellCommandResult(String[] command, List<String> stdout, List<String> stderr, int exitCode) {
+
+        public boolean isSuccessful() {
+            return exitCode == 0;
+        }
+
+        public String getFormattedErrorMessage() {
+            return String.format("Command '%s' failed with exit code %d: %s\nStderr: %s",
+                    String.join(" ", command), exitCode, stdoutString(), stderrString());
+        }
+
+        public String stdoutString() {
+            return String.join("\n", stdout);
+        }
+
+        public String stderrString() {
+            return String.join("\n", stderr);
+        }
+    }
 }

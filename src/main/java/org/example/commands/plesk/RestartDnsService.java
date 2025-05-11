@@ -17,8 +17,8 @@ public class RestartDnsService implements Command<Void> {
 
     @Override
     public Optional<Void> execute() throws CommandFailedException {
-        ShellUtils.runCommand(Executables.PLESK_CLI_EXECUTABLE, "bin", "dns", "--off", domain.name());
-        ShellUtils.runCommand(Executables.PLESK_CLI_EXECUTABLE, "bin", "dns", "--on", domain.name());
+        ShellUtils.execute(Executables.PLESK_CLI_EXECUTABLE, "bin", "dns", "--off", domain.name());
+        ShellUtils.execute(Executables.PLESK_CLI_EXECUTABLE, "bin", "dns", "--on", domain.name());
         return Optional.empty();
     }
 }

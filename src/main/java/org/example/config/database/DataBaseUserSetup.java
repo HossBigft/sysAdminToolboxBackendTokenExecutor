@@ -57,7 +57,11 @@ public class DataBaseUserSetup {
         };
 
         try {
-            List<String> output = ShellUtils.runCommand(command);
+            ShellUtils.ShellCommandResult result = ShellUtils.execute(command);
+            List<String> output = result.stdout();
+            if (!result.isSuccessful()) {
+                throw new CommandFailedException(result.getFormattedErrorMessage());
+            }
             boolean exists = output.getFirst().trim().equals("1");
 
             if (exists) {
@@ -67,7 +71,7 @@ public class DataBaseUserSetup {
             }
 
             return exists;
-        } catch (Exception e) {
+        } catch (CommandFailedException e) {
             logger.errorEntry().command(command).exception(e).log();
             throw new AppConfigException("Failed to check if database user exists", e);
         }
@@ -88,7 +92,7 @@ public class DataBaseUserSetup {
         };
 
         try {
-            ShellUtils.runCommand(command);
+            ShellUtils.execute(command);
             logger.infoEntry().message("Created database user").field("User", dbUser).log();
         } catch (Exception e) {
             logger.errorEntry().command(command).exception(e).log();
@@ -140,7 +144,7 @@ public class DataBaseUserSetup {
         };
 
         try {
-            ShellUtils.runCommand(command);
+            ShellUtils.execute(command);
             logger.infoEntry().message("Set database user password").field("User", getDatabaseUser())
                     .field("Password", getDatabasePassword()).log();
         } catch (Exception e) {

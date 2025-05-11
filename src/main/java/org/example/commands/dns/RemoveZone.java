@@ -22,13 +22,18 @@ public class RemoveZone implements Command<Void> {
     public Optional<Void> execute() throws CommandFailedException {
         Path removeZoneExecutable = findRemoveZoneExecutable();
 
-        ShellUtils.runCommand(
+        ShellUtils.ShellCommandResult result = ShellUtils.execute(
                 removeZoneExecutable.toString(),
                 "delzone",
                 "-clean",
                 domainNameToDelete.name()
         );
+        if (!result.isSuccessful()) {
+            if (!result.stderrString().contains("not found")) {
+                throw new CommandFailedException(result.getFormattedErrorMessage());
+            }
 
+        }
         return Optional.empty();
     }
 

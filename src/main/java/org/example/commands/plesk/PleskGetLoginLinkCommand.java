@@ -40,7 +40,8 @@ public class PleskGetLoginLinkCommand implements Command<String> {
     }
 
     private String pleskGetUserLoginLink(String username) throws CommandFailedException {
-        return ShellUtils.runCommand(PLESK_CLI_EXECUTABLE, "login", username).getFirst();
+        ShellUtils.ShellCommandResult result = ShellUtils.execute(PLESK_CLI_EXECUTABLE, "login", username);
+        return result.stdout().getFirst();
     }
 
 }
