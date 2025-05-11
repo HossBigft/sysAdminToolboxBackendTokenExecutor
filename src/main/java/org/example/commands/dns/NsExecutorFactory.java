@@ -1,7 +1,7 @@
 package org.example.commands.dns;
 
 import org.example.commands.AvailableCommand;
-import org.example.commands.Command;
+import org.example.commands.Operation;
 import org.example.commands.CommandRequest;
 import org.example.commands.core.CommandBuilderFactory;
 import org.example.value_types.DomainName;
@@ -15,7 +15,7 @@ public class NsExecutorFactory implements CommandBuilderFactory {
             args -> new RemoveZone(new DomainName(args[0])));
 
     @Override
-    public Command<?> build(CommandRequest parsed) {
+    public Operation<?> build(CommandRequest parsed) {
         CommandBuilder builder = COMMANDS.get(parsed.commandName());
         if (builder == null) {
             throw new IllegalArgumentException("Unknown command: " + parsed.commandName());
@@ -24,6 +24,6 @@ public class NsExecutorFactory implements CommandBuilderFactory {
     }
 
     private interface CommandBuilder {
-        Command<?> build(String[] args);
+        Operation<?> build(String[] args);
     }
 }

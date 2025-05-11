@@ -1,7 +1,7 @@
 package org.example.commands.plesk;
 
-import org.example.commands.Command;
-import org.example.exceptions.CommandFailedException;
+import org.example.commands.Operation;
+import org.example.exceptions.OperationFailedException;
 import org.example.utils.DbUtils;
 import org.example.utils.ShellUtils;
 import org.example.value_types.LinuxUsername;
@@ -11,20 +11,20 @@ import java.util.Optional;
 
 import static org.example.constants.Executables.PLESK_CLI_EXECUTABLE;
 
-public class PleskGetLoginLinkCommand implements Command<String> {
+public class PleskGetLoginLink implements Operation<String> {
     final int subscriptionId;
     final LinuxUsername username;
 
 
-    public PleskGetLoginLinkCommand(int subscriptionId,
-                                    LinuxUsername username) {
+    public PleskGetLoginLink(int subscriptionId,
+                             LinuxUsername username) {
         this.subscriptionId = subscriptionId;
         this.username = username;
     }
 
 
     public Optional<String> execute() throws
-            CommandFailedException, SQLException {
+            OperationFailedException, SQLException {
         final String REDIRECTION_HEADER = "&success_redirect_url=%2Fadmin%2Fsubscription%2Foverview%2Fid%2F";
         Optional<String> result;
 
@@ -35,11 +35,11 @@ public class PleskGetLoginLinkCommand implements Command<String> {
             String link = pleskGetUserLoginLink(username.value());
             return Optional.of(link + REDIRECTION_HEADER + subscriptionId);
         } else {
-            throw new CommandFailedException("Subscription with ID " + subscriptionId + " doesn't exist.");
+            throw new OperationFailedException("Subscription with ID " + subscriptionId + " doesn't exist.");
         }
     }
 
-    private String pleskGetUserLoginLink(String username) throws CommandFailedException {
+    private String pleskGetUserLoginLink(String username) throws OperationFailedException {
         ShellUtils.ShellCommandResult result = ShellUtils.execute(PLESK_CLI_EXECUTABLE, "login", username);
         return result.stdout().getFirst();
     }

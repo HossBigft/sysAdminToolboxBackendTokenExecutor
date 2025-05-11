@@ -3,7 +3,7 @@ package org.example.commands.plesk;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.example.commands.Command;
+import org.example.commands.Operation;
 import org.example.utils.DbUtils;
 import org.example.value_types.DomainName;
 
@@ -11,10 +11,10 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
-public class PleskGetSubscriptionIdByDomainCommand implements Command<ObjectNode> {
+public class PleskGetSubscriptionIdByDomain implements Operation<ObjectNode> {
     private final DomainName domain;
 
-    public PleskGetSubscriptionIdByDomainCommand(DomainName domain) {
+    public PleskGetSubscriptionIdByDomain(DomainName domain) {
         this.domain = domain;
     }
 

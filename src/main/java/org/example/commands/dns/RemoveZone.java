@@ -1,8 +1,8 @@
 package org.example.commands.dns;
 
-import org.example.commands.Command;
+import org.example.commands.Operation;
 import org.example.constants.Executables;
-import org.example.exceptions.CommandFailedException;
+import org.example.exceptions.OperationFailedException;
 import org.example.utils.ShellUtils;
 import org.example.value_types.DomainName;
 
@@ -11,7 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-public class RemoveZone implements Command<Void> {
+public class RemoveZone implements Operation<Void> {
     private final DomainName domainNameToDelete;
 
     public RemoveZone(DomainName domainName) {
@@ -19,7 +19,7 @@ public class RemoveZone implements Command<Void> {
     }
 
     @Override
-    public Optional<Void> execute() throws CommandFailedException {
+    public Optional<Void> execute() throws OperationFailedException {
         Path removeZoneExecutable = findRemoveZoneExecutable();
 
         ShellUtils.ShellCommandResult result = ShellUtils.execute(
@@ -30,14 +30,14 @@ public class RemoveZone implements Command<Void> {
         );
         if (!result.isSuccessful()) {
             if (!result.stderrString().contains("not found")) {
-                throw new CommandFailedException(result.getFormattedErrorMessage());
+                throw new OperationFailedException(result.getFormattedErrorMessage());
             }
 
         }
         return Optional.empty();
     }
 
-    private Path findRemoveZoneExecutable() throws CommandFailedException {
+    private Path findRemoveZoneExecutable() throws OperationFailedException {
         Path primaryPath = Paths.get(Executables.BIND_REMOVE_ZONE_EXECUTABLE);
         Path fallbackPath = Paths.get(Executables.BIND_REMOVE_ZONE_EXECUTABLE_FALLBACK);
 
@@ -46,7 +46,7 @@ public class RemoveZone implements Command<Void> {
         } else if (Files.isExecutable(fallbackPath)) {
             return fallbackPath;
         } else {
-            throw new CommandFailedException("Cannot find executable remove zone script");
+            throw new OperationFailedException("Cannot find executable remove zone script");
         }
     }
 

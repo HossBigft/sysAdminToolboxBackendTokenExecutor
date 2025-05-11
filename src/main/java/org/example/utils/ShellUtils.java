@@ -1,6 +1,6 @@
 package org.example.utils;
 
-import org.example.exceptions.CommandFailedException;
+import org.example.exceptions.OperationFailedException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 
@@ -22,13 +22,13 @@ public class ShellUtils {
     private ShellUtils() {
     }
 
-    public static String getSqlCliName() throws CommandFailedException {
+    public static String getSqlCliName() throws OperationFailedException {
         if (isCommandAvailable("mariadb")) {
             return "mariadb";
         } else if (isCommandAvailable("mysql")) {
             return "mysql";
         } else {
-            throw new CommandFailedException("Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
+            throw new OperationFailedException("Neither 'mariadb' nor 'mysql' is installed or available in PATH.");
         }
     }
 
@@ -37,7 +37,7 @@ public class ShellUtils {
     }
 
 
-    public static ShellCommandResult execute(String... args) throws CommandFailedException {
+    public static ShellCommandResult execute(String... args) throws OperationFailedException {
         try {
             getLogger().debugEntry().command(args).log();
             Process process = new ProcessBuilder(args).start();
@@ -57,7 +57,7 @@ public class ShellUtils {
                 boolean completed = process.waitFor(30, TimeUnit.SECONDS);
                 if (!completed) {
                     process.destroyForcibly();
-                    throw new CommandFailedException("Command execution timed out: " + String.join(" ", args));
+                    throw new OperationFailedException("Command execution timed out: " + String.join(" ", args));
                 }
 
                 CompletableFuture.allOf(outputFuture, errorFuture).join();
@@ -77,13 +77,13 @@ public class ShellUtils {
             String errorMessage = String.format("Failed to execute command '%s': %s", String.join(" ", args),
                     e.getMessage());
             getLogger().error(errorMessage);
-            throw new CommandFailedException(errorMessage, e);
+            throw new OperationFailedException(errorMessage, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             String errorMessage = String.format("Failed to execute command '%s': %s", String.join(" ", args),
                     e.getMessage());
             getLogger().error(errorMessage);
-            throw new CommandFailedException(errorMessage, e);
+            throw new OperationFailedException(errorMessage, e);
         }
     }
 

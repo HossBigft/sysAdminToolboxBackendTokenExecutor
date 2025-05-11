@@ -1,6 +1,6 @@
 package org.example.commands.dns;
 
-import org.example.commands.Command;
+import org.example.commands.Operation;
 import org.example.value_types.DomainName;
 
 import java.io.IOException;
@@ -12,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-public class GetZoneMaster implements Command<String> {
+public class GetZoneMaster implements Operation<String> {
     private static final Path ZONEFILE_PATH_BIND = Paths.get("/var/opt/isc/scls/isc-bind/zones/_default.nzf");
     private static final Path PLESK_BIND_ZONE_DIR = Paths.get("/var/named/run-root/");
     private static final Pattern IP_REGEX = Pattern.compile("((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}");

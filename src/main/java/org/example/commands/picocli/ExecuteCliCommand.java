@@ -2,10 +2,10 @@ package org.example.commands.picocli;
 
 import org.example.SysAdminToolboxBackendTokenExecutor;
 import org.example.commands.AvailableCommand;
-import org.example.commands.Command;
+import org.example.commands.Operation;
 import org.example.commands.CommandRequest;
 import org.example.commands.dns.NsExecutorFactory;
-import org.example.commands.plesk.PleskCommandExecutorFactory;
+import org.example.commands.plesk.PleskOperationFactory;
 import org.example.token_handler.TokenProcessor;
 import org.example.value_types.Token;
 import picocli.CommandLine;
@@ -77,13 +77,13 @@ public class ExecuteCliCommand extends AbstractCliCommand {
     }
 
     private Optional<?> executeCommand(CommandRequest commandRequest) throws Exception {
-        Command<?> executor = getExecutorForCommand(commandRequest);
+        Operation<?> executor = getExecutorForCommand(commandRequest);
         return executor.execute();
     }
 
-    private Command<?> getExecutorForCommand(CommandRequest commandRequest) {
+    private Operation<?> getExecutorForCommand(CommandRequest commandRequest) {
         return switch (commandRequest.commandName()) {
-            case AvailableCommand.Plesk pleskCommand -> new PleskCommandExecutorFactory().build(commandRequest);
+            case AvailableCommand.Plesk pleskCommand -> new PleskOperationFactory().build(commandRequest);
             case AvailableCommand.NS nsCommand -> new NsExecutorFactory().build(commandRequest);
         };
     }

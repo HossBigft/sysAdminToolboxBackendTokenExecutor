@@ -5,7 +5,7 @@ import org.example.config.database.DatabaseSetupCoordinator;
 import org.example.config.key_ed25519.KeyManager;
 import org.example.config.security.SudoPrivilegeManager;
 import org.example.constants.Executables;
-import org.example.exceptions.CommandFailedException;
+import org.example.exceptions.OperationFailedException;
 import org.example.exceptions.KeyManagerException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
@@ -58,7 +58,7 @@ public class ConfigBootstrapper {
         }
     }
 
-    public void ensureSudoPrivilegesConfigured() throws IOException, CommandFailedException, URISyntaxException {
+    public void ensureSudoPrivilegesConfigured() throws IOException, OperationFailedException, URISyntaxException {
         if (!isSudoConfigured) {
             new SudoPrivilegeManager().setupSudoPrivileges();
             isSudoConfigured = true;

@@ -2,6 +2,6 @@ package org.example.commands;
 
 import java.util.Optional;
 
-public interface Command<T> {
+public interface Operation<T> {
     Optional<T> execute() throws Exception;
 }

@@ -3,7 +3,7 @@ package org.example.commands.plesk;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.example.commands.Command;
+import org.example.commands.Operation;
 import org.example.utils.DbUtils;
 import org.example.value_types.DomainName;
 
@@ -12,10 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class PleskFetchSubscriptionInfoCommand implements Command<ArrayNode> {
+public class PleskFetchSubscriptionInfo implements Operation<ArrayNode> {
     final DomainName domain;
 
-    public PleskFetchSubscriptionInfoCommand(DomainName domain) {
+    public PleskFetchSubscriptionInfo(DomainName domain) {
         this.domain = domain;
     }
 

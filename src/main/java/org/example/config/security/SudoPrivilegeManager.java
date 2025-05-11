@@ -2,7 +2,7 @@ package org.example.config.security;
 
 import org.example.config.core.EnvironmentConfig;
 import org.example.constants.EnvironmentConstants;
-import org.example.exceptions.CommandFailedException;
+import org.example.exceptions.OperationFailedException;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.utils.ShellUtils;
@@ -29,7 +29,7 @@ public class SudoPrivilegeManager {
                     .owner(EnvironmentConstants.SUPERADMIN_USER)
                     .group(EnvironmentConstants.SUPERADMIN_USER);
 
-    public void setupSudoPrivileges() throws CommandFailedException, IOException {
+    public void setupSudoPrivileges() throws OperationFailedException, IOException {
         File sudoersFile = Paths.get(SUDOERS_DIR + cprovider.getDatabaseUser()).toFile();
 
         if (sudoersFile.isFile() && isFileInsecure()) {
@@ -41,7 +41,7 @@ public class SudoPrivilegeManager {
             securePermissions();
 
             if (isSudoRuleNotPresentInFile()) {
-                throw new CommandFailedException("Failed to apply sudo rules correctly!");
+                throw new OperationFailedException("Failed to apply sudo rules correctly!");
             }
             printRelevantRules();
         }
@@ -80,7 +80,7 @@ public class SudoPrivilegeManager {
         }
     }
 
-    private void createSudoersRuleFile(String sudoRule) throws IOException, CommandFailedException {
+    private void createSudoersRuleFile(String sudoRule) throws IOException, OperationFailedException {
         String tempFileName = TEMP_DIR + "sudoers_" + cprovider.getDatabaseUser();
         Path tempFile = Paths.get(tempFileName);
 
@@ -92,11 +92,11 @@ public class SudoPrivilegeManager {
         try {
             getLogger().debug("Validating sudoers syntax with visudo -cf");
             ShellUtils.execute("visudo", "-cf", tempFileName);
-        } catch (CommandFailedException e) {
+        } catch (OperationFailedException e) {
             getLogger().error("Invalid sudoers syntax detected!", e);
             Files.delete(tempFile);
             getLogger().error("Failed temp file removed without moving it to sudoers " + tempFile);
-            throw new CommandFailedException("Invalid sudoers syntax detected!");
+            throw new OperationFailedException("Invalid sudoers syntax detected!");
         }
         getLogger().debug("Soon to be sudoers file is validated " + tempFile);
 
@@ -119,7 +119,7 @@ public class SudoPrivilegeManager {
         return String.join("\n", defaultsLine, sudoRuleLine);
     }
 
-    private void printRelevantRules() throws CommandFailedException {
+    private void printRelevantRules() throws OperationFailedException {
         getLogger().debug("Printing relevant sudo rules from /etc/sudoers");
         ShellUtils.ShellCommandResult result = ShellUtils.execute("cat", "/etc/sudoers");
 

@@ -2,8 +2,8 @@ package org.example.commands.plesk;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.example.commands.Command;
-import org.example.exceptions.CommandFailedException;
+import org.example.commands.Operation;
+import org.example.exceptions.OperationFailedException;
 import org.example.utils.ShellUtils;
 import org.example.utils.Utils;
 import org.example.value_types.DomainName;
@@ -18,7 +18,7 @@ import static org.example.constants.Executables.PLESK_CLI_EXECUTABLE;
 import static org.example.constants.Executables.PLESK_CLI_GET_MAIL_USERS_CREDENTIALS;
 
 
-public class PleskGetTestMailboxCommand implements Command<ObjectNode> {
+public class PleskGetTestMailbox implements Operation<ObjectNode> {
 
     static final String TEST_MAIL_LOGIN = "testsupportmail";
     static final String
@@ -27,12 +27,12 @@ public class PleskGetTestMailboxCommand implements Command<ObjectNode> {
     static final int TEST_MAIL_PASSWORD_LENGTH = 15;
     final DomainName testMailDomain;
 
-    public PleskGetTestMailboxCommand(DomainName testmailDomain) {
+    public PleskGetTestMailbox(DomainName testmailDomain) {
         this.testMailDomain = testmailDomain;
     }
 
     @Override
-    public Optional<ObjectNode> execute() throws CommandFailedException {
+    public Optional<ObjectNode> execute() throws OperationFailedException {
         ObjectMapper om = new ObjectMapper();
         ObjectNode mailCredentials = om.createObjectNode();
         String password;
@@ -48,10 +48,10 @@ public class PleskGetTestMailboxCommand implements Command<ObjectNode> {
                 createMail(TEST_MAIL_LOGIN, testMailDomain, password,
                         TEST_MAIL_DESCRIPTION);
                 mailCredentials.put("new_email_created", "true");
-            } catch (CommandFailedException e) {
+            } catch (OperationFailedException e) {
                 System.err.println(
                         "Email creation for " + testMailDomain + " failed with " + e);
-                throw new CommandFailedException(
+                throw new OperationFailedException(
                         "Email creation for " + testMailDomain + " failed with " + e);
             }
         }
@@ -64,7 +64,7 @@ public class PleskGetTestMailboxCommand implements Command<ObjectNode> {
 
     private Optional<String> getEmailPassword(String login,
                                               DomainName mailDomain) throws
-            CommandFailedException {
+            OperationFailedException {
         String emailPassword = "";
 
         List<String> result = ShellUtils.execute(PLESK_CLI_GET_MAIL_USERS_CREDENTIALS).stdout();
@@ -88,7 +88,7 @@ public class PleskGetTestMailboxCommand implements Command<ObjectNode> {
     private void createMail(String login,
                             DomainName mailDomain,
                             String password,
-                            String description) throws CommandFailedException {
+                            String description) throws OperationFailedException {
         String email = login + "@" + mailDomain;
         ShellUtils.execute(PLESK_CLI_EXECUTABLE,
                 "bin",
