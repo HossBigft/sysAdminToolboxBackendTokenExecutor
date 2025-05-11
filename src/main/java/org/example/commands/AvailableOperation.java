@@ -1,8 +1,8 @@
 package org.example.commands;
 
-public sealed interface AvailableCommand permits AvailableCommand.NS, AvailableCommand.Plesk {
+public sealed interface AvailableOperation permits AvailableOperation.NS, AvailableOperation.Plesk {
 
-    static AvailableCommand valueOf(String qualifiedName) {
+    static AvailableOperation valueOf(String qualifiedName) {
         String[] parts = qualifiedName.split("\\.", 2);
 
         if (parts.length != 2) {
@@ -16,12 +16,12 @@ public sealed interface AvailableCommand permits AvailableCommand.NS, AvailableC
         };
     }
 
-    enum NS implements AvailableCommand {
+    enum NS implements AvailableOperation {
         REMOVE_ZONE,
         GET_ZONE_MASTER
     }
 
-    enum Plesk implements AvailableCommand {
+    enum Plesk implements AvailableOperation {
         GET_LOGIN_LINK,
         FETCH_SUBSCRIPTION_INFO,
         GET_TESTMAIL_CREDENTIALS,

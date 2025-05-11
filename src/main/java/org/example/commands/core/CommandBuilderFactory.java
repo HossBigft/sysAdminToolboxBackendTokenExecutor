@@ -1,11 +1,11 @@
 package org.example.commands.core;
 
 import org.example.commands.Operation;
-import org.example.commands.CommandRequest;
+import org.example.commands.OperationRequest;
 
 
 public interface CommandBuilderFactory {
 
-    Operation<?> build(CommandRequest command);
+    Operation<?> build(OperationRequest command);
 
 }

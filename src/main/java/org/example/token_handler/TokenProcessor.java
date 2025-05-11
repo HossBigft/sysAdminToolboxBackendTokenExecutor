@@ -1,7 +1,7 @@
 package org.example.token_handler;
 
-import org.example.commands.AvailableCommand;
-import org.example.commands.CommandRequest;
+import org.example.commands.AvailableOperation;
+import org.example.commands.OperationRequest;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.value_types.Token;
@@ -13,10 +13,10 @@ import java.util.Optional;
 
 public class TokenProcessor {
 
-    public Optional<CommandRequest> processToken(Token token) {
+    public Optional<OperationRequest> processToken(Token token) {
         getLogger().
                 infoEntry().message("Processing command token").field("Token", token.value()).log();
-        Optional<CommandRequest> command = Optional.empty();
+        Optional<OperationRequest> command = Optional.empty();
 
         if (!TokenManager.TokenValidator.isValid(token)) {
             getLogger().
@@ -59,7 +59,7 @@ public class TokenProcessor {
         return LogManager.getInstance().getLogger();
     }
 
-    public static CommandRequest parseCommand(String commandLine) {
+    public static OperationRequest parseCommand(String commandLine) {
         if (commandLine.isBlank()) {
             throw new IllegalArgumentException("No command provided");
         }
@@ -68,8 +68,8 @@ public class TokenProcessor {
             throw new IllegalArgumentException("Invalid command input");
         }
 
-        AvailableCommand commandName = AvailableCommand.valueOf(args[0]);
+        AvailableOperation commandName = AvailableOperation.valueOf(args[0]);
         String[] commandArgs = Arrays.copyOfRange(args, 1, args.length);
-        return new CommandRequest(commandName, commandArgs);
+        return new OperationRequest(commandName, commandArgs);
     }
 }

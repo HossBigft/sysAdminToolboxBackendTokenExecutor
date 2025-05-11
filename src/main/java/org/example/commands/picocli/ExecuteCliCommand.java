@@ -1,10 +1,10 @@
 package org.example.commands.picocli;
 
 import org.example.SysAdminToolboxBackendTokenExecutor;
-import org.example.commands.AvailableCommand;
+import org.example.commands.AvailableOperation;
 import org.example.commands.Operation;
-import org.example.commands.CommandRequest;
-import org.example.commands.dns.NsExecutorFactory;
+import org.example.commands.OperationRequest;
+import org.example.commands.dns.NsOperationFactory;
 import org.example.commands.plesk.PleskOperationFactory;
 import org.example.token_handler.TokenProcessor;
 import org.example.value_types.Token;
@@ -40,8 +40,8 @@ public class ExecuteCliCommand extends AbstractCliCommand {
         }
 
         try {
-            CommandRequest commandRequest = decodeAndProcessToken(encodedJson);
-            Optional<?> result = executeCommand(commandRequest);
+            OperationRequest operationRequest = decodeAndProcessToken(encodedJson);
+            Optional<?> result = executeCommand(operationRequest);
             result.ifPresent(System.out::println);
             return 0;
         } catch (IllegalArgumentException e) {
@@ -58,17 +58,17 @@ public class ExecuteCliCommand extends AbstractCliCommand {
     private void printAvailableCommands() {
         System.err.println("Available commands:");
         System.err.println("PLESK:");
-        for (AvailableCommand.Plesk cmd : AvailableCommand.Plesk.values()) {
+        for (AvailableOperation.Plesk cmd : AvailableOperation.Plesk.values()) {
             System.err.println("  PLESK." + cmd.name());
         }
 
         System.err.println("NS:");
-        for (AvailableCommand.NS cmd : AvailableCommand.NS.values()) {
+        for (AvailableOperation.NS cmd : AvailableOperation.NS.values()) {
             System.err.println("  NS." + cmd.name());
         }
     }
 
-    private CommandRequest decodeAndProcessToken(String encodedToken) throws Exception {
+    private OperationRequest decodeAndProcessToken(String encodedToken) throws Exception {
         String rawJson = new String(Base64.getDecoder().decode(encodedToken));
         Token token = Token.fromJson(rawJson);
         return new TokenProcessor()
@@ -76,15 +76,15 @@ public class ExecuteCliCommand extends AbstractCliCommand {
                 .orElseThrow(CommunicationException::new);
     }
 
-    private Optional<?> executeCommand(CommandRequest commandRequest) throws Exception {
-        Operation<?> executor = getExecutorForCommand(commandRequest);
+    private Optional<?> executeCommand(OperationRequest operationRequest) throws Exception {
+        Operation<?> executor = getExecutorForCommand(operationRequest);
         return executor.execute();
     }
 
-    private Operation<?> getExecutorForCommand(CommandRequest commandRequest) {
-        return switch (commandRequest.commandName()) {
-            case AvailableCommand.Plesk pleskCommand -> new PleskOperationFactory().build(commandRequest);
-            case AvailableCommand.NS nsCommand -> new NsExecutorFactory().build(commandRequest);
+    private Operation<?> getExecutorForCommand(OperationRequest operationRequest) {
+        return switch (operationRequest.commandName()) {
+            case AvailableOperation.Plesk pleskCommand -> new PleskOperationFactory().build(operationRequest);
+            case AvailableOperation.NS nsCommand -> new NsOperationFactory().build(operationRequest);
         };
     }
 }

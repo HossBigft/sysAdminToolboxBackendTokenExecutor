@@ -3,7 +3,7 @@ package org.example.commands;
 
 import java.util.Arrays;
 
-public record CommandRequest(AvailableCommand commandName, String[] commandArgs) {
+public record OperationRequest(AvailableOperation commandName, String[] commandArgs) {
 
     @Override
     public String toString() {
