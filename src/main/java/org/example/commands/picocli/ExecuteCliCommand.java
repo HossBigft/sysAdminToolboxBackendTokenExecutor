@@ -56,16 +56,15 @@ public class ExecuteCliCommand extends AbstractCliCommand {
     }
 
     private void printAvailableCommands() {
-        System.out.println("Available commands:");
-
-        System.out.println("PLESK:");
+        System.err.println("Available commands:");
+        System.err.println("PLESK:");
         for (AvailableCommand.Plesk cmd : AvailableCommand.Plesk.values()) {
-            System.out.println("  PLESK." + cmd.name());
+            System.err.println("  PLESK." + cmd.name());
         }
 
-        System.out.println("NS:");
+        System.err.println("NS:");
         for (AvailableCommand.NS cmd : AvailableCommand.NS.values()) {
-            System.out.println("  NS." + cmd.name());
+            System.err.println("  NS." + cmd.name());
         }
     }
 
