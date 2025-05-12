@@ -146,8 +146,10 @@ public class PleskFetchSubscriptionInfo implements Operation {
                 stateNode.put("domain", domainState.domain());
                 stateNode.put("status", domainState.status());
                 domainStatesArray.add(stateNode);
-                
-                domainsArray.add(domainState.domain());
+
+                ObjectNode domainNode = mapper.createObjectNode();
+                domainNode.put("name", domainState.domain());
+                domainsArray.add(domainNode);
             }
 
             node.put("is_space_overused", this.isSpaceOverused);
