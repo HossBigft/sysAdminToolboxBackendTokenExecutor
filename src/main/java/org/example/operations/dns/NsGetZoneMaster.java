@@ -37,7 +37,7 @@ public class NsGetZoneMaster implements Operation {
             result = getZoneMasterIpFromPleskBind(domain.name());
         }
         if (result.isEmpty()) {
-            return OperationResult.notFound(String.format("BIND DNS zone for domain %s not found.", zoneData));
+            return OperationResult.notFound(String.format("BIND DNS zone for domain %s not found.", domain));
         }
         zoneData.put("domain_name", domain.name());
         zoneData.put("zonemaster_ip", result.get());
