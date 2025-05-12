@@ -3,7 +3,10 @@ package org.example.operations.plesk;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.example.logging.core.CliLogger;
+import org.example.logging.facade.LogManager;
 import org.example.operations.Operation;
+import org.example.operations.OperationResult;
 import org.example.utils.DbUtils;
 import org.example.value_types.DomainName;
 
@@ -12,31 +15,76 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class PleskFetchSubscriptionInfo implements Operation<ArrayNode> {
+public class PleskFetchSubscriptionInfo implements Operation {
     final DomainName domain;
 
     public PleskFetchSubscriptionInfo(DomainName domain) {
         this.domain = domain;
     }
 
-    public Optional<ArrayNode> execute() throws SQLException {
-        Optional<List<String>> subscriptionInfoList = DbUtils.fetchSubscriptionInfoByDomain(domain.name());
-        ObjectMapper objectMapper = new ObjectMapper();
-        ArrayNode resultArray = objectMapper.createArrayNode();
+    public OperationResult execute() {
+        return runSafely(() -> {
+            ObjectMapper objectMapper = new ObjectMapper();
+            ArrayNode resultArray = objectMapper.createArrayNode();
 
-        subscriptionInfoList.ifPresentOrElse(
-                infoList -> infoList.stream().filter(info -> info != null && !info.trim().isEmpty()).forEach(info -> {
-                    try {
-                        SubscriptionDetails details = SubscriptionDetails.parse(info);
-                        resultArray.add(details.toJsonNode(objectMapper));
-                    } catch (Exception e) {
-                        System.err.println("Error processing subscription info: " + e.getMessage());
-                    }
-                }), () -> System.out.println("No subscription information found for domain: " + domain.name()));
+            Optional<List<String>> subscriptionInfoRaw = DbUtils.fetchSubscriptionInfoByDomain(domain.name());
 
-        return Optional.of(resultArray);
+            if (subscriptionInfoRaw.isEmpty()) {
+                return OperationResult.notFound(
+                        "No subscription information found for domain: " + domain.name()
+                );
+            }
+
+            List<String> infoList = subscriptionInfoRaw.get();
+            processSubscriptionInfo(infoList, resultArray, objectMapper);
+
+            return OperationResult.success(Optional.of(resultArray));
+        });
     }
 
+    private OperationResult runSafely(ThrowingSupplier<OperationResult> operation) {
+        try {
+            return operation.get();
+        } catch (SQLException e) {
+            getLogger().error("Database error while fetching subscription info: {}", e);
+            return OperationResult.internalError(
+                    "Database error while fetching subscription information: " + e
+            );
+        } catch (Exception e) {
+            getLogger().errorEntry().message("Unexpected error: {}").exception(e).log();
+            return OperationResult.internalError(
+                    "Unexpected error while fetching subscription information: " + e
+            );
+        }
+    }
+
+    private void processSubscriptionInfo(List<String> infoList,
+                                         ArrayNode resultArray,
+                                         ObjectMapper objectMapper) {
+        infoList.stream()
+                .filter(info -> info != null && !info.trim().isEmpty())
+                .forEach(info -> processSubscriptionEntry(info, resultArray, objectMapper));
+    }
+
+    private CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
+    }
+
+    private void processSubscriptionEntry(String info,
+                                          ArrayNode resultArray,
+                                          ObjectMapper objectMapper) {
+        try {
+            SubscriptionDetails details = SubscriptionDetails.parse(info);
+            resultArray.add(details.toJsonNode(objectMapper));
+        } catch (Exception e) {
+            getLogger().error("Error processing subscription info: {}", e);
+        }
+    }
+
+    @FunctionalInterface
+    public interface ThrowingSupplier<T> {
+        T get() throws Exception;
+    }
 
     public record SubscriptionDetails(String id, String name, String username, String userlogin,
                                       List<DomainState> domainStates, boolean isSpaceOverused, int subscriptionSizeMb,
@@ -77,16 +125,13 @@ public class PleskFetchSubscriptionInfo implements Operation<ArrayNode> {
                         domainStates.add(new DomainState(domain, status));
                     }
                 } catch (Exception e) {
-                    System.err.println("Error parsing domain state: " + domainStatus + " - " + e.getMessage());
+                    System.err.println("Error parsing domain state: " + domainStatus + " - " + e);
                 }
             }
 
             return domainStates;
         }
 
-        /**
-         * Convert this record to a JSON node
-         */
         public ObjectNode toJsonNode(ObjectMapper mapper) {
             ObjectNode node = mapper.createObjectNode();
             node.put("id", this.id);

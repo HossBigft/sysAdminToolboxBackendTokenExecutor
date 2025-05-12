@@ -1,15 +1,15 @@
 package org.example.operations.plesk;
 
 import org.example.constants.Executables;
+import org.example.logging.core.CliLogger;
+import org.example.logging.facade.LogManager;
 import org.example.operations.Operation;
-import org.example.operations.OperationFailedException;
+import org.example.operations.OperationResult;
 import org.example.utils.CommandFailedException;
 import org.example.utils.ShellUtils;
 import org.example.value_types.DomainName;
 
-import java.util.Optional;
-
-public class PleskRestartDnsService implements Operation<Void> {
+public class PleskRestartDnsService implements Operation {
     private final DomainName domain;
 
     public PleskRestartDnsService(DomainName domain) {
@@ -17,14 +17,27 @@ public class PleskRestartDnsService implements Operation<Void> {
     }
 
     @Override
-    public Optional<Void> execute() throws OperationFailedException {
+    public OperationResult execute() {
+
         try {
             ShellUtils.execute(Executables.PLESK_CLI_EXECUTABLE, "bin", "dns", "--off", domain.name());
+        } catch (CommandFailedException e) {
+            getLogger().errorEntry().message("Operation stop DNS service for domain " + domain + " failed.")
+                    .exception(e).log();
+            return OperationResult.internalError("Operation stop DNS service for domain " + domain + " failed.");
+        }
+
+        try {
             ShellUtils.execute(Executables.PLESK_CLI_EXECUTABLE, "bin", "dns", "--on", domain.name());
         } catch (CommandFailedException e) {
-            throw new OperationFailedException("Operation restart DNS service for domain " + domain + " failed with",
-                    e);
+            getLogger().errorEntry().message("Operation start DNS service for domain " + domain + " failed.")
+                    .exception(e).log();
+            return OperationResult.internalError("Operation start DNS service for domain " + domain + " failed.");
         }
-        return Optional.empty();
+        return OperationResult.success();
+    }
+
+    private static CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
     }
 }

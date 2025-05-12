@@ -4,6 +4,7 @@ import org.example.main;
 import org.example.operations.AvailableOperation;
 import org.example.operations.Operation;
 import org.example.operations.OperationRequest;
+import org.example.operations.OperationResult;
 import org.example.operations.dns.NsOperationFactory;
 import org.example.operations.plesk.PleskOperationFactory;
 import org.example.token_handler.TokenProcessor;
@@ -12,7 +13,6 @@ import picocli.CommandLine;
 
 import javax.naming.CommunicationException;
 import java.util.Base64;
-import java.util.Optional;
 
 @CommandLine.Command(
         name = "execute",
@@ -42,8 +42,8 @@ public class ExecuteSubCommand extends AbstractSubCommand {
 
         try {
             OperationRequest operationRequest = decodeAndProcessToken(encodedJson);
-            Optional<?> result = executeCommand(operationRequest);
-            result.ifPresent(System.out::println);
+            OperationResult result = executeCommand(operationRequest);
+            System.out.println(result.toPrettyJson());
             return 0;
         } catch (IllegalArgumentException e) {
             System.err.println("Invalid command: " + e.getMessage());
@@ -64,8 +64,8 @@ public class ExecuteSubCommand extends AbstractSubCommand {
                 .orElseThrow(CommunicationException::new);
     }
 
-    private Optional<?> executeCommand(OperationRequest operationRequest) throws Exception {
-        Operation<?> executor = getExecutorForCommand(operationRequest);
+    private OperationResult executeCommand(OperationRequest operationRequest) throws Exception {
+        Operation executor = getExecutorForCommand(operationRequest);
         return executor.execute();
     }
 
@@ -82,7 +82,7 @@ public class ExecuteSubCommand extends AbstractSubCommand {
         }
     }
 
-    private Operation<?> getExecutorForCommand(OperationRequest operationRequest) {
+    private Operation getExecutorForCommand(OperationRequest operationRequest) {
         return switch (operationRequest.commandName()) {
             case AvailableOperation.Plesk pleskCommand -> new PleskOperationFactory().build(operationRequest);
             case AvailableOperation.NS nsCommand -> new NsOperationFactory().build(operationRequest);

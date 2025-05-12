@@ -1,9 +1,12 @@
 package org.example.operations.plesk;
 
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.example.logging.core.CliLogger;
+import org.example.logging.facade.LogManager;
 import org.example.operations.Operation;
-import org.example.operations.OperationFailedException;
+import org.example.operations.OperationResult;
 import org.example.utils.CommandFailedException;
 import org.example.utils.ShellUtils;
 import org.example.utils.Utils;
@@ -19,7 +22,7 @@ import static org.example.constants.Executables.PLESK_CLI_EXECUTABLE;
 import static org.example.constants.Executables.PLESK_CLI_GET_MAIL_USERS_CREDENTIALS;
 
 
-public class PleskGetTestMailbox implements Operation<ObjectNode> {
+public class PleskGetTestMailbox implements Operation {
 
     static final String TEST_MAIL_LOGIN = "testsupportmail";
     static final String
@@ -33,45 +36,56 @@ public class PleskGetTestMailbox implements Operation<ObjectNode> {
     }
 
     @Override
-    public Optional<ObjectNode> execute() throws OperationFailedException, CommandFailedException {
+    public OperationResult execute() {
         ObjectMapper om = new ObjectMapper();
         ObjectNode mailCredentials = om.createObjectNode();
-        String password;
-        URI login_link = URI.create(
-                "https://webmail." + testMailDomain + "/roundcube/index.php?_user=" + URLEncoder.encode(
-                        TEST_MAIL_LOGIN + "@" + testMailDomain,
-                        StandardCharsets.UTF_8));
-        Optional<String> existing_password;
-        existing_password = getEmailPassword(TEST_MAIL_LOGIN, testMailDomain);
+        URI loginLink = URI.create(
+                "https://webmail." + testMailDomain + "/roundcube/index.php?_user=" +
+                        URLEncoder.encode(TEST_MAIL_LOGIN + "@" + testMailDomain, StandardCharsets.UTF_8));
 
-        password = existing_password.orElseGet(() -> Utils.generatePassword(TEST_MAIL_PASSWORD_LENGTH));
-        if (existing_password.isEmpty()) {
+        boolean newEmailCreated = false;
+        String password;
+
+        Optional<String> existingPassword = getEmailPassword(TEST_MAIL_LOGIN, testMailDomain);
+
+        if (existingPassword.isPresent()) {
+            password = existingPassword.get();
+        } else {
+            password = Utils.generatePassword(TEST_MAIL_PASSWORD_LENGTH);
             try {
-                createMail(TEST_MAIL_LOGIN, testMailDomain, password,
-                        TEST_MAIL_DESCRIPTION);
-                mailCredentials.put("new_email_created", "true");
+                createMail(TEST_MAIL_LOGIN, testMailDomain, password, TEST_MAIL_DESCRIPTION);
+                newEmailCreated = true;
             } catch (CommandFailedException e) {
-                System.err.println(
-                        "Email creation for " + testMailDomain + " failed with " + e);
-                throw new OperationFailedException(
-                        "Email creation for " + testMailDomain + " failed with " + e);
+                getLogger().errorEntry().message("Failed to create test mail").field("Domain", testMailDomain)
+                        .exception(e).log();
+                return OperationResult.internalError("Could not create test mail account.");
             }
         }
 
+
         mailCredentials.put("email", TEST_MAIL_LOGIN + "@" + testMailDomain);
         mailCredentials.put("password", password);
-        mailCredentials.put("login_link", login_link.toString());
-        mailCredentials.put("new_email_created", "false");
-        return mailCredentials.isEmpty() ? Optional.empty() : Optional.of(mailCredentials);
+        mailCredentials.put("login_link", loginLink.toString());
+        mailCredentials.put("new_email_created", String.valueOf(newEmailCreated));
+
+        if (mailCredentials.isEmpty()) {
+            return OperationResult.notFound(String.format("Email domain %s not found.", testMailDomain));
+        }
+
+        return newEmailCreated
+                ? OperationResult.successCreated("New test email created.", Optional.of(mailCredentials))
+                : OperationResult.success("Test email credentials fetched.", Optional.of(mailCredentials));
     }
 
     private Optional<String> getEmailPassword(String login,
-                                              DomainName mailDomain) throws
-            CommandFailedException {
+                                              DomainName mailDomain) {
         String emailPassword = "";
-
-        List<String> result = ShellUtils.execute(PLESK_CLI_GET_MAIL_USERS_CREDENTIALS).stdout();
-
+        List<String> result;
+        try {
+            result = ShellUtils.execute(PLESK_CLI_GET_MAIL_USERS_CREDENTIALS).stdout();
+        } catch (CommandFailedException e) {
+            return Optional.empty();
+        }
 
         String email = login + "@" + mailDomain;
         result = result.stream()
@@ -104,5 +118,9 @@ public class PleskGetTestMailbox implements Operation<ObjectNode> {
                 "true",
                 "-description",
                 description);
+    }
+
+    private static CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
     }
 }

@@ -1,7 +1,7 @@
 package org.example.picocli.subcommands;
 
-import org.example.main;
 import org.example.config.core.AppConfiguration;
+import org.example.main;
 import picocli.CommandLine;
 
 @CommandLine.Command(

@@ -117,6 +117,10 @@ public class EnvironmentConfig {
         } catch (IOException e) {
             throw new AppConfigException("Failed to save config file", e);
         }
+    }
+
+    private CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
     }    private void ensureConfigDirExists() {
         File configDir = getConfigDir();
         if (!configDir.isDirectory()) {
@@ -133,17 +137,9 @@ public class EnvironmentConfig {
         }
     }
 
-    private CliLogger getLogger() {
-        return LogManager.getInstance().getLogger();
-    }    public Map<String, String> getConfigMap() {
-        return configMap;
-    }
-
     public Path getPublicKeyPath() {
         return Paths.get(
                 new EnvironmentConfig().getConfigDir().toString() + "/" + EnvironmentConstants.PUBLIC_KEY_FILENAME);
-    }    public void setConfigMap(Map<String, String> configMap) {
-        this.configMap = new HashMap<>(configMap);
     }
 
     public URI getPublicKeyURI() throws AppConfigException {
@@ -169,6 +165,8 @@ public class EnvironmentConfig {
                     .log();
             throw new AppConfigException("Invalid public key URI format: " + uriString, e);
         }
+    }    public Map<String, String> getConfigMap() {
+        return configMap;
     }
 
     public String getEnvFilePath() {
@@ -177,7 +175,17 @@ public class EnvironmentConfig {
 
     public void setPublicKeyURI(String uri) {
         updateValue(EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD, uri);
-    }    private void setDefaultIfMissing(String key,
+    }    public void setConfigMap(Map<String, String> configMap) {
+        this.configMap = new HashMap<>(configMap);
+    }
+
+
+
+
+
+
+
+    private void setDefaultIfMissing(String key,
                                      Supplier<String> defaultValueSupplier) {
         String value = getValue(key);
         if (value == null || value.isBlank()) {
@@ -192,13 +200,6 @@ public class EnvironmentConfig {
     public int getDbUserPasswordLength() {
         return EnvironmentConstants.DB_USER_PASSWORD_LENGTH;
     }
-
-
-
-
-
-
-
 
 
 }

@@ -36,7 +36,7 @@ public class ShellUtils {
     }
 
 
-    public static ShellCommandResult execute(String... args) throws CommandFailedException {
+    public static ExecutionResult execute(String... args) throws CommandFailedException {
         try {
             getLogger().debugEntry().command(args).log();
             Process process = new ProcessBuilder(args).start();
@@ -70,7 +70,7 @@ public class ShellUtils {
                             .field("stderr", String.join("\n", stderrLines)).log();
                 }
 
-                return new ShellCommandResult(args, Collections.unmodifiableList(stdoutLines),
+                return new ExecutionResult(args, Collections.unmodifiableList(stdoutLines),
                         Collections.unmodifiableList(stderrLines), exitCode);
             }
         } catch (IOException e) {
@@ -138,7 +138,7 @@ public class ShellUtils {
                 .orElseThrow(() -> new IllegalStateException("Could not determine valid user for running executable."));
     }
 
-    public record ShellCommandResult(String[] command, List<String> stdout, List<String> stderr, int exitCode) {
+    public record ExecutionResult(String[] command, List<String> stdout, List<String> stderr, int exitCode) {
 
         public boolean isSuccessful() {
             return exitCode == 0;

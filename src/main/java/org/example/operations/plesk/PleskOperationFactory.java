@@ -27,7 +27,7 @@ public class PleskOperationFactory implements OperationFactory {
     );
 
     @Override
-    public Operation<?> build(OperationRequest parsed) {
+    public Operation build(OperationRequest parsed) {
         CommandBuilder builder = COMMANDS.get(parsed.commandName());
         if (builder == null) {
             throw new IllegalArgumentException("Unknown command: " + parsed.commandName());
@@ -36,7 +36,7 @@ public class PleskOperationFactory implements OperationFactory {
     }
 
     private interface CommandBuilder {
-        Operation<?> build(String[] args);
+        Operation build(String[] args);
     }
 
 }

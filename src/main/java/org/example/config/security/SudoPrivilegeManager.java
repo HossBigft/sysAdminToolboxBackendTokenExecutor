@@ -121,7 +121,7 @@ public class SudoPrivilegeManager {
 
     private void printRelevantRules() throws CommandFailedException {
         getLogger().debug("Printing relevant sudo rules from /etc/sudoers");
-        ShellUtils.ShellCommandResult result = ShellUtils.execute("cat", "/etc/sudoers");
+        ShellUtils.ExecutionResult result = ShellUtils.execute("cat", "/etc/sudoers");
 
         result.stdout().stream().filter(l -> l.contains(shellUser))
                 .forEach(System.out::println);

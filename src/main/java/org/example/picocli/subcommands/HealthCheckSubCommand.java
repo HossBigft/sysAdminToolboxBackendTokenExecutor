@@ -1,6 +1,7 @@
 package org.example.picocli.subcommands;
 
 import org.example.main;
+import org.example.operations.OperationResult;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -15,7 +16,7 @@ public class HealthCheckSubCommand extends AbstractSubCommand {
 
     @Override
     public Integer call() {
-        System.out.println("online");
+        System.out.println(OperationResult.success("Online").toPrettyJson());
         return 0;
     }
 }

@@ -30,7 +30,7 @@ public class DatabasePrivilegeManager {
 
     private boolean isDbUserReadOnly() {
         try {
-            ShellUtils.ShellCommandResult result = ShellUtils.execute(ShellUtils.getSqlCliName(),
+            ShellUtils.ExecutionResult result = ShellUtils.execute(ShellUtils.getSqlCliName(),
                     "-u",
                     EnvironmentConstants.SUPERADMIN_USER,
                     "--skip-column-names",

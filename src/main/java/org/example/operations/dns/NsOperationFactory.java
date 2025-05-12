@@ -16,7 +16,7 @@ public class NsOperationFactory implements OperationFactory {
             args -> new NsRemoveZone(new DomainName(args[0])));
 
     @Override
-    public Operation<?> build(OperationRequest parsed) {
+    public Operation build(OperationRequest parsed) {
         CommandBuilder builder = COMMANDS.get(parsed.commandName());
         if (builder == null) {
             throw new IllegalArgumentException("Unknown command: " + parsed.commandName());
@@ -25,6 +25,6 @@ public class NsOperationFactory implements OperationFactory {
     }
 
     private interface CommandBuilder {
-        Operation<?> build(String[] args);
+        Operation build(String[] args);
     }
 }

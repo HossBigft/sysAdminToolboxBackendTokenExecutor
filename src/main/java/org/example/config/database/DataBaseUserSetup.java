@@ -57,7 +57,7 @@ public class DataBaseUserSetup {
         };
 
         try {
-            ShellUtils.ShellCommandResult result = ShellUtils.execute(command);
+            ShellUtils.ExecutionResult result = ShellUtils.execute(command);
             List<String> output = result.stdout();
             if (!result.isSuccessful()) {
                 throw new CommandFailedException(result.getFormattedErrorMessage());

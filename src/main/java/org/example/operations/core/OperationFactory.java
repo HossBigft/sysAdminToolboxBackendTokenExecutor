@@ -6,6 +6,6 @@ import org.example.operations.OperationRequest;
 
 public interface OperationFactory {
 
-    Operation<?> build(OperationRequest command);
+    Operation build(OperationRequest command);
 
 }
