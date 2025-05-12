@@ -140,11 +140,14 @@ public class PleskFetchSubscriptionInfo implements Operation {
             node.put("userlogin", this.userlogin);
 
             ArrayNode domainStatesArray = node.putArray("domain_states");
+            ArrayNode domainsArray = node.putArray("domains");
             for (DomainState domainState : this.domainStates) {
                 ObjectNode stateNode = mapper.createObjectNode();
                 stateNode.put("domain", domainState.domain());
                 stateNode.put("status", domainState.status());
                 domainStatesArray.add(stateNode);
+                
+                domainsArray.add(domainState.domain());
             }
 
             node.put("is_space_overused", this.isSpaceOverused);
