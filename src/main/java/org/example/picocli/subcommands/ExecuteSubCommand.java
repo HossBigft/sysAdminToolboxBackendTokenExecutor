@@ -12,7 +12,9 @@ import org.example.value_types.Token;
 import picocli.CommandLine;
 
 import javax.naming.CommunicationException;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 @CommandLine.Command(
         name = "execute",
@@ -45,9 +47,14 @@ public class ExecuteSubCommand extends AbstractSubCommand {
             OperationResult result = executeCommand(operationRequest);
             System.out.println(result.toPrettyJson());
             return 0;
+        } catch (TokenProcessor.SignatureValidationFailException e) {
+            System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.UNAUTHORIZED, e.getMessage())
+                    .toPrettyJson());
+            return 1;
         } catch (IllegalArgumentException e) {
-            System.err.println("Invalid command: " + e.getMessage());
-            printAvailableCommands();
+            List<String> availableCommandsList = getAvailableCommandsList();
+            System.out.println(availableCommandsList);
+            System.out.println(OperationResult.notFound(availableCommandsList.toString()));
             return 2;
         } catch (Exception e) {
             System.err.println("Failed to execute token: " + encodedJson);
@@ -69,17 +76,19 @@ public class ExecuteSubCommand extends AbstractSubCommand {
         return executor.execute();
     }
 
-    private void printAvailableCommands() {
-        System.err.println("Available commands:");
-        System.err.println("PLESK:");
+    private List<String> getAvailableCommandsList() {
+        List<String> availableCommands = new ArrayList<>();
+        availableCommands.add("Available commands:");
+        availableCommands.add("PLESK:");
         for (AvailableOperation.Plesk cmd : AvailableOperation.Plesk.values()) {
-            System.err.println("  PLESK." + cmd.name());
+            availableCommands.add("  PLESK." + cmd.name());
         }
 
-        System.err.println("NS:");
+        availableCommands.add("NS:");
         for (AvailableOperation.NS cmd : AvailableOperation.NS.values()) {
-            System.err.println("  NS." + cmd.name());
+            availableCommands.add("  NS." + cmd.name());
         }
+        return availableCommands;
     }
 
     private Operation getExecutorForCommand(OperationRequest operationRequest) {

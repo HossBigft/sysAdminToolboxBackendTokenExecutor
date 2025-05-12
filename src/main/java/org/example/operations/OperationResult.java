@@ -112,6 +112,7 @@ public record OperationResult(ExecutionStatus status, String message, Optional<J
         OK(200, "OK"),
         CREATED(201, "Created"),
         BAD_REQUEST(400, "Bad Request"),
+        UNAUTHORIZED(401, "Unauthorized"),
         UNPROCCESIBLE_ENTITY(422, "Unprocessable Entity"),
         NOT_FOUND(404, "Not Found"),
         INTERNAL_ERROR(500, "Internal Server Error");

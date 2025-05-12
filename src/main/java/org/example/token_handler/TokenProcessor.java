@@ -13,7 +13,7 @@ import java.util.Optional;
 
 public class TokenProcessor {
 
-    public Optional<OperationRequest> processToken(Token token) {
+    public Optional<OperationRequest> processToken(Token token) throws SignatureValidationFailException {
         getLogger().
                 infoEntry().message("Processing command token").field("Token", token.value()).log();
         Optional<OperationRequest> command = Optional.empty();
@@ -21,7 +21,7 @@ public class TokenProcessor {
         if (!TokenManager.TokenValidator.isValid(token)) {
             getLogger().
                     warnEntry().message("Token validation failed").field("Token", token.value()).log();
-            return command;
+            throw new SignatureValidationFailException();
         }
 
         getLogger().
@@ -71,5 +71,19 @@ public class TokenProcessor {
         AvailableOperation commandName = AvailableOperation.valueOf(args[0]);
         String[] commandArgs = Arrays.copyOfRange(args, 1, args.length);
         return new OperationRequest(commandName, commandArgs);
+    }
+
+    public static class SignatureValidationFailException extends Exception {
+
+        public SignatureValidationFailException(String message) {
+            super(message);
+        }
+        public SignatureValidationFailException() {
+            super("Signature validation failed. Signature or public key are invalid.");
+        }
+        public SignatureValidationFailException(String message,
+                                                Throwable cause) {
+            super(message, cause);
+        }
     }
 }
