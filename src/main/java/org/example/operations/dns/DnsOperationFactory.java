@@ -8,12 +8,12 @@ import org.example.value_types.DomainName;
 
 import java.util.Map;
 
-public class NsOperationFactory implements OperationFactory {
+public class DnsOperationFactory implements OperationFactory {
 
     private static final Map<AvailableOperation, CommandBuilder> COMMANDS = Map.of(
-            AvailableOperation.NS.GET_ZONE_MASTER,
-            args -> new NsGetZoneMaster(new DomainName(args[0])), AvailableOperation.NS.REMOVE_ZONE,
-            args -> new NsRemoveZone(new DomainName(args[0])));
+            AvailableOperation.DNS.GET_ZONE_MASTER,
+            args -> new DnsGetZoneMaster(new DomainName(args[0])), AvailableOperation.DNS.REMOVE_ZONE,
+            args -> new DnsRemoveZone(new DomainName(args[0])));
 
     @Override
     public Operation build(OperationRequest parsed) {

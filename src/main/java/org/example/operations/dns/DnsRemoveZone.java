@@ -14,10 +14,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-public class NsRemoveZone implements Operation {
+public class DnsRemoveZone implements Operation {
     private final DomainName domainNameToDelete;
 
-    public NsRemoveZone(DomainName domainName) {
+    public DnsRemoveZone(DomainName domainName) {
         this.domainNameToDelete = domainName;
     }
 

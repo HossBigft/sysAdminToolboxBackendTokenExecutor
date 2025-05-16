@@ -1,6 +1,6 @@
 package org.example.operations;
 
-public sealed interface AvailableOperation permits AvailableOperation.NS, AvailableOperation.Plesk {
+public sealed interface AvailableOperation permits AvailableOperation.DNS, AvailableOperation.Plesk {
 
     static AvailableOperation valueOf(String qualifiedName) {
         String[] parts = qualifiedName.split("\\.", 2);
@@ -10,13 +10,13 @@ public sealed interface AvailableOperation permits AvailableOperation.NS, Availa
         }
 
         return switch (parts[0].toUpperCase()) {
-            case "NS" -> NS.valueOf(parts[1].toUpperCase());
+            case "DNS" -> DNS.valueOf(parts[1].toUpperCase());
             case "PLESK" -> Plesk.valueOf(parts[1].toUpperCase());
             default -> throw new IllegalArgumentException("Unknown enum type: " + parts[0]);
         };
     }
 
-    enum NS implements AvailableOperation {
+    enum DNS implements AvailableOperation {
         REMOVE_ZONE,
         GET_ZONE_MASTER
     }

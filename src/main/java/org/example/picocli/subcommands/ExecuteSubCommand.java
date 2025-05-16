@@ -5,7 +5,7 @@ import org.example.operations.AvailableOperation;
 import org.example.operations.Operation;
 import org.example.operations.OperationRequest;
 import org.example.operations.OperationResult;
-import org.example.operations.dns.NsOperationFactory;
+import org.example.operations.dns.DnsOperationFactory;
 import org.example.operations.plesk.PleskOperationFactory;
 import org.example.token_handler.TokenProcessor;
 import org.example.value_types.Token;
@@ -85,7 +85,7 @@ public class ExecuteSubCommand extends AbstractSubCommand {
         }
 
         availableCommands.add("NS:");
-        for (AvailableOperation.NS cmd : AvailableOperation.NS.values()) {
+        for (AvailableOperation.DNS cmd : AvailableOperation.DNS.values()) {
             availableCommands.add("  NS." + cmd.name());
         }
         return availableCommands;
@@ -94,7 +94,7 @@ public class ExecuteSubCommand extends AbstractSubCommand {
     private Operation getExecutorForCommand(OperationRequest operationRequest) {
         return switch (operationRequest.commandName()) {
             case AvailableOperation.Plesk pleskCommand -> new PleskOperationFactory().build(operationRequest);
-            case AvailableOperation.NS nsCommand -> new NsOperationFactory().build(operationRequest);
+            case AvailableOperation.DNS DNSCommand -> new DnsOperationFactory().build(operationRequest);
         };
     }
 }

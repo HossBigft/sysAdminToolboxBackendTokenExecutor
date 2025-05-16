@@ -17,13 +17,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-public class NsGetZoneMaster implements Operation {
+public class DnsGetZoneMaster implements Operation {
     private static final Path ZONEFILE_PATH_BIND = Paths.get("/var/opt/isc/scls/isc-bind/zones/_default.nzf");
     private static final Path PLESK_BIND_ZONE_DIR = Paths.get("/var/named/run-root/");
     private static final Pattern IP_REGEX = Pattern.compile("((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}");
     private final DomainName domain;
 
-    public NsGetZoneMaster(DomainName domainName) {
+    public DnsGetZoneMaster(DomainName domainName) {
         this.domain = domainName;
     }
 
@@ -53,7 +53,7 @@ public class NsGetZoneMaster implements Operation {
                 try (Stream<String> lines = Files.lines(ZONEFILE_PATH_BIND)) {
                     return lines
                             .filter(line -> domainPattern.matcher(line).find())
-                            .flatMap(NsGetZoneMaster::extractIps)
+                            .flatMap(DnsGetZoneMaster::extractIps)
                             .findFirst();
                 }
             }
@@ -76,7 +76,7 @@ public class NsGetZoneMaster implements Operation {
                     return lines
                             .filter(line -> nsPattern.matcher(line).find())
                             .filter(line -> line.contains("IN A"))
-                            .flatMap(NsGetZoneMaster::extractIps)
+                            .flatMap(DnsGetZoneMaster::extractIps)
                             .findFirst();
                 }
             }
