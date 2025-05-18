@@ -39,7 +39,7 @@ public class DnsGetZoneMaster implements Operation {
         if (result.isEmpty()) {
             return OperationResult.notFound(String.format("BIND DNS zone for domain %s not found.", domain));
         }
-        zoneData.put("domain_name", domain.name());
+        zoneData.put("zone_name", domain.name());
         zoneData.put("zonemaster_ip", result.get());
 
         return OperationResult.success(Optional.of(zoneData));
