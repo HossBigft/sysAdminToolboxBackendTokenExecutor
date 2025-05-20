@@ -1,5 +1,6 @@
 package org.example.token_handler;
 
+import org.example.config.core.AppConfiguration;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.operations.AvailableOperation;
@@ -20,8 +21,19 @@ public class TokenProcessor {
 
         if (!TokenManager.TokenValidator.isValid(token)) {
             getLogger().
-                    warnEntry().message("Token validation failed").field("Token", token.value()).log();
-            throw new SignatureValidationFailException();
+                    warnEntry().message("Token validation failed").field("Token", token.value())
+                    .field("Key", AppConfiguration.getInstance().getPublicKey()).log();
+            getLogger().
+                    infoEntry().message("Refetching public key").log();
+            AppConfiguration.getInstance().refetchPublicKey();
+
+            if (!TokenManager.TokenValidator.isValid(token)) {
+                getLogger().
+                        warnEntry().message("Token validation failed after refetching public key.")
+                        .field("Token", token.value()).field("Key", AppConfiguration.getInstance().getPublicKey())
+                        .log();
+                throw new SignatureValidationFailException();
+            }
         }
 
         getLogger().
@@ -78,9 +90,11 @@ public class TokenProcessor {
         public SignatureValidationFailException(String message) {
             super(message);
         }
+
         public SignatureValidationFailException() {
             super("Signature validation failed. Signature or public key are invalid.");
         }
+
         public SignatureValidationFailException(String message,
                                                 Throwable cause) {
             super(message, cause);

@@ -117,4 +117,13 @@ public class AppConfiguration {
         keyManager.fetchKeyAndSave(getPublicKeyURI());
     }
 
+    public void refetchPublicKey() {
+        try {
+            keyManager.fetchKeyAndSave(getPublicKeyURI());
+        } catch (KeyManagerException e) {
+
+            throw new RuntimeException(e);
+        }
+    }
+
 }

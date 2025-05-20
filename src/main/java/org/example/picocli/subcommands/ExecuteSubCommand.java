@@ -63,7 +63,8 @@ public class ExecuteSubCommand extends AbstractSubCommand {
         }
     }
 
-    private OperationRequest decodeAndProcessToken(String encodedToken) throws Exception {
+    private OperationRequest decodeAndProcessToken(String encodedToken) throws CommunicationException,
+            TokenProcessor.SignatureValidationFailException {
         String rawJson = new String(Base64.getDecoder().decode(encodedToken));
         Token token = Token.fromJson(rawJson);
         return new TokenProcessor()
@@ -71,7 +72,7 @@ public class ExecuteSubCommand extends AbstractSubCommand {
                 .orElseThrow(CommunicationException::new);
     }
 
-    private OperationResult executeCommand(OperationRequest operationRequest) throws Exception {
+    private OperationResult executeCommand(OperationRequest operationRequest) {
         Operation executor = getExecutorForCommand(operationRequest);
         return executor.execute();
     }
