@@ -39,7 +39,7 @@ public class ExecuteSubCommand extends AbstractSubCommand {
             System.err.println("Usage: execute <signed-token>");
             System.err.println(
                     "Hint: You should pass a single base64-encoded signed token, not separate command components.");
-            return 2;
+            return 1;
         }
 
         try {
@@ -50,12 +50,12 @@ public class ExecuteSubCommand extends AbstractSubCommand {
         } catch (TokenProcessor.SignatureValidationFailException e) {
             System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.UNAUTHORIZED, e.getMessage())
                     .toPrettyJson());
-            return 1;
+            return 0;
         } catch (IllegalArgumentException e) {
             List<String> availableCommandsList = getAvailableCommandsList();
             System.out.println(availableCommandsList);
             System.out.println(OperationResult.notFound(availableCommandsList.toString()));
-            return 2;
+            return 0;
         } catch (Exception e) {
             System.err.println("Failed to execute token: " + encodedJson);
             e.printStackTrace();
