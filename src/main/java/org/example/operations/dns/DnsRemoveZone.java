@@ -23,11 +23,9 @@ public class DnsRemoveZone implements Operation {
 
     @Override
     public OperationResult execute() {
-        Path removeZoneExecutable;
+        Path removeZoneExecutable = Paths.get(Executables.BIND_REMOVE_ZONE_EXECUTABLE);
 
-        if (findRemoveZoneExecutable().isPresent()) {
-            removeZoneExecutable = findRemoveZoneExecutable().get();
-        } else {
+        if (!removeZoneExecutable.toFile().isFile()) {
             getLogger().errorEntry().message("Bind executable not found.")
                     .field("Executable", Executables.BIND_REMOVE_ZONE_EXECUTABLE).log();
             return OperationResult.internalError();
@@ -56,19 +54,6 @@ public class DnsRemoveZone implements Operation {
 
         }
         return OperationResult.success();
-    }
-
-    private Optional<Path> findRemoveZoneExecutable() {
-        Path primaryPath = Paths.get(Executables.BIND_REMOVE_ZONE_EXECUTABLE);
-        Path fallbackPath = Paths.get(Executables.BIND_REMOVE_ZONE_EXECUTABLE_FALLBACK);
-
-        if (Files.isExecutable(primaryPath)) {
-            return Optional.of(primaryPath);
-        } else if (Files.isExecutable(fallbackPath)) {
-            return Optional.of(fallbackPath);
-        } else {
-            return Optional.empty();
-        }
     }
 
     private static CliLogger getLogger() {
