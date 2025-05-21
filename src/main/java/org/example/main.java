@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-@Command(name = "sysadmintoolbox", description = "Safe root wrapper for executing system administration commands", version = "0.3", mixinStandardHelpOptions = true)
+@Command(name = "sysadmintoolbox", description = "Safe root wrapper for executing system administration commands", version = "0.3.1", mixinStandardHelpOptions = true)
 public class main implements Callable<Integer> {
 
     @Option(names = {"--debug"}, description = "Enable debug output. Also prints everything logged.", scope = CommandLine.ScopeType.INHERIT)
