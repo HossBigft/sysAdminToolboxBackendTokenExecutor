@@ -31,6 +31,9 @@ public class InitSubCommand extends AbstractSubCommand {
                 System.out.println("Public key fetched and saved successfully");
             }
             AppConfiguration.getInstance().initialize();
+            System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.OK,
+                            "Initialisation succeed.")
+                    .toPrettyJson());
             return 0;
         } catch (Exception e) {
             System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.INTERNAL_ERROR,
