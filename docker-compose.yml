@@ -16,7 +16,7 @@ services:
         ./mvnw clean package -P${MAVEN_PROFILE} &&
         echo 'Copying artifacts to output...' &&
         mkdir -p /build-output &&
-        cp target/secOpsDispatcher /build-output || echo 'No excutable found' &&
+        cp target/secOpsDispatcher /build-output/secOpsDispatcher_glibc_2.28 || echo 'No excutable found' &&
         ls -la /build-output/ &&
         echo 'Build completed successfully!'
       "
