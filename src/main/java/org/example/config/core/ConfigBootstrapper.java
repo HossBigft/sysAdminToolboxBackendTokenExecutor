@@ -46,7 +46,7 @@ public class ConfigBootstrapper {
 
         if (!pleskExists && !bindExists) {
             logger.error("CRITICAL ERROR: Neither Plesk nor Bind are installed");
-            throw new AppConfigException("Missing required system components");
+            throw new AppConfigException("Missing required system components: Neither Plesk nor Bind are installed.");
         }
     }
 
