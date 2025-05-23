@@ -21,6 +21,18 @@ public class ShellUtils {
     private ShellUtils() {
     }
 
+    public static Boolean isDatabaseInstalled() {
+        String sqlCliName;
+        try {
+            sqlCliName=getSqlCliName();
+        } catch (CommandFailedException e) {
+            getLogger().debugEntry().message("Neither MySQl or MariaDB CLI executables are detected").log();
+            return false;
+        }
+        getLogger().debugEntry().message("Found SQL CLI executable name").field("Executable",sqlCliName).log();
+        return true;
+    }
+
     public static String getSqlCliName() throws CommandFailedException {
         if (isCommandAvailable("mariadb")) {
             return "mariadb";
