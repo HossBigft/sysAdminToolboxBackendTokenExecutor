@@ -1,16 +1,26 @@
-
-
 services:
   builder_centos8:
-    environment:
-      - MAVEN_PROFILE=
-    command: ./mvnw clean package -P${MAVEN_PROFILE} -Dcustom.build.dir=/custom-target -X 
     build:
       dockerfile: builder_centos8/Dockerfile
     container_name: secopsdispatcher_builder
     volumes:
-      - .:/app:ro
-      - ./build_centos8/target:/target
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
+      - .:/app
+      - maven-cache:/root/.m2
+      - ./builder_centos8/output:/build-output
+    working_dir: /app
+    environment:
+      - MAVEN_PROFILE=${MAVEN_PROFILE:-}
+    command: >
+      sh -c "
+        echo 'Starting build process...' &&
+        ./mvnw clean package -P${MAVEN_PROFILE} &&
+        echo 'Copying artifacts to output...' &&
+        mkdir -p /build-output &&
+        cp target/secOpsDispatcher /build-output || echo 'No excutable found' &&
+        ls -la /build-output/ &&
+        echo 'Build completed successfully!'
+      "
+
+volumes:
+  maven-cache:
+    driver: local

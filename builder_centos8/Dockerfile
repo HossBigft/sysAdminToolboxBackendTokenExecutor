@@ -28,3 +28,5 @@ COPY mvnw /app/mvnw
 
 # Preload dependencies
 RUN ./mvnw dependency:go-offline -B
+
+RUN mkdir -p /build-output && chmod 755 /build-output
