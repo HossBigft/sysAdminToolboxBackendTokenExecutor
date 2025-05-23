@@ -113,6 +113,28 @@
     </build>
     <profiles>
         <profile>
+            <id>custom-build-dir</id>
+            <activation>
+                <property>
+                    <name>custom.build.dir</name>
+                </property>
+            </activation>
+            <build>
+                <directory>${custom.build.dir}</directory>
+            </build>
+        </profile>
+
+        <profile>
+            <id>default-build-dir</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <directory>target</directory>
+            </build>
+        </profile>
+
+        <profile>
             <id>dev</id>
             <properties>
                 <buildArgs>--no-fallback -Ob</buildArgs>

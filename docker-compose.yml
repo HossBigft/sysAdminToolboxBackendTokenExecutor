@@ -1,0 +1,16 @@
+
+
+services:
+  builder_centos8:
+    environment:
+      - MAVEN_PROFILE=
+    command: ./mvnw clean package -P${MAVEN_PROFILE} -Dcustom.build.dir=/custom-target -X 
+    build:
+      dockerfile: builder_centos8/Dockerfile
+    container_name: secopsdispatcher_builder
+    volumes:
+      - .:/app:ro
+      - ./build_centos8/target:/target
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
