@@ -53,13 +53,12 @@ public class ExecuteSubCommand extends AbstractSubCommand {
             return 0;
         } catch (IllegalArgumentException e) {
             List<String> availableCommandsList = getAvailableCommandsList();
-            System.out.println(availableCommandsList);
-            System.out.println(OperationResult.notFound(availableCommandsList.toString()));
+            System.out.println(OperationResult.notFound(availableCommandsList.toString()).toPrettyJson());
             return 0;
         } catch (Exception e) {
-            System.err.println("Failed to execute token: " + encodedJson);
-            e.printStackTrace();
-            return 1;
+            System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.INTERNAL_ERROR, e.getMessage())
+                    .toPrettyJson());
+            return 0;
         }
     }
 
