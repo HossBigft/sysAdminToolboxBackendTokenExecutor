@@ -2,6 +2,7 @@ package org.example.picocli.subcommands;
 
 import org.example.config.core.AppConfiguration;
 import org.example.main;
+import org.example.operations.OperationResult;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -32,8 +33,9 @@ public class InitSubCommand extends AbstractSubCommand {
             AppConfiguration.getInstance().initialize();
             return 0;
         } catch (Exception e) {
-            System.out.println("Failed to setup environment");
-            e.printStackTrace();
+            System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.INTERNAL_ERROR,
+                            "Failed to set up environment: " + e.getMessage())
+                    .toPrettyJson());
             return 1;
         }
     }
