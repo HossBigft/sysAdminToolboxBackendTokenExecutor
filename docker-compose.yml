@@ -1,5 +1,5 @@
 services:
-  builder_centos8:
+  builder_glibc_2.28:
     build:
       dockerfile: builder_centos8_glibc_2.28/Dockerfile
     volumes:
@@ -15,12 +15,12 @@ services:
         ./mvnw clean package -P${MAVEN_PROFILE} &&
         echo 'Copying artifacts to output...' &&
         mkdir -p /build-output &&
-        cp target/secOpsDispatcher /build-output || echo 'No excutable found' &&
+        cp target/secOpsDispatcher /build-output/secOpsDispatcher_glibc_2.28 || echo 'No excutable found' &&
         ls -la /build-output/ &&
         echo 'Build completed successfully!'
       "
 
-  builder_centos7:
+  builder_glibc_2.17:
     build:
       dockerfile: builder_centos7_glibc_2.17/Dockerfile
     volumes:
