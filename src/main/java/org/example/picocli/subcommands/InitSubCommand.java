@@ -26,9 +26,7 @@ public class InitSubCommand extends AbstractSubCommand {
     public Integer call() {
         try {
             if (keyLink != null && !keyLink.isEmpty()) {
-                System.out.println("Fetching public key from: " + keyLink);
                 AppConfiguration.getInstance().setPublicKeyURI(keyLink);
-                System.out.println("Public key fetched and saved successfully");
             }
             AppConfiguration.getInstance().initialize();
             System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.OK,
