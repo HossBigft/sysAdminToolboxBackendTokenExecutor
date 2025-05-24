@@ -3,6 +3,7 @@ package org.example;
 import org.example.config.core.AppConfiguration;
 import org.example.logging.core.LogLevel;
 import org.example.logging.facade.LogManager;
+import org.example.operations.OperationResult;
 import org.example.picocli.subcommands.ExecuteSubCommand;
 import org.example.picocli.subcommands.HealthCheckSubCommand;
 import org.example.picocli.subcommands.InitSubCommand;
@@ -19,7 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-@Command(name = "sysadmintoolbox", description = "Safe root wrapper for executing system administration commands", version = "0.3.2", mixinStandardHelpOptions = true)
+@Command(name = "sysadmintoolbox", description = "Safe root wrapper for executing Plesk and Bind administration commands. github.com/HossBigft/sysAdminToolboxBackendTokenExecutor", version = "0.3.2", mixinStandardHelpOptions = true)
 public class main implements Callable<Integer> {
 
     @Option(names = {"--debug"}, description = "Enable debug output. Also prints everything logged.", scope = CommandLine.ScopeType.INHERIT)
@@ -28,6 +29,7 @@ public class main implements Callable<Integer> {
     boolean verbose;
 
     public static void main(String[] args) {
+
         main app = new main();
         CommandLine commandLine = new CommandLine(app);
 
@@ -53,21 +55,28 @@ public class main implements Callable<Integer> {
             commandLine.parseArgs(args);
         } catch (CommandLine.UnmatchedArgumentException e) {
             PrintWriter err = commandLine.getErr();
-            err.println("Unknown command: " + Arrays.toString(args));
+            System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.UNPROCCESIBLE_ENTITY,
+                    "Unknown command: " + Arrays.toString(args)).toPrettyJson());
             commandLine.usage(err);
             return;
         }
         setupLogging(app);
 
         commandLine.setExecutionStrategy(parseResult -> {
-            String subcommandName = parseResult.hasSubcommand() ?
-                    parseResult.subcommand().commandSpec().name() : null;
+            try {
+                String subcommandName = parseResult.hasSubcommand() ?
+                        parseResult.subcommand().commandSpec().name() : null;
 
-            if (!"init".equals(subcommandName)) {
-                AppConfiguration.getInstance().initializeLazily();
+                if (!"init".equals(subcommandName)) {
+                    AppConfiguration.getInstance().initializeLazily();
+                }
+
+                return new CommandLine.RunLast().execute(parseResult);
+            } catch (Exception e) {
+                System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.INTERNAL_ERROR, e.getMessage())
+                        .toPrettyJson());
+                return CommandLine.ExitCode.SOFTWARE;
             }
-
-            return new CommandLine.RunLast().execute(parseResult);
         });
 
         int exitCode = commandLine.execute(args);
