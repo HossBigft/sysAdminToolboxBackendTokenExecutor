@@ -41,7 +41,7 @@ public class LogWriter {
     private void initializeLogFile() throws IOException {
         Path logDirPath = getLogDir();
         if (!Files.exists(logDirPath)) {
-            System.out.println("Creating log dir " + logDirPath);
+//            System.out.println("Creating log dir " + logDirPath);
             Files.createDirectories(logDirPath);
             try {
                 getLogDirAccessPolicy().enforce();
@@ -54,7 +54,7 @@ public class LogWriter {
         Path logFilePath = Paths.get(config.getFullLogPath());
         FileAccessPolicy logFileAccessPolicy = getLogFileAccessPolicy();
         if (!Files.exists(logFilePath)) {
-            System.out.println("Creating log file " + logFilePath);
+//            System.out.println("Creating log file " + logFilePath);
             Files.createFile(logFilePath);
             try {
                 logFileAccessPolicy.enforce();
