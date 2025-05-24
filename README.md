@@ -3,6 +3,8 @@
 A secure wrapper for executing privileged commands related to Plesk and BIND server administration. Commands to execute
 passed via signed tokens encoded with Base64. [Example of generator](https://github.com/HossBigft/signedTokenGenerator)
 
+#Diagram
+![asdasdt](singed_executor.png)
 # Building the Binary
 
 To compile the binary, run:
@@ -29,4 +31,4 @@ The wrapper automatically creates:
   directory
 
 - A read-only MySQL database user named after the app, with access to all databases
-- Used token saved to `/tmp/APP_NAME/used_tokens.txt`
+- Used token saved to `/tmp/used_tokens.txt`
