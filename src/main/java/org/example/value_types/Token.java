@@ -32,7 +32,7 @@ public record Token(
             long timestamp = ((Number) map.get("timestamp")).longValue();
             String nonce = (String) map.get("nonce");
             long expiry = ((Number) map.get("expiry")).longValue();
-            String command = (String) map.get("command");
+            String command = (String) map.get("operation");
             String signature = (String) map.get("signature");
 
             return new Token(timestamp, nonce, expiry, command, signature);
