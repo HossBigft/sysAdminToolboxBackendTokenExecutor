@@ -1,5 +1,8 @@
 package org.example.picocli.subcommands;
 
+import org.example.config.core.AppConfiguration;
+import org.example.logging.core.LogLevel;
+import org.example.logging.facade.LogManager;
 import org.example.main;
 import org.example.operations.AvailableOperation;
 import org.example.operations.Operation;
@@ -20,10 +23,15 @@ import java.util.List;
         name = "execute",
         description = "Executes command from signed base64 token. Usage: execute [TOKEN] "
 )
+
+
 public class ExecuteSubCommand extends AbstractSubCommand {
+    @CommandLine.Option(names = {"--debug"}, description = "Enable debug output. Also prints everything logged.")
+    static boolean debug;
+    @CommandLine.Option(names = {"--verbose"}, description = "Print logged information.")
+    static boolean verbose;
     @CommandLine.Parameters(index = "0", description = "The signed token")
     private String encodedJson;
-
     @CommandLine.Unmatched
     private java.util.List<String> unmatchedArgs;
 
@@ -34,6 +42,8 @@ public class ExecuteSubCommand extends AbstractSubCommand {
 
     @Override
     public Integer call() {
+        AppConfiguration.getInstance().initializeLazily();
+        setupLogging();
         if (unmatchedArgs != null && !unmatchedArgs.isEmpty()) {
             System.err.println("Unexpected extra arguments: " + unmatchedArgs);
             System.err.println("Usage: execute <signed-token>");
@@ -59,6 +69,15 @@ public class ExecuteSubCommand extends AbstractSubCommand {
             System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.INTERNAL_ERROR, e.getMessage())
                     .toPrettyJson());
             return 0;
+        }
+    }
+
+    private static void setupLogging() {
+        if (debug) {
+            new LogManager.Builder().globalLogLevel(LogLevel.DEBUG).apply();
+        }
+        if (verbose) {
+            new LogManager.Builder().setVerbose().apply();
         }
     }
 

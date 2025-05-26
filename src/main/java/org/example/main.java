@@ -1,15 +1,11 @@
 package org.example;
 
-import org.example.config.core.AppConfiguration;
-import org.example.logging.core.LogLevel;
-import org.example.logging.facade.LogManager;
 import org.example.operations.OperationResult;
 import org.example.picocli.subcommands.ExecuteSubCommand;
 import org.example.picocli.subcommands.HealthCheckSubCommand;
 import org.example.picocli.subcommands.InitSubCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -23,16 +19,11 @@ import java.util.concurrent.Callable;
 @Command(name = "sysadmintoolbox", description = "Safe root wrapper for executing Plesk and Bind administration commands. github.com/HossBigft/sysAdminToolboxBackendTokenExecutor", version = "0.3.2", mixinStandardHelpOptions = true)
 public class main implements Callable<Integer> {
 
-    @Option(names = {"--debug"}, description = "Enable debug output. Also prints everything logged.", scope = CommandLine.ScopeType.INHERIT)
-    boolean debug;
-    @Option(names = {"--verbose"}, description = "Print logged information.", scope = CommandLine.ScopeType.INHERIT)
-    boolean verbose;
 
     public static void main(String[] args) {
 
         main app = new main();
         CommandLine commandLine = new CommandLine(app);
-
         commandLine.addSubcommand(new ExecuteSubCommand(app));
         commandLine.addSubcommand(new InitSubCommand(app));
         commandLine.addSubcommand(new HealthCheckSubCommand(app));
@@ -60,24 +51,6 @@ public class main implements Callable<Integer> {
             commandLine.usage(err);
             return;
         }
-        setupLogging(app);
-
-        commandLine.setExecutionStrategy(parseResult -> {
-            try {
-                String subcommandName = parseResult.hasSubcommand() ?
-                        parseResult.subcommand().commandSpec().name() : null;
-
-                if (!"init".equals(subcommandName)) {
-                    AppConfiguration.getInstance().initializeLazily();
-                }
-
-                return new CommandLine.RunLast().execute(parseResult);
-            } catch (Exception e) {
-                System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.INTERNAL_ERROR, e.getMessage())
-                        .toPrettyJson());
-                return CommandLine.ExitCode.SOFTWARE;
-            }
-        });
 
         int exitCode = commandLine.execute(args);
         System.exit(exitCode);
@@ -99,14 +72,6 @@ public class main implements Callable<Integer> {
         return arguments.toArray(String[]::new);
     }
 
-    private static void setupLogging(main app) {
-        if (app.debug) {
-            new LogManager.Builder().globalLogLevel(LogLevel.DEBUG).apply();
-        }
-        if (app.verbose) {
-            new LogManager.Builder().setVerbose().apply();
-        }
-    }
 
     @Override
     public Integer call() {
