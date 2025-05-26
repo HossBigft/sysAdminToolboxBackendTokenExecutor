@@ -1,24 +1,24 @@
 services:
-  builder_glibc_2.28:
-    build:
-      dockerfile: builder_centos8_glibc_2.28/Dockerfile
-    volumes:
-      - .:/app
-      - maven-cache:/root/.m2
-      - ./builder_centos8_glibc_2.28/output:/build-output
-    working_dir: /app
-    environment:
-      - MAVEN_PROFILE=${MAVEN_PROFILE:-}
-    command: >
-      sh -c "
-        echo 'Starting build process...' &&
-        ./mvnw clean package -P${MAVEN_PROFILE} &&
-        echo 'Copying artifacts to output...' &&
-        mkdir -p /build-output &&
-        cp target/secOpsDispatcher /build-output/secOpsDispatcher_glibc_2.28 || echo 'No excutable found' &&
-        ls -la /build-output/ &&
-        echo 'Build completed successfully!'
-      "
+#  builder_glibc_2.28:
+#    build:
+#      dockerfile: builder_centos8_glibc_2.28/Dockerfile
+#    volumes:
+#      - .:/app
+#      - maven-cache:/root/.m2
+#      - ./builder_centos8_glibc_2.28/output:/build-output
+#    working_dir: /app
+#    environment:
+#      - MAVEN_PROFILE=${MAVEN_PROFILE:-}
+#    command: >
+#      sh -c "
+#        echo 'Starting build process...' &&
+#        ./mvnw clean package -P${MAVEN_PROFILE} &&
+#        echo 'Copying artifacts to output...' &&
+#        mkdir -p /build-output &&
+#        cp target/secOpsDispatcher /build-output/secOpsDispatcher_glibc_2.28 || echo 'No excutable found' &&
+#        ls -la /build-output/ &&
+#        echo 'Build completed successfully!'
+#      "
 
   builder_glibc_2.17:
     build:
