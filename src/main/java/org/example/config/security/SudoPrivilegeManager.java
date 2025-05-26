@@ -7,8 +7,10 @@ import org.example.logging.facade.LogManager;
 import org.example.utils.CommandFailedException;
 import org.example.utils.ShellUtils;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -61,15 +63,12 @@ public class SudoPrivilegeManager {
         Path sudoersFile = Paths.get(SUDOERS_DIR + cprovider.getDatabaseUser());
 
         try {
-            List<String> lines = Files.readAllLines(sudoersFile);
+            String expectedSudoRule = generateSudoRule().trim();
+            String fileContent = Files.readString(sudoersFile).trim();
 
-            String expectedDefaultsLine = "Defaults:" + shellUser + " env_keep += \"SSH_ORIGINAL_COMMAND\"";
-            String expectedSudoRuleLine = shellUser + " ALL=(ALL) NOPASSWD: " + ShellUtils.getExecutablePath() + " *";
-
-            boolean missing = !(lines.contains(expectedDefaultsLine) && lines.contains(expectedSudoRuleLine));
-
+            boolean missing = !fileContent.equals(expectedSudoRule);
             if (missing) {
-                getLogger().info("Sudoers rule not present in " + sudoersFile);
+                getLogger().info("Sudoers rule not present or out of sync in " + sudoersFile);
             }
 
             return missing;
@@ -85,7 +84,11 @@ public class SudoPrivilegeManager {
         Path tempFile = Paths.get(tempFileName);
 
         getLogger().debug("Creating temp sudo rule file at " + tempFile);
-        Files.writeString(tempFile, sudoRule);
+
+        try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
+            writer.write(sudoRule);
+            writer.write("\n");
+        }
 
         getLogger().debug("Generated sudo rule: " + sudoRule);
         Files.setPosixFilePermissions(tempFile, PosixFilePermissions.fromString("r--r-----"));
@@ -114,7 +117,7 @@ public class SudoPrivilegeManager {
         String executablePath = ShellUtils.getExecutablePath();
         //For passing parameters via $SSH_ORIGINAL_COMMAND with SSH Forced command
         String defaultsLine = String.format("Defaults:%s env_keep += \"SSH_ORIGINAL_COMMAND\"", shellUser);
-        String sudoRuleLine = String.format("%s ALL=(ALL) NOPASSWD: %s *", shellUser, executablePath);
+        String sudoRuleLine = String.format("%s ALL=(ALL) NOPASSWD: %s", shellUser, executablePath);
 
         return String.join("\n", defaultsLine, sudoRuleLine);
     }
