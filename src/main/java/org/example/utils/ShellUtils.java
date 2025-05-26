@@ -76,10 +76,12 @@ public class ShellUtils {
 
                 int exitCode = process.exitValue();
                 if (exitCode != 0) {
+                    String errorMessage = String.join("\n", stderrLines);
                     getLogger().warnEntry().message("Shell command completed with non-zero exit code")
                             .field("command", String.join(" ", args))
                             .field("exitCode", exitCode).field("stdout", String.join("\n", stdoutLines))
-                            .field("stderr", String.join("\n", stderrLines)).log();
+                            .field("stderr", errorMessage).log();
+                    throw new CommandFailedException("Shell command completed with non-zero exit code ["+ exitCode + "] with error:"+ errorMessage);
                 }
 
                 return new ExecutionResult(args, Collections.unmodifiableList(stdoutLines),
