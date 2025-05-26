@@ -6,9 +6,7 @@ public class CommandFailedException extends Exception {
         super(message);
     }
 
-    public CommandFailedException(String message,
-                                  Throwable cause) {
-        super(message,
-                cause);
+    public CommandFailedException(String message, Throwable cause) {
+        super(message, cause);
     }
 }
