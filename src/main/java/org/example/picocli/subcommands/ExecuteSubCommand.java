@@ -26,6 +26,8 @@ import java.util.List;
 
 
 public class ExecuteSubCommand extends AbstractSubCommand {
+
+
     @CommandLine.Option(names = {"--debug"}, description = "Enable debug output. Also prints everything logged.")
     static boolean debug;
     @CommandLine.Option(names = {"--verbose"}, description = "Print logged information.")
@@ -54,19 +56,24 @@ public class ExecuteSubCommand extends AbstractSubCommand {
 
         try {
             OperationRequest operationRequest = decodeAndProcessToken(encodedJson);
-            OperationResult result = executeCommand(operationRequest);
-            System.out.println(result.toPrettyJson());
-            return 0;
+            try {
+                OperationResult result = executeCommand(operationRequest);
+                System.out.println(result.toPrettyJson());
+                return 0;
+            } catch (IllegalArgumentException e) {
+                List<String> availableCommandsList = getAvailableCommandsList();
+                System.out.println(OperationResult.notFound("Unknown operation: [" +
+                        operationRequest.toString() + "] " +
+                        availableCommandsList).toPrettyJson());
+                return 0;
+            }
         } catch (TokenProcessor.SignatureValidationFailException e) {
             System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.UNAUTHORIZED, e.getMessage())
                     .toPrettyJson());
             return 0;
-        } catch (IllegalArgumentException e) {
-            List<String> availableCommandsList = getAvailableCommandsList();
-            System.out.println(OperationResult.notFound(availableCommandsList.toString()).toPrettyJson());
-            return 0;
         } catch (Exception e) {
-            System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.INTERNAL_ERROR, e.getMessage())
+            System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.INTERNAL_ERROR,
+                            e.getMessage())
                     .toPrettyJson());
             return 0;
         }
