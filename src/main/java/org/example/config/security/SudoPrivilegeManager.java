@@ -15,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.List;
 
 public class SudoPrivilegeManager {
     private static final String shellUser = ShellUtils.resolveAppUser();
@@ -45,7 +44,6 @@ public class SudoPrivilegeManager {
             if (isSudoRuleNotPresentInFile()) {
                 throw new CommandFailedException("Failed to apply sudo rules correctly!");
             }
-            printRelevantRules();
         }
     }
 
@@ -68,13 +66,13 @@ public class SudoPrivilegeManager {
 
             boolean missing = !fileContent.equals(expectedSudoRule);
             if (missing) {
-                getLogger().info("Sudoers rule not present or out of sync in " + sudoersFile);
+                getLogger().warn("Sudoers rule not present or out of sync in " + sudoersFile);
             }
 
             return missing;
 
         } catch (IOException e) {
-            getLogger().info("Sudoers file " + sudoersFile + " is not present or unreadable.");
+            getLogger().warn("Sudoers file " + sudoersFile + " is not present or unreadable.");
             return true;
         }
     }
@@ -83,14 +81,14 @@ public class SudoPrivilegeManager {
         String tempFileName = TEMP_DIR + "sudoers_" + cprovider.getDatabaseUser();
         Path tempFile = Paths.get(tempFileName);
 
-        getLogger().debug("Creating temp sudo rule file at " + tempFile);
+        getLogger().info("Creating temp sudo rule file at " + tempFile);
 
         try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
             writer.write(sudoRule);
             writer.write("\n");
         }
 
-        getLogger().debug("Generated sudo rule: " + sudoRule);
+        getLogger().info("Generated sudo rule: " + sudoRule);
         Files.setPosixFilePermissions(tempFile, PosixFilePermissions.fromString("r--r-----"));
         try {
             getLogger().debug("Validating sudoers syntax with visudo -cf");
@@ -120,14 +118,6 @@ public class SudoPrivilegeManager {
         String sudoRuleLine = String.format("%s ALL=(ALL) NOPASSWD: %s", shellUser, executablePath);
 
         return String.join("\n", defaultsLine, sudoRuleLine);
-    }
-
-    private void printRelevantRules() throws CommandFailedException {
-        getLogger().debug("Printing relevant sudo rules from /etc/sudoers");
-        ShellUtils.ExecutionResult result = ShellUtils.execute("cat", "/etc/sudoers");
-
-        result.stdout().stream().filter(l -> l.contains(shellUser))
-                .forEach(System.out::println);
     }
 
     private static CliLogger getLogger() {
