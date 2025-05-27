@@ -80,6 +80,7 @@ public class EnvironmentConfig {
         if (!envFile.exists()) {
             getLogger().infoEntry().message("Config file does not exist, will create on save").field("File", envFile)
                     .log();
+            saveConfig();
             return;
         }
 
@@ -121,7 +122,25 @@ public class EnvironmentConfig {
 
     private CliLogger getLogger() {
         return LogManager.getInstance().getLogger();
-    }    private void ensureConfigDirExists() {
+    }
+
+    private void setDefaultIfMissing(String key,
+                                     Supplier<String> defaultValueSupplier) {
+        String value = getValue(key);
+        if (value == null || value.isBlank()) {
+            configMap.put(key, defaultValueSupplier.get());
+        }
+    }
+
+    public String generatePassword(int length) {
+        return Utils.generatePassword(length);
+    }
+
+    public int getDbUserPasswordLength() {
+        return EnvironmentConstants.DB_USER_PASSWORD_LENGTH;
+    }
+
+    private void ensureConfigDirExists() {
         File configDir = getConfigDir();
         if (!configDir.isDirectory()) {
             try {
@@ -135,6 +154,14 @@ public class EnvironmentConfig {
                 throw new AppConfigException("Failed to create config directory", e);
             }
         }
+    }
+
+    public Map<String, String> getConfigMap() {
+        return configMap;
+    }
+
+    public void setConfigMap(Map<String, String> configMap) {
+        this.configMap = new HashMap<>(configMap);
     }
 
     public Path getPublicKeyPath() {
@@ -165,8 +192,6 @@ public class EnvironmentConfig {
                     .log();
             throw new AppConfigException("Invalid public key URI format: " + uriString, e);
         }
-    }    public Map<String, String> getConfigMap() {
-        return configMap;
     }
 
     public String getEnvFilePath() {
@@ -175,30 +200,6 @@ public class EnvironmentConfig {
 
     public void setPublicKeyURI(String uri) {
         updateValue(EnvironmentConstants.ENV_PUBLIC_KEY_URI_FIELD, uri);
-    }    public void setConfigMap(Map<String, String> configMap) {
-        this.configMap = new HashMap<>(configMap);
-    }
-
-
-
-
-
-
-
-    private void setDefaultIfMissing(String key,
-                                     Supplier<String> defaultValueSupplier) {
-        String value = getValue(key);
-        if (value == null || value.isBlank()) {
-            configMap.put(key, defaultValueSupplier.get());
-        }
-    }
-
-    public String generatePassword(int length) {
-        return Utils.generatePassword(length);
-    }
-
-    public int getDbUserPasswordLength() {
-        return EnvironmentConstants.DB_USER_PASSWORD_LENGTH;
     }
 
 

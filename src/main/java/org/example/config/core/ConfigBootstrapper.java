@@ -69,7 +69,6 @@ public class ConfigBootstrapper {
         try {
             logger.debugEntry().message("Starting initialisation...").log();
             environmentConfig.loadConfig();
-            logger.debug("Config file " + environmentConfig.getEnvFilePath() + " is loaded.");
             ensureSudoPrivilegesConfigured();
             new DatabaseSetupCoordinator().ensureDatabaseSetup();
             ensurePublicKey();
