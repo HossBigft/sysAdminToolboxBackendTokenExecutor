@@ -16,6 +16,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.Optional;
 
@@ -25,6 +26,7 @@ public class KeyManager {
     private static final String KEYFILE_PERMISSIONS = "rw-------";
     private static final String KEYFILE_OWNER = "root";
     private static final String KEYFILE_GROUP = "root";
+    private static final int FETCH_TIMEOUT = 5;
     private final Path keyPath;
     private final FileAccessPolicy accessPolicy;
 
@@ -198,6 +200,7 @@ public class KeyManager {
                     .field("URI", request.uri())
                     .log();
             HttpResponse<String> response = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(FETCH_TIMEOUT))
                     .build()
                     .send(request, HttpResponse.BodyHandlers.ofString());
 
