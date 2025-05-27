@@ -42,8 +42,8 @@ public class ExecuteSubCommand extends AbstractSubCommand {
 
     @Override
     public Integer call() {
-        AppConfiguration.getInstance().initializeLazily();
         setupLogging();
+        AppConfiguration.getInstance().initializeLazily();
         if (unmatchedArgs != null && !unmatchedArgs.isEmpty()) {
             System.err.println("Unexpected extra arguments: " + unmatchedArgs);
             System.err.println("Usage: execute <signed-token>");

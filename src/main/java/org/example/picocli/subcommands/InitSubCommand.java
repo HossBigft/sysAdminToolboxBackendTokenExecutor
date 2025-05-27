@@ -25,8 +25,8 @@ public class InitSubCommand extends AbstractSubCommand {
 
     @Override
     public Integer call() {
-        AppConfiguration.getInstance().initializeLazily();
         setupLogging();
+        AppConfiguration.getInstance().initializeLazily();
         try {
             if (keyLink != null && !keyLink.isEmpty()) {
                 AppConfiguration.getInstance().setPublicKeyURI(keyLink);
