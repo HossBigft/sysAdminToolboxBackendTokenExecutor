@@ -8,7 +8,6 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -45,10 +44,8 @@ public class main implements Callable<Integer> {
         try {
             commandLine.parseArgs(args);
         } catch (CommandLine.UnmatchedArgumentException e) {
-            PrintWriter err = commandLine.getErr();
             System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.UNPROCCESIBLE_ENTITY,
                     "Unknown command: " + Arrays.toString(args)).toPrettyJson());
-            commandLine.usage(err);
             return;
         }
 
