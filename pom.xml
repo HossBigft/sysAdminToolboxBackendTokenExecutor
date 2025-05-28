@@ -139,6 +139,7 @@
                         <configuration>
                             <buildArgs combine.children="append">
                                 <buildArg>-Ob</buildArg>
+                                <buildArg>-march=compatibility</buildArg>
                             </buildArgs>
                         </configuration>
                     </plugin>
