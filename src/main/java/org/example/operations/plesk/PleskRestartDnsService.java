@@ -1,6 +1,6 @@
 package org.example.operations.plesk;
 
-import org.example.constants.Executables;
+import org.example.config.constants.Executables;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.operations.Operation;

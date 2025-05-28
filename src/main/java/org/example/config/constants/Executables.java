@@ -1,4 +1,4 @@
-package org.example.constants;
+package org.example.config.constants;
 
 public final class Executables {
     public static final String PLESK_CLI_GET_MAIL_USERS_CREDENTIALS = "/usr/local/psa/admin/bin/mail_auth_view";

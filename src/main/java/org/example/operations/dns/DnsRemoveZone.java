@@ -1,6 +1,6 @@
 package org.example.operations.dns;
 
-import org.example.constants.Executables;
+import org.example.config.constants.Executables;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.operations.Operation;
@@ -9,10 +9,8 @@ import org.example.utils.CommandFailedException;
 import org.example.utils.ShellUtils;
 import org.example.value_types.DomainName;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 public class DnsRemoveZone implements Operation {
     private final DomainName domainNameToDelete;

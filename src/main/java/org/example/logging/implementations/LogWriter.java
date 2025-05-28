@@ -1,7 +1,7 @@
 package org.example.logging.implementations;
 
 import org.example.config.security.FileAccessPolicy;
-import org.example.constants.EnvironmentConstants;
+import org.example.config.constants.EnvironmentConstants;
 import org.example.logging.config.LogConfig;
 import org.example.logging.core.LogLevel;
 import org.example.logging.model.LogEntry;

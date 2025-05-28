@@ -1,6 +1,6 @@
 package org.example.logging.config;
 
-import org.example.constants.EnvironmentConstants;
+import org.example.config.constants.EnvironmentConstants;
 import org.example.logging.core.LogLevel;
 
 public class LogConfig {

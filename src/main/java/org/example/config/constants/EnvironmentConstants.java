@@ -1,4 +1,4 @@
-package org.example.constants;
+package org.example.config.constants;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;

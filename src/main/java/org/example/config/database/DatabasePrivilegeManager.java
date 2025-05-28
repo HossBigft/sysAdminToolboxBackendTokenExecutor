@@ -1,7 +1,8 @@
 package org.example.config.database;
 
+import org.example.config.constants.EnvironmentConstants;
+import org.example.config.constants.Executables;
 import org.example.config.core.EnvironmentConfig;
-import org.example.constants.EnvironmentConstants;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.utils.CommandFailedException;
@@ -14,13 +15,11 @@ public class DatabasePrivilegeManager {
     private static final String databaseUser = new EnvironmentConfig().getDatabaseUser();
 
     public void enforceReadOnlyAccess() {
-        getLogger().
-                debug("Checking if user " + databaseUser + " is read-only.");
+        getLogger().debug("Checking if user " + databaseUser + " is read-only.");
         if (!isDbUserReadOnly()) {
             setReadOnly();
         } else {
-            getLogger().
-                    debug("User " + databaseUser + " is already read-only.");
+            getLogger().debug("User " + databaseUser + " is already read-only.");
         }
     }
 
@@ -30,12 +29,9 @@ public class DatabasePrivilegeManager {
 
     private boolean isDbUserReadOnly() {
         try {
-            ShellUtils.ExecutionResult result = ShellUtils.execute(ShellUtils.getSqlCliName(),
-                    "-u",
-                    EnvironmentConstants.SUPERADMIN_USER,
-                    "--skip-column-names",
-                    "-e",
-                    String.format("SHOW GRANTS FOR '%s'@'localhost'", databaseUser));
+            ShellUtils.ExecutionResult result = ShellUtils.execute(Executables.PLESK_CLI_EXECUTABLE, "db", "-Ne",
+
+                    String.format("SHOW GRANTS FOR '%s'@'localhost'", databaseUser), "\"");
             List<String>
 
                     output = result.stdout();
@@ -52,8 +48,7 @@ public class DatabasePrivilegeManager {
                         break;
                     }
 
-                    if (line.matches(
-                            ".*\\b(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|INDEX|EXECUTE|ALL PRIVILEGES)\\b.*")) {
+                    if (line.matches(".*\\b(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|INDEX|EXECUTE|ALL PRIVILEGES)\\b.*")) {
                         hasOnlySelectPrivileges = false;
                         break;
                     }
@@ -62,16 +57,14 @@ public class DatabasePrivilegeManager {
 
             return hasOnlySelectPrivileges;
         } catch (CommandFailedException e) {
-            getLogger().
-                    error("Error checking user permissions for " + databaseUser, e);
+            getLogger().error("Error checking user permissions for " + databaseUser, e);
             return false;
         }
     }
 
     private void setReadOnly() {
         if (databaseUser.equalsIgnoreCase(EnvironmentConstants.SUPERADMIN_USER)) {
-            getLogger().
-                    warn("Refusing to modify the root user. Please configure a different database user.");
+            getLogger().warn("Refusing to modify the root user. Please configure a different database user.");
             return;
         }
         try {
@@ -81,13 +74,10 @@ public class DatabasePrivilegeManager {
                             "GRANT SELECT ON *.* TO '%s'@'localhost'; " +
                             "FLUSH PRIVILEGES;", databaseUser, databaseUser);
 
-            ShellUtils.execute(ShellUtils.getSqlCliName(), "-u", EnvironmentConstants.SUPERADMIN_USER, "-e",
-                    commands);
-            getLogger().
-                    info(String.format("Set user %s as read-only successfully.", databaseUser));
+            ShellUtils.execute(Executables.PLESK_CLI_EXECUTABLE, "db", commands);
+            getLogger().info(String.format("Set user %s as read-only successfully.", databaseUser));
         } catch (CommandFailedException e) {
-            getLogger().
-                    error("Error setting database user " + databaseUser + " as read-only.", e);
+            getLogger().error("Error setting database user " + databaseUser + " as read-only.", e);
         }
     }
 }

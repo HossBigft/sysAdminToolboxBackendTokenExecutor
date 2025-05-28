@@ -12,7 +12,7 @@ import org.example.value_types.LinuxUsername;
 import java.sql.SQLException;
 import java.util.Optional;
 
-import static org.example.constants.Executables.PLESK_CLI_EXECUTABLE;
+import static org.example.config.constants.Executables.PLESK_CLI_EXECUTABLE;
 
 public class PleskGetLoginLink implements Operation {
     final int subscriptionId;

@@ -1,8 +1,9 @@
 package org.example.config.database;
 
 import org.example.config.AppConfigException;
+import org.example.config.constants.EnvironmentConstants;
+import org.example.config.constants.Executables;
 import org.example.config.core.AppConfiguration;
-import org.example.constants.EnvironmentConstants;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.utils.CommandFailedException;
@@ -43,18 +44,12 @@ public class DataBaseUserSetup {
     }
 
     boolean doesUserExist() throws CommandFailedException {
-        String mysqlCliName = ShellUtils.getSqlCliName();
         String dbUser = getDatabaseUser();
-        String query = String.format(
-                "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '%s') AS user_exists;",
-                dbUser);
+        String
+                query =
+                String.format("SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '%s') AS user_exists;", dbUser);
 
-        String[] command = new String[]{
-                mysqlCliName,
-                "-u", EnvironmentConstants.SUPERADMIN_USER,
-                "--skip-column-names",
-                "-e", query
-        };
+        String[] command = new String[]{Executables.PLESK_CLI_EXECUTABLE, "db", "-Ne", query};
 
         try {
             ShellUtils.ExecutionResult result = ShellUtils.execute(command);
@@ -80,16 +75,11 @@ public class DataBaseUserSetup {
     void createUser() throws CommandFailedException {
         String dbUser = getDatabaseUser();
         String dbPass = getDatabasePassword();
-        String mysqlCliName = ShellUtils.getSqlCliName();
-        String query = String.format(
-                "CREATE USER '%s'@'localhost' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;",
-                dbUser, dbPass);
+        String
+                query =
+                String.format("CREATE USER '%s'@'localhost' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;", dbUser, dbPass);
 
-        String[] command = new String[]{
-                mysqlCliName,
-                "-u", EnvironmentConstants.SUPERADMIN_USER,
-                "-e", query
-        };
+        String[] command = new String[]{Executables.PLESK_CLI_EXECUTABLE, "db", query};
 
         try {
             ShellUtils.execute(command);
@@ -103,9 +93,7 @@ public class DataBaseUserSetup {
     private boolean isDbUserAbleToConnect() {
         String dbUser = getDatabaseUser();
         String dbPass = getDatabasePassword();
-        try (Connection conn = DriverManager.getConnection(
-                DatabaseSetupCoordinator.DB_URL,
-                dbUser, dbPass)) {
+        try (Connection conn = DriverManager.getConnection(DatabaseSetupCoordinator.DB_URL, dbUser, dbPass)) {
             logger.debugEntry().message("User can connect to database.").field("User", dbUser).log();
             return true;
         } catch (SQLException e) {
@@ -132,21 +120,21 @@ public class DataBaseUserSetup {
             return;
         }
 
-        String mysqlCliName = ShellUtils.getSqlCliName();
-        String query = String.format(
-                "ALTER USER '%s'@'localhost' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;",
-                getDatabaseUser(), password);
+        String
+                query =
+                String.format("ALTER USER '%s'@'localhost' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;",
+                        getDatabaseUser(),
+                        password);
 
-        String[] command = new String[]{
-                mysqlCliName,
-                "-u", EnvironmentConstants.SUPERADMIN_USER,
-                "-e", query
-        };
+        String[] command = new String[]{Executables.PLESK_CLI_EXECUTABLE, "db", query};
 
         try {
             ShellUtils.execute(command);
-            logger.infoEntry().message("Set database user password").field("User", getDatabaseUser())
-                    .field("Password", getDatabasePassword()).log();
+            logger.infoEntry()
+                    .message("Set database user password")
+                    .field("User", getDatabaseUser())
+                    .field("Password", getDatabasePassword())
+                    .log();
         } catch (Exception e) {
             logger.errorEntry().command(command).exception(e).log();
             throw new AppConfigException("Failed to set database user password", e);

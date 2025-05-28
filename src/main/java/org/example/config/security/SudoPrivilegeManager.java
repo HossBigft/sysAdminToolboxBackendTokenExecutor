@@ -1,7 +1,7 @@
 package org.example.config.security;
 
 import org.example.config.core.EnvironmentConfig;
-import org.example.constants.EnvironmentConstants;
+import org.example.config.constants.EnvironmentConstants;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.utils.CommandFailedException;

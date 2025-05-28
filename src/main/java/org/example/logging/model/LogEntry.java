@@ -67,8 +67,8 @@ public class LogEntry {
             field("Command", command);
 
             StringBuilder argsStr = new StringBuilder();
-            for (String arg : args) {
-                argsStr.append(maskSecrets(arg)).append(" ");
+            for (int i = 1; i < args.length; i++) {
+                argsStr.append(maskSecrets(args[i])).append(" ");
             }
             field("Args", argsStr.toString().trim());
         }
