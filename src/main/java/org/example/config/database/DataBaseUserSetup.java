@@ -43,7 +43,7 @@ public class DataBaseUserSetup {
         return appConfiguration.getDatabaseUser();
     }
 
-    boolean doesUserExist() throws CommandFailedException {
+    boolean doesUserExist(){
         String dbUser = getDatabaseUser();
         String
                 query =
@@ -72,7 +72,7 @@ public class DataBaseUserSetup {
         }
     }
 
-    void createUser() throws CommandFailedException {
+    void createUser() {
         String dbUser = getDatabaseUser();
         String dbPass = getDatabasePassword();
         String
@@ -113,7 +113,7 @@ public class DataBaseUserSetup {
         return appConfiguration.getDatabasePassword();
     }
 
-    void setDbUserPassword(String password) throws CommandFailedException {
+    void setDbUserPassword(String password){
         if (getDatabaseUser().equalsIgnoreCase(EnvironmentConstants.SUPERADMIN_USER)) {
             logger.warn(
                     "WARNING: Refusing to modify the root database user password. Please configure a different database user");
@@ -122,7 +122,7 @@ public class DataBaseUserSetup {
 
         String
                 query =
-                String.format("ALTER USER '%s'@'localhost' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;",
+                String.format("SET PASSWORD FOR '%s'@'localhost'= PASSWORD('%s'); FLUSH PRIVILEGES;",
                         getDatabaseUser(),
                         password);
 
