@@ -31,7 +31,7 @@ public class DatabasePrivilegeManager {
         try {
             ShellUtils.ExecutionResult result = ShellUtils.execute(Executables.PLESK_CLI_EXECUTABLE, "db", "-Ne",
 
-                    String.format("SHOW GRANTS FOR '%s'@'localhost'", databaseUser), "\"");
+                    String.format("SHOW GRANTS FOR '%s'@'localhost'", databaseUser));
             List<String>
 
                     output = result.stdout();
