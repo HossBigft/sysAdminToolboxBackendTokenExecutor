@@ -43,7 +43,7 @@ public class DataBaseUserSetup {
         return appConfiguration.getDatabaseUser();
     }
 
-    boolean doesUserExist(){
+    boolean doesUserExist() {
         String dbUser = getDatabaseUser();
         String
                 query =
@@ -97,7 +97,7 @@ public class DataBaseUserSetup {
             logger.debugEntry().message("User can connect to database.").field("User", dbUser).log();
             return true;
         } catch (SQLException e) {
-            logger.error(getDatabaseUser() + " can't connect to database.", e);
+            logger.debugEntry().message(getDatabaseUser() + " can't connect to database.").exception(e).log();
             return false;
         }
     }
@@ -113,7 +113,7 @@ public class DataBaseUserSetup {
         return appConfiguration.getDatabasePassword();
     }
 
-    void setDbUserPassword(String password){
+    void setDbUserPassword(String password) {
         if (getDatabaseUser().equalsIgnoreCase(EnvironmentConstants.SUPERADMIN_USER)) {
             logger.warn(
                     "WARNING: Refusing to modify the root database user password. Please configure a different database user");
