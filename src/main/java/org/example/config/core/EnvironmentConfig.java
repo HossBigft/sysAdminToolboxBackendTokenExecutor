@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.example.config.AppConfigException;
-import org.example.config.security.FileAccessPolicy;
 import org.example.config.constants.EnvironmentConstants;
+import org.example.config.security.FileAccessPolicy;
 import org.example.logging.core.CliLogger;
 import org.example.logging.facade.LogManager;
 import org.example.utils.ShellUtils;
@@ -80,6 +80,8 @@ public class EnvironmentConfig {
         if (!envFile.exists()) {
             getLogger().infoEntry().message("Config file does not exist, will create on save").field("File", envFile)
                     .log();
+            setDefaultIfMissing(getEnvDbPassFieldName(),
+                    () -> generatePassword(getDbUserPasswordLength()));
             saveConfig();
             return;
         }
@@ -92,7 +94,6 @@ public class EnvironmentConfig {
             setDefaultIfMissing(getEnvDbPassFieldName(),
                     () -> generatePassword(getDbUserPasswordLength()));
 
-
             getLogger().debug("Loaded config from " + envFile);
             dotenvFilePolicy.enforce();
         } catch (IOException e) {
@@ -102,13 +103,12 @@ public class EnvironmentConfig {
 
     private void saveConfig() {
         ensureConfigDirExists();
-
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
         File envFile = dotEnvFile.toFile();
         String action = envFile.exists() ? "Updated" : "Created";
-
+        getLogger().debugEntry().message("Saving config").field("File", envFile).log();
         try {
             mapper.writeValue(envFile, getConfigMap());
             getConfigMap().forEach(
@@ -116,12 +116,9 @@ public class EnvironmentConfig {
                             .log());
 
         } catch (IOException e) {
+            getLogger().errorEntry().message("Failed to save config file").field("File", envFile).exception(e).log();
             throw new AppConfigException("Failed to save config file", e);
         }
-    }
-
-    private CliLogger getLogger() {
-        return LogManager.getInstance().getLogger();
     }
 
     private void setDefaultIfMissing(String key,
@@ -192,6 +189,10 @@ public class EnvironmentConfig {
                     .log();
             throw new AppConfigException("Invalid public key URI format: " + uriString, e);
         }
+    }
+
+    private CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
     }
 
     public String getEnvFilePath() {
