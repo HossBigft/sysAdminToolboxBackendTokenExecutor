@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public class TokenProcessor {
 
-    public Optional<OperationRequest> processToken(Token token) throws SignatureValidationFailException {
+    public Optional<OperationRequest> processToken(Token token) throws SignatureValidationFailException, TokenUsedException {
         getLogger().
                 infoEntry().message("Processing command token").field("Token", token.value()).log();
         Optional<OperationRequest> command = Optional.empty();
@@ -43,7 +43,7 @@ public class TokenProcessor {
         if (tokenUsed) {
             getLogger().
                     warnEntry().message("Token has already been used").field("Token", token.value()).log();
-            return command;
+            throw new TokenUsedException();
         }
 
         getLogger().
@@ -96,6 +96,21 @@ public class TokenProcessor {
         }
 
         public SignatureValidationFailException(String message,
+                                                Throwable cause) {
+            super(message, cause);
+        }
+    }
+    public static class TokenUsedException extends Exception {
+
+        public TokenUsedException(String message) {
+            super(message);
+        }
+
+        public TokenUsedException() {
+            super("Token has already been used.");
+        }
+
+        public TokenUsedException(String message,
                                                 Throwable cause) {
             super(message, cause);
         }

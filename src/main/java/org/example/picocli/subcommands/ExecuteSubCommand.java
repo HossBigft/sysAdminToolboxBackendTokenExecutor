@@ -71,6 +71,10 @@ public class ExecuteSubCommand extends AbstractSubCommand {
             System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.UNAUTHORIZED, e.getMessage())
                     .toPrettyJson());
             return 0;
+        } catch (TokenProcessor.TokenUsedException e) {
+            System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.BAD_REQUEST, e.getMessage())
+                    .toPrettyJson());
+            return 0;
         } catch (Exception e) {
             System.out.println(OperationResult.failure(OperationResult.ExecutionStatus.INTERNAL_ERROR,
                             e.getMessage())
@@ -89,7 +93,7 @@ public class ExecuteSubCommand extends AbstractSubCommand {
     }
 
     private OperationRequest decodeAndProcessToken(String encodedToken) throws CommunicationException,
-            TokenProcessor.SignatureValidationFailException {
+            TokenProcessor.SignatureValidationFailException, TokenProcessor.TokenUsedException {
         String rawJson = new String(Base64.getDecoder().decode(encodedToken));
         Token token = Token.fromJson(rawJson);
         return new TokenProcessor()
