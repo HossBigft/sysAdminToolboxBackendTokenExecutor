@@ -23,7 +23,7 @@ public class Utils {
             }
 
             public String getCharacters() {
-                return "!#$%&()*+,-./:;<=>?@[\\]^_{|}~";
+                return "!#$%&()*+,-.:;<=>?@[]^_{|}~";
             }
         };
         CharacterRule specialRule = new CharacterRule(safeSpecials, 1);
