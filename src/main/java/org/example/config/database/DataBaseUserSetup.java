@@ -47,7 +47,9 @@ public class DataBaseUserSetup {
         String dbUser = getDatabaseUser();
         String
                 query =
-                String.format("SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '%s') AS user_exists;", dbUser);
+                String.format(
+                        "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '%s' AND host='127.0.0.1') AS user_exists;",
+                        dbUser);
 
         String[] command = new String[]{Executables.PLESK_CLI_EXECUTABLE, "db", "-Ne", query};
 
@@ -77,7 +79,7 @@ public class DataBaseUserSetup {
         String dbPass = getDatabasePassword();
         String
                 query =
-                String.format("CREATE USER '%s'@'localhost' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;", dbUser, dbPass);
+                String.format("CREATE USER '%s'@'127.0.0.1' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;", dbUser, dbPass);
 
         String[] command = new String[]{Executables.PLESK_CLI_EXECUTABLE, "db", query};
 
@@ -122,7 +124,7 @@ public class DataBaseUserSetup {
 
         String
                 query =
-                String.format("SET PASSWORD FOR '%s'@'localhost'= PASSWORD('%s'); FLUSH PRIVILEGES;",
+                String.format("SET PASSWORD FOR '%s'@'127.0.0.1'= PASSWORD('%s'); FLUSH PRIVILEGES;",
                         getDatabaseUser(),
                         password);
 

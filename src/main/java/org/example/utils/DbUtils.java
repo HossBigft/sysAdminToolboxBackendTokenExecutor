@@ -53,7 +53,7 @@ public class DbUtils {
 
     private static Connection getConnection() {
         AppConfiguration config = AppConfiguration.getInstance();
-        String dbUrl = "jdbc:mysql://localhost/psa";
+        String dbUrl = "jdbc:mysql://127.0.0.1/psa";
         String dbUser = config.getDatabaseUser();
         String dbPassword = config.getDatabasePassword();
 

@@ -31,7 +31,7 @@ public class DatabasePrivilegeManager {
         try {
             ShellUtils.ExecutionResult result = ShellUtils.execute(Executables.PLESK_CLI_EXECUTABLE, "db", "-Ne",
 
-                    String.format("SHOW GRANTS FOR '%s'@'localhost'", databaseUser));
+                    String.format("SHOW GRANTS FOR '%s'@'127.0.0.1'", databaseUser));
             List<String>
 
                     output = result.stdout();
@@ -70,8 +70,8 @@ public class DatabasePrivilegeManager {
         try {
             String
                     commands =
-                    String.format("REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s'@'localhost'; " +
-                            "GRANT SELECT ON *.* TO '%s'@'localhost'; " +
+                    String.format("REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s'@'127.0.0.1'; " +
+                            "GRANT SELECT ON *.* TO '%s'@'127.0.0.1'; " +
                             "FLUSH PRIVILEGES;", databaseUser, databaseUser);
 
             ShellUtils.execute(Executables.PLESK_CLI_EXECUTABLE, "db", commands);

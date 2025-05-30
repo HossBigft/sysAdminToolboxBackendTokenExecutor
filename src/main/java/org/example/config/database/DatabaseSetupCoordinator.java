@@ -5,7 +5,7 @@ import org.example.logging.facade.LogManager;
 import org.example.utils.ShellUtils;
 
 public class DatabaseSetupCoordinator {
-    static final String DB_URL = "jdbc:mysql://localhost:3306";
+    static final String DB_URL = "jdbc:mysql://127.0.0.1:3306";
 
     public void ensureDatabaseSetup() {
         if (ShellUtils.isDatabaseInstalled()) {
