@@ -12,8 +12,7 @@ import java.util.Optional;
 
 
 public record OperationResult(ExecutionStatus status, String message, Optional<JsonNode> payload) {
-    private static final ObjectMapper MAPPER = new ObjectMapper()
-            .enable(SerializationFeature.INDENT_OUTPUT);
+    private static final ObjectMapper MAPPER = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
     public static OperationResult success(Optional<JsonNode> result) {
         return new OperationResult(ExecutionStatus.OK, "Operation completed successfully", result);
@@ -58,6 +57,10 @@ public record OperationResult(ExecutionStatus status, String message, Optional<J
                                           String message,
                                           Optional<JsonNode> partialResult) {
         return new OperationResult(statusCode, message, partialResult);
+    }
+
+    public static OperationResult failure(String message) {
+        return new OperationResult(ExecutionStatus.INTERNAL_ERROR, message, Optional.empty());
     }
 
     public int getStatusCode() {
@@ -109,13 +112,9 @@ public record OperationResult(ExecutionStatus status, String message, Optional<J
     }
 
     public enum ExecutionStatus {
-        OK(200, "OK"),
-        CREATED(201, "Created"),
-        BAD_REQUEST(400, "Bad Request"),
-        UNAUTHORIZED(401, "Unauthorized"),
-        UNPROCCESIBLE_ENTITY(422, "Unprocessable Entity"),
-        NOT_FOUND(404, "Not Found"),
-        INTERNAL_ERROR(500, "Internal Server Error");
+        OK(200, "OK"), CREATED(201, "Created"), BAD_REQUEST(400, "Bad Request"), UNAUTHORIZED(401,
+                "Unauthorized"), UNPROCCESIBLE_ENTITY(422, "Unprocessable Entity"), NOT_FOUND(404,
+                "Not Found"), INTERNAL_ERROR(500, "Internal Server Error");
 
 
         private final int code;

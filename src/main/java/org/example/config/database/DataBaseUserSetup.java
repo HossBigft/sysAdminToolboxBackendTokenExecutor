@@ -45,11 +45,9 @@ public class DataBaseUserSetup {
 
     boolean doesUserExist() {
         String dbUser = getDatabaseUser();
-        String
-                query =
-                String.format(
-                        "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '%s' AND host='127.0.0.1') AS user_exists;",
-                        dbUser);
+        String query = String.format(
+                "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '%s' AND host='127.0.0.1') AS user_exists;",
+                dbUser);
 
         String[] command = new String[]{Executables.PLESK_CLI_EXECUTABLE, "db", "-Ne", query};
 
@@ -77,9 +75,8 @@ public class DataBaseUserSetup {
     void createUser() {
         String dbUser = getDatabaseUser();
         String dbPass = getDatabasePassword();
-        String
-                query =
-                String.format("CREATE USER '%s'@'127.0.0.1' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;", dbUser, dbPass);
+        String query = String.format("CREATE USER '%s'@'127.0.0.1' IDENTIFIED BY '%s'; FLUSH PRIVILEGES;", dbUser,
+                dbPass);
 
         String[] command = new String[]{Executables.PLESK_CLI_EXECUTABLE, "db", query};
 
@@ -92,13 +89,14 @@ public class DataBaseUserSetup {
         }
     }
 
-    private boolean isDbUserAbleToConnect() {
+    public boolean isDbUserAbleToConnect() {
         String dbUser = getDatabaseUser();
         String dbPass = getDatabasePassword();
         try (Connection conn = DriverManager.getConnection(DatabaseSetupCoordinator.DB_URL, dbUser, dbPass)) {
             logger.debugEntry().message("User can connect to database.").field("User", dbUser).log();
             return true;
         } catch (SQLException e) {
+            logger.errorEntry().message("User can't connect to database.").field("User", dbUser).log();
             logger.debugEntry().message(getDatabaseUser() + " can't connect to database.").exception(e).log();
             return false;
         }
@@ -122,21 +120,15 @@ public class DataBaseUserSetup {
             return;
         }
 
-        String
-                query =
-                String.format("SET PASSWORD FOR '%s'@'127.0.0.1'= PASSWORD('%s'); FLUSH PRIVILEGES;",
-                        getDatabaseUser(),
-                        password);
+        String query = String.format("SET PASSWORD FOR '%s'@'127.0.0.1'= PASSWORD('%s'); FLUSH PRIVILEGES;",
+                getDatabaseUser(), password);
 
         String[] command = new String[]{Executables.PLESK_CLI_EXECUTABLE, "db", query};
 
         try {
             ShellUtils.execute(command);
-            logger.infoEntry()
-                    .message("Set database user password")
-                    .field("User", getDatabaseUser())
-                    .field("Password", getDatabasePassword())
-                    .log();
+            logger.infoEntry().message("Set database user password").field("User", getDatabaseUser())
+                    .field("Password", getDatabasePassword()).log();
         } catch (Exception e) {
             logger.errorEntry().command(command).exception(e).log();
             throw new AppConfigException("Failed to set database user password", e);

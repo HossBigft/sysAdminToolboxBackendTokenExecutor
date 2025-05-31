@@ -1,6 +1,7 @@
 package org.example;
 
 import org.example.operations.OperationResult;
+import org.example.picocli.subcommands.CheckSubCommand;
 import org.example.picocli.subcommands.ExecuteSubCommand;
 import org.example.picocli.subcommands.HealthCheckSubCommand;
 import org.example.picocli.subcommands.InitSubCommand;
@@ -26,6 +27,7 @@ public class main implements Callable<Integer> {
         commandLine.addSubcommand(new ExecuteSubCommand(app));
         commandLine.addSubcommand(new InitSubCommand(app));
         commandLine.addSubcommand(new HealthCheckSubCommand(app));
+        commandLine.addSubcommand(new CheckSubCommand(app));
 
         if (args.length == 0) {
             String sshOriginalCommand = System.getenv("SSH_ORIGINAL_COMMAND");
