@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-@Command(name = "sysadmintoolbox", description = "Safe root wrapper for executing Plesk and Bind administration commands. github.com/HossBigft/sysAdminToolboxBackendTokenExecutor", version = "0.3.3", mixinStandardHelpOptions = true)
+@Command(name = "sysadmintoolbox", description = "Safe root wrapper for executing Plesk and Bind administration commands. github.com/HossBigft/sysAdminToolboxBackendTokenExecutor", version = "0.3.5", mixinStandardHelpOptions = true)
 public class main implements Callable<Integer> {
 
 
