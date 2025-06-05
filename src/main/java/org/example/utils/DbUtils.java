@@ -87,7 +87,12 @@ public class DbUtils {
                         FROM domains d2
                         WHERE base.subscription_id IN (d2.id, d2.webspace_id)) AS domains,
                     (SELECT overuse FROM domains WHERE id = base.subscription_id) as is_space_overused,
-                    (SELECT ROUND(real_size/1024/1024) FROM domains WHERE id = base.subscription_id) as subscription_size_mb,
+                    (
+                        SELECT ROUND(SUM(real_size)/1024/1024)
+                        FROM domains d3
+                        WHERE d3.webspace_id = base.subscription_id
+                           OR d3.id = base.subscription_id
+                    ) AS subscription_size_mb,
                     (SELECT status FROM domains WHERE id = base.subscription_id) as subscription_status
                 FROM (
                     SELECT
