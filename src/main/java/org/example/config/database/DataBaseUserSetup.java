@@ -55,7 +55,7 @@ public class DataBaseUserSetup {
             ShellUtils.ExecutionResult result = ShellUtils.execute(command);
             List<String> output = result.stdout();
             if (!result.isSuccessful()) {
-                throw new CommandFailedException(result.getFormattedErrorMessage());
+                throw new AppConfigException(result.getFormattedErrorMessage());
             }
             boolean exists = output.getFirst().trim().equals("1");
 

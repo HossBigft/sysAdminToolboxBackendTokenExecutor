@@ -81,7 +81,7 @@ public class ShellUtils {
                             .field("command", String.join(" ", args))
                             .field("exitCode", exitCode).field("stdout", String.join("\n", stdoutLines))
                             .field("stderr", errorMessage).log();
-                    throw new CommandFailedException("Shell command completed with non-zero exit code ["+ exitCode + "] with error:"+ errorMessage);
+                    throw new CommandFailedException(stdoutLines, stderrLines, exitCode);
                 }
 
                 return new ExecutionResult(args, Collections.unmodifiableList(stdoutLines),
