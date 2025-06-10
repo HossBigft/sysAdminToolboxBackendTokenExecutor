@@ -24,12 +24,12 @@ public class ShellUtils {
     public static Boolean isDatabaseInstalled() {
         String sqlCliName;
         try {
-            sqlCliName=getSqlCliName();
+            sqlCliName = getSqlCliName();
         } catch (CommandFailedException e) {
             getLogger().debugEntry().message("Neither MySQl or MariaDB CLI executables are detected").log();
             return false;
         }
-        getLogger().debugEntry().message("Found SQL CLI executable name").field("Executable",sqlCliName).log();
+        getLogger().debugEntry().message("Found SQL CLI executable name").field("Executable", sqlCliName).log();
         return true;
     }
 
@@ -43,10 +43,13 @@ public class ShellUtils {
         }
     }
 
+    private static CliLogger getLogger() {
+        return LogManager.getInstance().getLogger();
+    }
+
     private static boolean isCommandAvailable(String cmd) {
         return new File("/usr/bin/" + cmd).exists() || new File("/usr/local/bin/" + cmd).exists();
     }
-
 
     public static ExecutionResult execute(String... args) throws CommandFailedException {
         try {
@@ -56,20 +59,23 @@ public class ShellUtils {
             List<String> stdoutLines = new ArrayList<>();
             List<String> stderrLines = new ArrayList<>();
 
-            try (BufferedReader stdoutReader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream())); BufferedReader stderrReader = new BufferedReader(
-                    new InputStreamReader(process.getErrorStream()))) {
-                CompletableFuture<Void> outputFuture = CompletableFuture.runAsync(
-                        () -> stdoutReader.lines().forEach(stdoutLines::add));
+            try (BufferedReader stdoutReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                 BufferedReader stderrReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                CompletableFuture<Void>
+                        outputFuture =
+                        CompletableFuture.runAsync(() -> stdoutReader.lines().forEach(stdoutLines::add));
 
-                CompletableFuture<Void> errorFuture = CompletableFuture.runAsync(
-                        () -> stderrReader.lines().forEach(stderrLines::add));
+                CompletableFuture<Void>
+                        errorFuture =
+                        CompletableFuture.runAsync(() -> stderrReader.lines().forEach(stderrLines::add));
 
                 boolean completed = process.waitFor(30, TimeUnit.SECONDS);
                 if (!completed) {
                     process.destroyForcibly();
-                    throw new CommandFailedException(
-                            "Shell command timed out after " + TimeUnit.SECONDS + "s: " + String.join(" ", args));
+                    throw new CommandFailedException("Shell command timed out after " +
+                            TimeUnit.SECONDS +
+                            "s: " +
+                            String.join(" ", args));
                 }
 
                 CompletableFuture.allOf(outputFuture, errorFuture).join();
@@ -77,32 +83,35 @@ public class ShellUtils {
                 int exitCode = process.exitValue();
                 if (exitCode != 0) {
                     String errorMessage = String.join("\n", stderrLines);
-                    getLogger().warnEntry().message("Shell command completed with non-zero exit code")
+                    getLogger().warnEntry()
+                            .message("Shell command completed with non-zero exit code")
                             .field("command", String.join(" ", args))
-                            .field("exitCode", exitCode).field("stdout", String.join("\n", stdoutLines))
-                            .field("stderr", errorMessage).log();
+                            .field("exitCode", exitCode)
+                            .field("stdout", String.join("\n", stdoutLines))
+                            .field("stderr", errorMessage)
+                            .log();
                     throw new CommandFailedException(stdoutLines, stderrLines, exitCode);
                 }
 
-                return new ExecutionResult(args, Collections.unmodifiableList(stdoutLines),
-                        Collections.unmodifiableList(stderrLines), exitCode);
+                return new ExecutionResult(args,
+                        Collections.unmodifiableList(stdoutLines),
+                        Collections.unmodifiableList(stderrLines),
+                        exitCode);
             }
         } catch (IOException e) {
-            String errorMessage = String.format("Failed to execute shell command '%s': %s", String.join(" ", args),
-                    e.getMessage());
+            String
+                    errorMessage =
+                    String.format("Failed to execute shell command '%s': %s", String.join(" ", args), e.getMessage());
             getLogger().error(errorMessage);
             throw new CommandFailedException(errorMessage, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            String errorMessage = String.format("Failed to execute shell command '%s': %s", String.join(" ", args),
-                    e.getMessage());
+            String
+                    errorMessage =
+                    String.format("Failed to execute shell command '%s': %s", String.join(" ", args), e.getMessage());
             getLogger().error(errorMessage);
             throw new CommandFailedException(errorMessage, e);
         }
-    }
-
-    private static CliLogger getLogger() {
-        return LogManager.getInstance().getLogger();
     }
 
     public static String resolveAppUser() {
@@ -111,7 +120,9 @@ public class ShellUtils {
         Optional<String> systemUser = getSystemUser();
         Optional<String> pathUser = getUserFromPath();
 
-        return Stream.of(sudoUser, systemUser, pathUser).flatMap(Optional::stream).filter(ShellUtils::isValidUser)
+        return Stream.of(sudoUser, systemUser, pathUser)
+                .flatMap(Optional::stream)
+                .filter(ShellUtils::isValidUser)
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Could not determine valid system user for app."));
     }
@@ -148,7 +159,9 @@ public class ShellUtils {
     }
 
     public static String resolveShellUser() {
-        return Stream.of(getSudoUser(), getSystemUser()).flatMap(Optional::stream).findFirst()
+        return Stream.of(getSudoUser(), getSystemUser())
+                .flatMap(Optional::stream)
+                .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Could not determine valid user for running executable."));
     }
 
@@ -160,7 +173,10 @@ public class ShellUtils {
 
         public String getFormattedErrorMessage() {
             return String.format("Command '%s' failed with exit code %d: %s\nStderr: %s",
-                    String.join(" ", command), exitCode, stdoutString(), stderrString());
+                    String.join(" ", command),
+                    exitCode,
+                    stdoutString(),
+                    stderrString());
         }
 
         public String stdoutString() {
