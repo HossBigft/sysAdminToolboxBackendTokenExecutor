@@ -19,8 +19,7 @@ public class PleskGetLoginLink implements Operation {
     final LinuxUsername username;
 
 
-    public PleskGetLoginLink(int subscriptionId,
-                             LinuxUsername username) {
+    public PleskGetLoginLink(int subscriptionId, LinuxUsername username) {
         this.subscriptionId = subscriptionId;
         this.username = username;
     }
@@ -40,20 +39,34 @@ public class PleskGetLoginLink implements Operation {
         }
 
 
-        if (subscriptionName.isPresent()) {
-            String link;
-            try {
-                link = pleskGetUserLoginLink(username.value());
-            } catch (CommandFailedException e) {
-                return OperationResult.internalError(
-                        "Operation get subscription login link for subscription with ID " + subscriptionId + " for user " + username + " failed.");
-            }
+        if (subscriptionName.isEmpty()) {
+            return OperationResult.notFound("Subscription with ID " + subscriptionId + " doesn't exist.");
+        }
+
+        try {
+            String loginLink = pleskGetUserLoginLink(username.value());
+
             jsonArr.put("subscription_name", subscriptionName.get());
-            jsonArr.put("login_link", link + REDIRECTION_HEADER + subscriptionId);
+            jsonArr.put("login_link", loginLink + REDIRECTION_HEADER + subscriptionId);
 
             return OperationResult.success("Subscription login link generated.", Optional.of(jsonArr));
-        } else {
-            return OperationResult.notFound("Subscription with ID " + subscriptionId + " doesn't exist.");
+
+        } catch (CommandFailedException e) {
+            boolean
+                    isUserNotFound =
+                    e.getStderr()
+                            .stream()
+                            .anyMatch(s -> s.equalsIgnoreCase("You have entered incorrect username or password."));
+
+            if (isUserNotFound) {
+                return OperationResult.notFound("User " + username + " not found.");
+            }
+
+            return OperationResult.internalError("Failed to generate login link for subscription ID " +
+                    subscriptionId +
+                    " and user " +
+                    username +
+                    ".");
         }
     }
 
