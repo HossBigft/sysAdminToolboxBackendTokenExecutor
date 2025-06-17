@@ -7,20 +7,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class LogEntry {
-    private static final String[] SENSITIVE_FIELD_NAMES = {
-            "PASSWORD", "SECRET", "CREDENTIAL", "AUTH"
-    };
+    private static final String[] SENSITIVE_FIELD_NAMES = {"PASSWORD", "SECRET", "CREDENTIAL", "AUTH"};
     private final Map<String, Object> fields = new LinkedHashMap<>();
 
     public LogEntry message(String message) {
         return field("Message", message);
     }
 
-    public LogEntry field(String key,
-                          Object value) {
+    public LogEntry field(String key, Object value) {
         if (value != null) {
-            Object maskedValue = shouldMaskField(key) ?
-                    maskValue(value) : value;
+            Object maskedValue = shouldMaskField(key) ? maskValue(value) : value;
             fields.put(key, maskedValue);
         }
         return this;
@@ -46,7 +42,6 @@ public class LogEntry {
         } else if (value instanceof char[]) {
             return "REDACTED";
         } else {
-            // For other types, convert to string but mask it
             return "REDACTED";
         }
     }
@@ -88,14 +83,13 @@ public class LogEntry {
         masked = masked.replaceAll("(?i)([A-Z_]+PASSWORD=)([^\\s|\\]]+)", "$1REDACTED");
 
 
-        masked = masked.replaceAll("(?i)([A-Z_]*(SECRET|KEY|TOKEN|CREDENTIAL|AUTH)[A-Z_]*=)([^\\s|\\]]+)",
-                "$1REDACTED");
+        masked =
+                masked.replaceAll("(?i)([A-Z_]*(SECRET|KEY|TOKEN|CREDENTIAL|AUTH)[A-Z_]*=)([^\\s|\\]]+)", "$1REDACTED");
 
         return masked;
     }
 
-    public LogEntry action(String action,
-                           String target) {
+    public LogEntry action(String action, String target) {
         return field("Action", action).field("Target", target);
     }
 
@@ -107,10 +101,7 @@ public class LogEntry {
         return new LinkedHashMap<>(fields);
     }
 
-    /**
-     * Get raw fields without applying any additional masking
-     * Internal use only for special cases
-     */
+
     protected Map<String, Object> getRawFields() {
         return fields;
     }
@@ -120,16 +111,10 @@ public class LogEntry {
         return getMaskedFields().toString();
     }
 
-    /**
-     * Applies deep masking to all string values in fields map
-     * Use this when logging the entire entry
-     */
     public Map<String, Object> getMaskedFields() {
-        return fields.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> maskPotentialSecrets(entry.getValue())
-                ));
+        return fields.entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> maskPotentialSecrets(entry.getValue())));
     }
 
     private Object maskPotentialSecrets(Object value) {
