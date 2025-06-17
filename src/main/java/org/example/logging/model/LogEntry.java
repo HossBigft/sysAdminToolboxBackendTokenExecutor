@@ -3,11 +3,25 @@ package org.example.logging.model;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class LogEntry {
     private static final String[] SENSITIVE_FIELD_NAMES = {"PASSWORD", "SECRET", "CREDENTIAL", "AUTH"};
+    private static final List<Pattern> SECRET_PATTERNS = List.of(
+            Pattern.compile("(?i)(IDENTIFIED BY\\s+)'[^']*'"),
+            Pattern.compile("(?i)(SET PASSWORD\\s*=\\s*)'[^']*'"),
+            Pattern.compile("(?i)(--password=)([^\\s]+)"),
+            Pattern.compile("(?i)(password\\s*[:=]\\s*)([^\\s'\"]+)"),
+            Pattern.compile("(?i)(DATABASE_PASSWORD=)([^\\s|\\]]+)"),
+            Pattern.compile("(?i)([A-Z_]+PASSWORD=)([^\\s|\\]]+)"),
+            Pattern.compile("(?i)([A-Z_]*(SECRET|KEY|TOKEN|CREDENTIAL|AUTH)[A-Z_]*=)([^\\s|\\]]+)"),
+            Pattern.compile("(?i)(PASSWORD\\s*\\()'[^']*'\\)")
+    );
+    private static final String SECRET_MASK = "$1REDACTED";
     private final Map<String, Object> fields = new LinkedHashMap<>();
 
     public LogEntry message(String message) {
@@ -74,18 +88,11 @@ public class LogEntry {
         if (input == null) return null;
 
         String masked = input;
-
-        masked = masked.replaceAll("(?i)(IDENTIFIED BY\\s+)'[^']*'", "$1'REDACTED'");
-        masked = masked.replaceAll("(?i)(SET PASSWORD\\s*=\\s*)'[^']*'", "$1'REDACTED'");
-        masked = masked.replaceAll("(?i)(--password=)([^\\s]+)", "$1REDACTED");
-        masked = masked.replaceAll("(?i)(password\\s*[:=]\\s*)([^\\s'\"]+)", "$1REDACTED");
-        masked = masked.replaceAll("(?i)(DATABASE_PASSWORD=)([^\\s|\\]]+)", "$1REDACTED");
-        masked = masked.replaceAll("(?i)([A-Z_]+PASSWORD=)([^\\s|\\]]+)", "$1REDACTED");
-
-
-        masked =
-                masked.replaceAll("(?i)([A-Z_]*(SECRET|KEY|TOKEN|CREDENTIAL|AUTH)[A-Z_]*=)([^\\s|\\]]+)", "$1REDACTED");
-
+        for (Pattern pattern : SECRET_PATTERNS) {
+            Matcher matcher = pattern.matcher(masked);
+            String replacement = pattern.pattern().contains("PASSWORD\\s*\\(") ? "$1'REDACTED')" : SECRET_MASK;
+            masked = matcher.replaceAll(replacement);
+        }
         return masked;
     }
 
