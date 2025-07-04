@@ -47,13 +47,16 @@ public class DnsGetZoneMaster implements Operation {
 
     private Optional<String> getZoneMasterIp(String domainName) {
         String loweredDomain = domainName.toLowerCase();
-        Pattern domainPattern = Pattern.compile("\\b" + Pattern.quote(loweredDomain) + "\\b");
+        Pattern domainPattern = Pattern.compile("zone\\s+\"?" + Pattern.quote(loweredDomain) + "\"?", Pattern.CASE_INSENSITIVE);
+        Pattern ipPattern = Pattern.compile("(\\d{1,3}\\.){3}\\d{1,3}");
         try {
             if (Files.exists(ZONEFILE_PATH_BIND)) {
                 try (Stream<String> lines = Files.lines(ZONEFILE_PATH_BIND)) {
                     return lines
                             .filter(line -> domainPattern.matcher(line).find())
-                            .flatMap(DnsGetZoneMaster::extractIps)
+                            .map(ipPattern::matcher)
+                            .filter(Matcher::find)
+                            .map(Matcher::group)
                             .findFirst();
                 }
             }
